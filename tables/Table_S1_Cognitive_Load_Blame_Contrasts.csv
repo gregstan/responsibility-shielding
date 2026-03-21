@@ -1,0 +1,7 @@
+﻿Cognitive Load,Contrast,Estimate,95% CI,p-value,p_value_raw,source_file,source_row_note
+Pooled,BCH - BCC,1.0,"[0.79, 1.22]",3.58e-18,3.5818915283669664e-18,tests.csv,Within-subject delta vs 0 (included_only): Clark blame CH-CC
+Pooled,BDIV - BCC,0.6,"[0.40, 0.81]",2.19e-08,2.186749024411211e-08,tests.csv,Within-subject delta vs 0 (included_only): Clark blame DIV-CC
+High,BCH - BCC,1.13,"[0.83, 1.43]",1.65e-11,1.6480638199032865e-11,tests.csv,Within-subject delta vs 0 (included_only): Clark blame CH-CC
+High,BDIV - BCC,0.55,"[0.22, 0.88]",0.0012,0.0011919240469250175,tests.csv,Within-subject delta vs 0 (included_only): Clark blame DIV-CC
+Low,BCH - BCC,0.89,"[0.60, 1.19]",2.09e-08,2.0913042788869e-08,tests.csv,Within-subject delta vs 0 (included_only): Clark blame CH-CC
+Low,BDIV - BCC,0.65,"[0.39, 0.91]",2.53e-06,2.529146600243722e-06,tests.csv,Within-subject delta vs 0 (included_only): Clark blame DIV-CC

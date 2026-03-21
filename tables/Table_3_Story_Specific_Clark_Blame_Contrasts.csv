@@ -1,0 +1,9 @@
+﻿Story,Design,Contrast,Estimate,95% CI,p-value,p_value_raw,source_file,source_row_note
+Firework,Between-subj,BCH - BCC,1.33,"[0.65, 2.01]",1.27e-04,0.00012670818791511173,integrated_blame_models.csv,Story-specific first-vignette model-based contrast for CH - CC in the parade story family.
+Firework,Between-subj,BDIV - BCC,0.65,"[-0.10, 1.40]",0.0873,0.08730681526271841,integrated_blame_models.csv,Story-specific first-vignette model-based contrast for DIV - CC in the parade story family.
+Firework,Within-subj,BCH - BCC,1.22,"[0.97, 1.48]",5.09e-21,5.085261086197722e-21,integrated_blame_models.csv,Story-specific repeated-measures model-based contrast for CH - CC in the parade story family.
+Firework,Within-subj,BDIV - BCC,0.73,"[0.47, 0.98]",1.89e-08,1.886460107811336e-08,integrated_blame_models.csv,Story-specific repeated-measures model-based contrast for DIV - CC in the parade story family.
+Trolley,Between-subj,BCH - BCC,0.74,"[0.05, 1.42]",0.0345,0.03453554592198331,integrated_blame_models.csv,Story-specific first-vignette model-based contrast for CH - CC in the trolley story family.
+Trolley,Between-subj,BDIV - BCC,0.74,"[0.06, 1.41]",0.0319,0.0318880802636564,integrated_blame_models.csv,Story-specific first-vignette model-based contrast for DIV - CC in the trolley story family.
+Trolley,Within-subj,BCH - BCC,0.76,"[0.43, 1.09]",6.87e-06,6.865165202083931e-06,integrated_blame_models.csv,Story-specific repeated-measures model-based contrast for CH - CC in the trolley story family.
+Trolley,Within-subj,BDIV - BCC,0.46,"[0.14, 0.78]",0.0045,0.004454710241659916,integrated_blame_models.csv,Story-specific repeated-measures model-based contrast for DIV - CC in the trolley story family.
