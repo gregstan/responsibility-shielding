@@ -1,6 +1,6 @@
 
 """
-Responsibility_Shielding_Analysis.py
+analysis.py
 
 Responsibility Shielding Analysis Pipeline
 Author: Greg Stanley
@@ -28,7 +28,7 @@ from pathlib import Path
 from scipy import stats
 
 from typing import Sequence, TypedDict, Dict, List, Tuple, Any
-import statsmodels.formula.api as smf, plotly.graph_objects as go, statsmodels.api as sm, \
+import plotly.graph_objects as go, statsmodels.api as sm, \
     statsmodels.formula.api as smf, pandas as pd, numpy as np, copy, os, re
 
 
@@ -42,10 +42,11 @@ class FileNames(TypedDict):
     raw_data: Path
     group_summaries: Path
     consistency_effects: Path
+    afc_counts_table: Path
+    afc_counts_long: Path
     triangulation: Path
     correlations: Path
     regressions: Path
-    afc_counts: Path
     first_vignette: Path
     within_subject: Path
     blame_models: Path
@@ -58,7 +59,7 @@ class TableNames(TypedDict):
     table_5_within_subject_pairwise_blame_matrix: Path
     table_5_within_subject_pairwise_blame_long: Path
     table_6_cognitive_load_blame_contrasts: Path
-    table_7_secondary_dv_contrast: Path
+    table_7_secondary_dv_contrasts: Path
     table_8_order_effects_summary: Path
     table_manifest: Path
 
@@ -77,16 +78,19 @@ class Filing(TypedDict):
 
 class Visuals(TypedDict):
     figure_layout: dict[str, Any]
-    export_fig: bool
+    create_figures: bool
+    export_figure: bool
     marker_size: int
     dark_mode: bool
     base_hue: int
 
 class MiscSettings(TypedDict):
-    force_rebuild: bool
-    freeze_timestamp_first: str
     rebuild_cleaned_dataframe: bool
-
+    print_tables_to_terminal: bool
+    freeze_timestamp_first: str
+    freeze_timestamp_last: str
+    force_rebuild: bool
+    
 class GeneralSettings(TypedDict):
     filing: Filing
     visuals: Visuals
@@ -2238,7 +2242,7 @@ def compute_triangulation_results(general_settings: GeneralSettings, force_rebui
     return dataframe_triangulation
 
 
-def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, confirmatory_between_subjects_method: str = "welch", 
+def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, confirmatory_between_subjects_method: str = "pooled_ols", 
                                            confirmatory_pooled_ols_covariance_type: str | None = None, force_rebuild: bool | None = None) -> pd.DataFrame:
     """
     Runs the primary confirmatory tests plus a structured set of exploratory tests.
@@ -4006,7 +4010,7 @@ def _export_plotly_figure_html(fig: "object", general_settings: GeneralSettings,
     if file_name.endswith(".html"):
         file_name = file_name[:-5]
 
-    "Remove illegal Windows filename characters: \ / : * ? \" < > |"
+    r"Remove illegal Windows filename characters: \ / : * ? \" < > |"
     file_name = re.sub(r'[\\/:*?"<>|]', "_", file_name)
 
     "Collapse any runs of whitespace or underscores introduced by substitution"
@@ -9104,15 +9108,16 @@ file_paths: FilePaths = {
     "root":        ROOT
 }
 
+confirmatory_between_subjects_method = "pooled_ols"
 freeze_timestamp_first = "2/19/2026 10:57:56 PM" 
 freeze_timestamp_last =  "3/20/2026 10:00:09 AM"
 rebuild_cleaned_dataframe = True
 print_tables_to_terminal = True
-create_figures = True
 force_rebuild = True
 
 default_marker_size = 7
-export_fig = True
+create_figures = True
+export_figure = True
 dark_mode = False
 base_hue = 220
 
@@ -9169,12 +9174,14 @@ general_settings: GeneralSettings = {
         "figure_layout": figure_layout,
         "marker_size": default_marker_size,
         "create_figures": create_figures,
-        "export_fig": export_fig,
+        "export_figure": export_figure,
         "dark_mode": dark_mode,
         "base_hue": base_hue
     },
     "misc": {
+        "confirmatory_between_subjects_method": confirmatory_between_subjects_method,
         "rebuild_cleaned_dataframe": rebuild_cleaned_dataframe,
+        "print_tables_to_terminal": print_tables_to_terminal,
         "freeze_timestamp_first": freeze_timestamp_first,
         "freeze_timestamp_last": freeze_timestamp_last,
         "force_rebuild": force_rebuild
