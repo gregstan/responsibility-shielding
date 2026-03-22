@@ -98,39 +98,39 @@ By default, most analysis functions **reuse existing CSV outputs** if they alrea
 The repository is organized so that the paper’s outputs can be matched directly to files in the repo.
 
 ### Main text tables
-- **Table 1** → [`tables/`](tables/Table_1_Participant_Counts.csv) → participant counts by condition
-- **Table 2** → [`tables/`](tables/Table_2_Primary_Clark_Blame_Contrasts.csv) → primary Clark-blame contrasts
-- **Table 3** → [`tables/`](tables/Table_3_Story_Specific_Clark_Blame_Contrasts.csv) → story-specific Clark-blame contrasts
-- **Table 4** → [`tables/`](tables/Table_4_Two_Alternative_Forced_Choice_Distribution.csv) → 2AFC response distribution
+- **Table 1** → [`tables/Table_1_Participant_Counts.csv`](tables/Table_1_Participant_Counts.csv) → participant counts by condition
+- **Table 2** → [`tables/Table_2_Primary_Clark_Blame_Contrasts.csv`](tables/Table_2_Primary_Clark_Blame_Contrasts.csv) → primary Clark-blame contrasts
+- **Table 3** → [`tables/Table_3_Story_Specific_Clark_Blame_Contrasts.csv`](tables/Table_3_Story_Specific_Clark_Blame_Contrasts.csv) → story-specific Clark-blame contrasts
+- **Table 4** → [`tables/Table_4_Two_Alternative_Forced_Choice_Distribution.csv`](tables/Table_4_Two_Alternative_Forced_Choice_Distribution.csv) → 2AFC response distribution
 
 ### Supplementary tables
-- **Table 5** → [`tables/`](tables/Table_5_Within_Subject_Pairwise_Blame_Matrix.csv) → within-subject pairwise blame matrix
-- **Table 6** → [`tables/`](tables/Table_6_Cognitive_Load_Blame_Contrasts.csv) → cognitive-load contrasts
-- **Table 7** → [`tables/`](tables/Table_7_Secondary_DV_Contrasts.csv) → secondary dependent variables
-- **Table 8** → [`tables/`](tables/Table_8_Order_Effects_Summary.csv) → vignette-position / order effects
+- **Table 5** → [`tables/Table_5_Within_Subject_Pairwise_Blame_Matrix.csv`](tables/Table_5_Within_Subject_Pairwise_Blame_Matrix.csv) → within-subject pairwise blame matrix
+- **Table 6** → [`tables/Table_6_Cognitive_Load_Blame_Contrasts.csv`](tables/Table_6_Cognitive_Load_Blame_Contrasts.csv) → cognitive-load contrasts
+- **Table 7** → [`tables/Table_7_Secondary_DV_Contrasts.csv`](tables/Table_7_Secondary_DV_Contrasts.csv) → secondary dependent variables
+- **Table 8** → [`tables/Table_8_Order_Effects_Summary.csv`](tables/Table_8_Order_Effects_Summary.csv) → vignette-position / order effects
 
 ### Main text figures
-- **Figure 1** → [`images/figures/`](images/figures/figure_1.png) → Schematic of three main conditions
-- **Figure 2** → [`images/figures/`](images/figures/figure_2.png) → Illustrations the accompany vignettes
-- **Figure 3** → [`images/figures/`](images/figures/figure_3.png) → Blame ratings by vignette conditions 
-- **Figure 4** → [`images/figures/`](images/figures/figure_4.png) → Distribution of shielding effects
-- **Figure 5** → [`images/figures/`](images/figures/figure_5.png) → Roadmap to future experiments
+- **Figure 1** → [`images/figures/figure_1.png`](images/figures/figure_1.png) → Schematic of three main conditions
+- **Figure 2** → [`images/figures/figure_2.png`](images/figures/figure_2.png) → Illustrations the accompany vignettes
+- **Figure 3** → [`images/figures/figure_3.png`](images/figures/figure_3.png) → Blame ratings by vignette conditions 
+- **Figure 4** → [`images/figures/figure_4.png`](images/figures/figure_4.png) → Distribution of shielding effects
+- **Figure 5** → [`images/figures/figure_5.png`](images/figures/figure_5.png) → Roadmap to future experiments
 
 ### Supplementary figures
-- **Figure 6** → [`images/figures/`](images/figures/figure_6.png) → Cognitive load violin plot
-- **Figure 7** → [`images/figures/`](images/figures/figure_7.png) → Order-effects line graph
-- **Figure 8** → [`images/figures/`](images/figures/figure_8.png) → Blame versus wrongness 
+- **Figure 6** → [`images/figures/figure_6.png`](images/figures/figure_6.png) → Cognitive load violin plot
+- **Figure 7** → [`images/figures/figure_7.png`](images/figures/figure_7.png) → Order-effects line graph
+- **Figure 8** → [`images/figures/figure_8.png`](images/figures/figure_8.png) → Blame versus wrongness 
 
 > Interactive HTML versions live in [`visuals/`](visuals/)
 > Double-click any Plotly `.html` file in `visuals/` to open it in a browser as an interactive figure.
 
 ### Experimental Stimlui - Vignette Illustrations
-- **Trolley -  Choice-Choice** → [`images/stimuli/`](images/stimuli/rshielding_trolley_choice-chance_dark_mode.png) 
-- **Trolley -  Choice-Chance** → [`images/stimuli/`](images/stimuli/rshielding_trolley_choice-choice_dark_mode.png) 
-- **Trolley -  Division** →      [`images/stimuli/`](images/stimuli/rshielding_trolley_division_dark_mode.png) 
-- **Firework - Choice-Choice** → [`images/stimuli/`](images/stimuli/rshielding_trolley_choice-chance_dark_mode.png) 
-- **Firework - Choice-Chance** → [`images/stimuli/`](images/stimuli/rshielding_trolley_choice-choice_dark_mode.png) 
-- **Firework - Division** →      [`images/stimuli/`](images/stimuli/rshielding_trolley_division_dark_mode.png) 
+- **Trolley -  Choice-Choice** → [`images/stimuli/rshielding_trolley_choice-chance_dark_mode.png`](images/stimuli/rshielding_trolley_choice-chance_dark_mode.png) 
+- **Trolley -  Choice-Chance** → [`images/stimuli/rshielding_trolley_choice-choice_dark_mode.png`](images/stimuli/rshielding_trolley_choice-choice_dark_mode.png) 
+- **Trolley -  Division** →      [`images/stimuli/rshielding_trolley_division_dark_mode.png`](images/stimuli/rshielding_trolley_division_dark_mode.png) 
+- **Firework - Choice-Choice** → [`images/stimuli/rshielding_trolley_choice-chance_dark_mode.png`](images/stimuli/rshielding_trolley_choice-chance_dark_mode.png) 
+- **Firework - Choice-Chance** → [`images/stimuli/rshielding_trolley_choice-choice_dark_mode.png`](images/stimuli/rshielding_trolley_choice-choice_dark_mode.png) 
+- **Firework - Division** →      [`images/stimuli/rshielding_trolley_division_dark_mode.png`](images/stimuli/rshielding_trolley_division_dark_mode.png) 
 
 ---
 
