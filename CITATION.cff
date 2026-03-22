@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite it using the metadata below."
+title: "Responsibility Shielding"
+type: software
+authors:
+  - family-names: "Stanley"
+    given-names: "Greg"
+abstract: >-
+  Code, data products, manuscript tables, and figures for the paper on
+  responsibility shielding in moral judgment.
+repository-code: "REPLACE_WITH_GITHUB_REPO_URL"
+license: "MIT"
+keywords:
+  - moral psychology
+  - responsibility shielding
+  - causal reasoning
+  - moral judgment
+  - blame

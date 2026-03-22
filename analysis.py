@@ -2,39 +2,34 @@
 """
 Responsibility_Shielding_Analysis.py
 
-This file contains two pipelines:
+Responsibility Shielding Analysis Pipeline
+Author: Greg Stanley
 
-    1) Preprocessing pipeline:
-        - Reads the raw Qualtrics export CSV.
-        - Removes pilot / preview rows by StartDate cutoff and Status filter.
-        - Keeps only completed responses.
-        - Harmonizes Parade vs Trolley columns into a single wide format (no long blocks of blanks).
-        - Converts Likert-style strings to numeric values.
-        - Creates an `included` column based on comprehension checks.
-        - Builds helper columns for preregistered (between-subjects) and exploratory (within-subjects) analyses.
-        - Compresses CRT and INDCOL into score columns.
-        - Moves timing columns to the end, and drops page-submit / click-count timing fields.
+This script reproduces the analyses, tables, and figures 
+for the paper on responsibility shielding in moral judgment.
 
-    2) Analysis pipeline:
-        - Runs confirmatory between-subjects tests on the first vignette encountered (Clark blame).
-        - Runs parallel descriptive and exploratory tests across DVs (blame, wrongness, punishment),
-          plus within-subject deltas, story/load subgroups, 2AFC summaries, correlations, and
-          order/consistency checks.
-        - Saves tidy CSV outputs suitable for direct plotting in Plotly.
+The pipeline:
+1. Loads or rebuilds the cleaned dataset from raw Qualtrics data
+2. Applies the preregistered data-freeze window
+3. Runs confirmatory and exploratory analyses
+4. Runs integrated model analyses
+5. Generates all manuscript and supplementary tables
+6. Generates all Plotly figures 
+7. Saves outputs to processed/, tables/, and visuals/
 
-Author: Gregory Stanley (design) + Kailani (implementation support)
+Default settings reproduce the manuscript results.
 
+Use `force_rebuild=True` to regenerate outputs from scratch.
+Set to False after first run to save compute resources.
 """
 from __future__ import annotations
 from plotly.subplots import make_subplots
-from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from scipy import stats
 
-from typing import Dict, TypedDict, Iterable, List, Optional, Sequence, Tuple, Any
+from typing import Sequence, TypedDict, Dict, List, Tuple, Any
 import statsmodels.formula.api as smf, plotly.graph_objects as go, statsmodels.api as sm, \
-    statsmodels.formula.api as smf, pandas as pd, numpy as np, copy, math, os, re
+    statsmodels.formula.api as smf, pandas as pd, numpy as np, copy, os, re
 
 
 "=========================================================================================="
@@ -59,18 +54,19 @@ class TableNames(TypedDict):
     table_1_participant_counts: Path
     table_2_primary_clark_blame_contrasts: Path
     table_3_story_specific_clark_blame_contrasts: Path
-    table_4_twoafc_distribution: Path
+    table_4_two_alternative_forced_choice_distribution: Path
     table_5_within_subject_pairwise_blame_matrix: Path
     table_5_within_subject_pairwise_blame_long: Path
-    table_s1_cognitive_load_blame_contrasts: Path
-    table_s2_secondary_dv_contrast: Path
-    table_s3_order_effects_summary: Path
+    table_6_cognitive_load_blame_contrasts: Path
+    table_7_secondary_dv_contrast: Path
+    table_8_order_effects_summary: Path
     table_manifest: Path
 
 class FilePaths(TypedDict):
     raw_data: Path
     processed: Path
     visuals: Path
+    images: Path
     tables: Path
     root: Path
 
@@ -88,7 +84,7 @@ class Visuals(TypedDict):
 
 class MiscSettings(TypedDict):
     force_rebuild: bool
-    freeze_timestamp_str: str
+    freeze_timestamp_first: str
     rebuild_cleaned_dataframe: bool
 
 class GeneralSettings(TypedDict):
@@ -105,8 +101,8 @@ def convert_string_to_snake_case(original_string: str) -> str:
     """
     Converts a string into snake_case.
 
-    Args:
-        original_string:
+    Arguments:
+        • original_string:
             Any column name string.
 
     Returns:
@@ -169,7 +165,6 @@ def parse_likert_numeric_value(likert_value) -> float:
     likert_string = str(likert_value).strip()
 
     "Extract the first integer substring found"
-    import re
     integer_match = re.search(r"-?\d+", likert_string)
 
     if integer_match is None:
@@ -214,10 +209,10 @@ def coalesce_series(primary_series: pd.Series, secondary_series: pd.Series) -> p
     """
     Returns a series equal to primary_series where non-null, otherwise secondary_series.
 
-    Args:
-        primary_series:
+    Arguments:
+        • primary_series:
             Preferred values.
-        secondary_series:
+        • secondary_series:
             Fallback values.
 
     Returns:
@@ -256,7 +251,7 @@ def compute_indcol_scores(indcol_item_series_dict: Dict[str, pd.Series]) -> pd.D
     """
     Computes INDCOL-derived individualism scores.
 
-    We treat collectivism as the opposite pole of individualism and compute:
+    I treat collectivism as the opposite pole of individualism and compute:
 
         individualism_horizontal = scaled( mean(HI) - mean(HC) ) in [0,1]
         individualism_vertical   = scaled( mean(VI) - mean(VC) ) in [0,1]
@@ -336,14 +331,8 @@ def compute_cognitive_load_digits_correct_bool(load_condition_value: str, digits
     return False
 
 
-def encode_two_afc_compact_response(
-    primary_choice_value,
-    followup_choice_value,
-    left_label: str,
-    right_label: str,
-    left_prefix: str,
-    right_prefix: str,
-) -> str:
+def encode_two_afc_compact_response(primary_choice_value, followup_choice_value, left_label: str, 
+                                    right_label: str, left_prefix: str, right_prefix: str) -> str:
     """
     Encodes a 2AFC + follow-up into one of four compact strings.
 
@@ -387,7 +376,108 @@ def parse_datetime_series(datetime_series: pd.Series) -> pd.Series:
     Returns:
         pandas Series of dtype datetime64[ns] with NaT for unparseable values.
     """
-    return pd.to_datetime(datetime_series, errors="coerce")
+    return pd.to_datetime(datetime_series, format="%m/%d/%Y %H:%M", errors="coerce")
+
+
+def apply_collection_window_freeze(raw_dataframe: pd.DataFrame, general_settings: dict[str, Any]) -> pd.DataFrame:
+    """
+    Restrict the raw Qualtrics dataframe to the final collection window used in the paper.
+
+    Arguments:
+        • raw_dataframe: pd.DataFrame
+            - Raw Qualtrics export dataframe.
+        • general_settings: dict[str, Any]
+            - Master settings dictionary. Expects:
+                general_settings["misc"]["freeze_timestamp_first"]
+                general_settings["misc"]["freeze_timestamp_last"]
+
+    Returns:
+        • pd.DataFrame
+            - Raw dataframe filtered to the frozen collection window.
+    """
+    freeze_timestamp_first: pd.Timestamp = pd.to_datetime(
+        general_settings["misc"]["freeze_timestamp_first"],
+        format="%m/%d/%Y %I:%M:%S %p",
+        errors="raise",
+    )
+    freeze_timestamp_last: pd.Timestamp = pd.to_datetime(
+        general_settings["misc"]["freeze_timestamp_last"],
+        format="%m/%d/%Y %I:%M:%S %p",
+        errors="raise",
+    )
+
+    possible_timestamp_column_names: list[str] = [
+        "RecordedDate",
+        "StartDate",
+        "EndDate",
+        "recorded_date",
+        "start_date",
+        "end_date",
+    ]
+
+    timestamp_column_name: str | None = None
+    for column_name in possible_timestamp_column_names:
+        if column_name in raw_dataframe.columns:
+            timestamp_column_name = column_name
+            break
+
+    if timestamp_column_name is None:
+        raise Exception(
+            "Could not find a Qualtrics timestamp column for freeze-window filtering. "
+            f"Tried: {possible_timestamp_column_names}"
+        )
+
+    filtered_dataframe = raw_dataframe.copy()
+    filtered_dataframe[timestamp_column_name] = pd.to_datetime(
+        filtered_dataframe[timestamp_column_name],
+        errors="coerce",
+    )
+
+    filtered_dataframe = filtered_dataframe.loc[
+        filtered_dataframe[timestamp_column_name].between(
+            freeze_timestamp_first,
+            freeze_timestamp_last,
+            inclusive="both",
+        )
+    ].copy()
+
+    return filtered_dataframe
+
+
+def drop_identifying_columns_from_cleaned_dataframe(cleaned_dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Remove unnecessary identifying Qualtrics columns from the cleaned dataframe before saving it.
+
+    Arguments:
+        • cleaned_dataframe: pd.DataFrame
+            - Cleaned participant-level dataframe.
+
+    Notes:
+        • I already removed these columns from the raw data file before pushing the code, making this function pro forma.
+        • The only columns that could have possibly identified the participants were their latitude, longitude, and IP address.        
+
+    Returns:
+        • pd.DataFrame
+            - De-identified cleaned dataframe.
+    """
+    column_names_to_drop_if_present: list[str] = [
+        "IPAddress",
+        "RecipientLast Name",
+        "RecipientFirst Name",
+        "RecipientEmail",
+        "ExternalDataReference",
+        "LocationLatitude",
+        "LocationLongitude",
+        "DistributionChannel",
+        "Status"
+    ]
+
+    cleaned_dataframe = cleaned_dataframe.drop(
+        columns=[column_name for column_name in column_names_to_drop_if_present if column_name in cleaned_dataframe.columns],
+        errors="ignore",
+    ).copy()
+
+    return cleaned_dataframe
 
 
 def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.DataFrame:
@@ -400,13 +490,14 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
     file_path_raw_data = general_settings["filing"]["file_paths"]["raw_data"] / \
         general_settings["filing"]["file_names"]["raw_data"]
 
-    freeze_timestamp_str = general_settings["misc"]["freeze_timestamp_str"]
+    freeze_timestamp_first = general_settings["misc"]["freeze_timestamp_first"]
 
     f"Loading raw Qualtrics export: {file_path_raw_data}"
     raw_dataframe = pd.read_csv(file_path_raw_data, low_memory=False)
 
     "Filter to actual participant responses (exclude preview rows and Qualtrics header rows)"
-    raw_dataframe = raw_dataframe[raw_dataframe["Status"] == "IP Address"].copy()
+    if "Status" in raw_dataframe.columns and "IP Address" in raw_dataframe.columns:
+        raw_dataframe = raw_dataframe[raw_dataframe["Status"] == "IP Address"].copy()
 
     "StartDate cutoff to remove pilot / pre-freeze runs"
     raw_dataframe["start_date"] = parse_datetime_series(raw_dataframe["StartDate"])
@@ -415,7 +506,7 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
 
     raw_dataframe["duration_seconds"] = pd.to_numeric(raw_dataframe["Duration (in seconds)"], errors="coerce")
 
-    freeze_timestamp = pd.to_datetime(freeze_timestamp_str)
+    freeze_timestamp = pd.to_datetime(freeze_timestamp_first)
 
     raw_dataframe = raw_dataframe[raw_dataframe["start_date"] > freeze_timestamp].copy()
 
@@ -427,6 +518,7 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
 
     "Standardize core condition columns"
     raw_dataframe["story_condition"] = raw_dataframe["StoryCondition"].astype(str).str.strip().str.lower()
+    raw_dataframe["story_condition"] = raw_dataframe["story_condition"].str.replace("parade", "firework", regex=False)
     raw_dataframe["load_condition"] = raw_dataframe["LoadCondition"].astype(str).str.strip().str.lower()
 
     raw_dataframe["case_order"] = raw_dataframe["CaseOrder"].astype(str)
@@ -594,29 +686,29 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
     raw_dataframe["bill_minus_clark_ch_punish"] = raw_dataframe["proximate_punish_ch"] - raw_dataframe["clark_punish_ch"]
 
     "2AFC: encode compact responses (Bill vs Clark; CH vs CC; DIV vs CC)"
-    parade_interpersonal_bill = "Bill (the buyer who detonated the dangerous fireworks) is more blameworthy."
-    parade_interpersonal_clark = "Clark (the clerk who enabled and sold the explosive charge) is more blameworthy."
+    firework_interpersonal_bill = "Bill (the buyer who detonated the dangerous fireworks) is more blameworthy."
+    firework_interpersonal_clark = "Clark (the clerk who enabled and sold the explosive charge) is more blameworthy."
     trolley_interpersonal_bill = "Bill (the operator at the second fork) is more blameworthy."
     trolley_interpersonal_clark = "Clark (the operator at the first fork) is more blameworthy."
 
-    parade_ch_more = "Clark is more blameworthy in the story where Bill has brain damage."
-    parade_cc_more_ch = "Clark is more blameworthy in the story where Bill is a mentally competent adult."
+    firework_ch_more = "Clark is more blameworthy in the story where Bill has brain damage."
+    firework_cc_more_ch = "Clark is more blameworthy in the story where Bill is a mentally competent adult."
     trolley_ch_more = "Clark is more blameworthy in the story where the second fork is operated by a computerized switching mechanism."
     trolley_cc_more_ch = "Clark is more blameworthy in the story where the second fork is operated by Bill, another operator."
 
-    parade_div_more = "Clark is more blameworthy in the story where he armed the flare canister remotely at the same time that Bill ignited it."
-    parade_cc_more_div = "Clark is more blameworthy in the story where he armed the flare canister before selling it to Bill."
+    firework_div_more = "Clark is more blameworthy in the story where he armed the flare canister remotely at the same time that Bill ignited it."
+    firework_cc_more_div = "Clark is more blameworthy in the story where he armed the flare canister before selling it to Bill."
     trolley_div_more = "Clark is more blameworthy in the story where he flips the switch at the same time as Bill."
     trolley_cc_more_div = "Clark is more blameworthy in the story where he flips the switch before Bill."
 
     raw_dataframe["twoafc_bill_vs_clark"] = np.where(
-        raw_dataframe["story_condition"] == "parade",
+        raw_dataframe["story_condition"] == "firework",
         raw_dataframe.apply(
             lambda row: encode_two_afc_compact_response(
                 row["2afc_p_interperson_1"],
                 row["2afc_p_interperson_2"],
-                parade_interpersonal_bill,
-                parade_interpersonal_clark,
+                firework_interpersonal_bill,
+                firework_interpersonal_clark,
                 "Bill",
                 "Clark",
             ),
@@ -636,13 +728,13 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
     )
 
     raw_dataframe["twoafc_ch_vs_cc"] = np.where(
-        raw_dataframe["story_condition"] == "parade",
+        raw_dataframe["story_condition"] == "firework",
         raw_dataframe.apply(
             lambda row: encode_two_afc_compact_response(
                 row["2afc_p_intraperson_1"],
                 row["2afc_p_intraperson_2"],
-                parade_ch_more,
-                parade_cc_more_ch,
+                firework_ch_more,
+                firework_cc_more_ch,
                 "CH",
                 "CC",
             ),
@@ -662,13 +754,13 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
     )
 
     raw_dataframe["twoafc_div_vs_cc"] = np.where(
-        raw_dataframe["story_condition"] == "parade",
+        raw_dataframe["story_condition"] == "firework",
         raw_dataframe.apply(
             lambda row: encode_two_afc_compact_response(
                 row["2afc_p_intraperson_3"],
                 row["2afc_p_intraperson_4"],
-                parade_div_more,
-                parade_cc_more_div,
+                firework_div_more,
+                firework_cc_more_div,
                 "DIV",
                 "CC",
             ),
@@ -728,9 +820,9 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
         ("comprehension", "comp_p", "comp_t"),
     ]
 
-    for unified_prefix, parade_prefix, trolley_prefix in timing_blocks:
-        first_click_column_parade = f"{parade_prefix}_timing_First Click"
-        last_click_column_parade = f"{parade_prefix}_timing_Last Click"
+    for unified_prefix, firework_prefix, trolley_prefix in timing_blocks:
+        first_click_column_firework = f"{firework_prefix}_timing_First Click"
+        last_click_column_firework = f"{firework_prefix}_timing_Last Click"
 
         first_click_column_trolley = f"{trolley_prefix}_timing_First Click"
         last_click_column_trolley = f"{trolley_prefix}_timing_Last Click"
@@ -740,12 +832,12 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
         unified_last_minus_first = f"{unified_prefix}_timing_last_minus_first_seconds"
 
         raw_dataframe[unified_first_click] = coalesce_series(
-            pd.to_numeric(raw_dataframe.get(first_click_column_parade), errors="coerce"),
+            pd.to_numeric(raw_dataframe.get(first_click_column_firework), errors="coerce"),
             pd.to_numeric(raw_dataframe.get(first_click_column_trolley), errors="coerce"),
         )
 
         raw_dataframe[unified_last_click] = coalesce_series(
-            pd.to_numeric(raw_dataframe.get(last_click_column_parade), errors="coerce"),
+            pd.to_numeric(raw_dataframe.get(last_click_column_firework), errors="coerce"),
             pd.to_numeric(raw_dataframe.get(last_click_column_trolley), errors="coerce"),
         )
 
@@ -830,6 +922,17 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
     columns_to_drop = list(dict.fromkeys(columns_to_drop))
 
     cleaned_dataframe = raw_dataframe.drop(columns=[column_name for column_name in columns_to_drop if column_name in raw_dataframe.columns])
+
+    "Restrict rows to the frozen manuscript collection window."
+    cleaned_dataframe = apply_collection_window_freeze(
+        raw_dataframe=cleaned_dataframe,
+        general_settings=general_settings,
+    )
+
+    "Remove unnecessary identifying Qualtrics columns before saving."
+    cleaned_dataframe = drop_identifying_columns_from_cleaned_dataframe(
+        cleaned_dataframe=cleaned_dataframe,
+    )
 
     "Rename remaining columns to snake_case"
     cleaned_dataframe = cleaned_dataframe.rename(columns={column_name: convert_string_to_snake_case(column_name) for column_name in cleaned_dataframe.columns})
@@ -945,7 +1048,7 @@ def load_or_build_cleaned_dataframe(general_settings: GeneralSettings, force_reb
             "Could not find the cleaned analysis CSV: "
             f"{file_path_raw_data}."
         )
-
+    
     cleaned_dataframe = preprocess_raw_qualtrics_export(general_settings=general_settings)
     cleaned_dataframe.to_csv(file_path_cleaned, index=False, encoding="utf-8-sig")
     return cleaned_dataframe
@@ -1015,7 +1118,7 @@ def load_analysis_dataframe(general_settings: GeneralSettings, file_name_key: st
             "dataframe": None
         }
     
-    dataframe = pd.read_csv(full_path, index_col=0, encoding="utf-8", engine='python') 
+    dataframe = pd.read_csv(full_path, index_col=0, encoding="utf-8-sig", engine='python') 
     message = f"Successfully loaded dataframe {file_name}!"
     return {
         "success": True, 
@@ -1033,10 +1136,10 @@ def compute_welch_degrees_of_freedom(sample_a: np.ndarray, sample_b: np.ndarray)
     """
     Computes Welch-Satterthwaite degrees of freedom.
 
-    Args:
-        sample_a:
+    Arguments:
+        • sample_a:
             Numeric vector.
-        sample_b:
+        • sample_b:
             Numeric vector.
 
     Returns:
@@ -1061,10 +1164,10 @@ def hedges_g_for_two_independent_samples(sample_a: np.ndarray, sample_b: np.ndar
     """
     Computes Hedges g for two independent samples.
 
-    Args:
-        sample_a:
+    Arguments:
+        • sample_a:
             Numeric vector.
-        sample_b:
+        • sample_b:
             Numeric vector.
 
     Returns:
@@ -1099,17 +1202,17 @@ def cohens_d_for_two_independent_samples(sample_a: np.ndarray, sample_b: np.ndar
     Computes Cohen's d for two independent samples.
 
     Arguments:
-        - sample_a: np.ndarray
+        • sample_a: np.ndarray
             First numeric sample.
-        - sample_b: np.ndarray
+        • sample_b: np.ndarray
             Second numeric sample.
 
     Notes:
-        - This is the uncorrected standardized mean difference.
-        - I am using this here because the preregistration explicitly named Cohen's d.
+        • This is the uncorrected standardized mean difference.
+        • I am using this here because the preregistration explicitly named Cohen's d.
 
     Returns:
-        - float
+        • float
             Cohen's d for mean(sample_a) - mean(sample_b).
     """
     "======================================="
@@ -1142,7 +1245,7 @@ def compute_welch_mean_difference_ci(sample_a: np.ndarray, sample_b: np.ndarray,
     Computes a confidence interval for mean(sample_a) - mean(sample_b) using Welch standard error.
 
     Returns:
-        difference, ci_lower, ci_upper, df
+        • difference, ci_lower, ci_upper, df
     """
     sample_a = sample_a[~np.isnan(sample_a)]
     sample_b = sample_b[~np.isnan(sample_b)]
@@ -1176,7 +1279,7 @@ def holm_bonferroni_correct_p_values(p_values: Sequence[float]) -> List[float]:
     Applies Holm-Bonferroni correction to a list of p-values.
 
     Returns:
-        List of adjusted p-values, aligned with the input order.
+        • List of adjusted p-values, aligned with the input order.
     """
     p_values_array = np.asarray(p_values, dtype=float)
 
@@ -1196,7 +1299,7 @@ def run_welch_t_test_between_groups(dataframe: pd.DataFrame, dv_column_name: str
     Runs a Welch two-sample t-test on dv_column_name comparing group_a_value vs group_b_value.
 
     Returns:
-        Dict with test summary (including Hedges g, CI, df).
+        • Dict with test summary (including Hedges g, CI, df).
     """
     sample_a = pd.to_numeric(dataframe[dataframe[group_column_name] == group_a_value][dv_column_name], errors="coerce").to_numpy(dtype=float)
     sample_b = pd.to_numeric(dataframe[dataframe[group_column_name] == group_b_value][dv_column_name], errors="coerce").to_numpy(dtype=float)
@@ -1239,24 +1342,24 @@ def run_pooled_ols_planned_contrasts(dataframe: pd.DataFrame, dv_column_name: st
     Fits the preregistered pooled OLS / one-way ANOVA style model and returns the two planned contrasts.
 
     Arguments:
-        - dataframe: pd.DataFrame
+        • dataframe: pd.DataFrame
             The dataframe containing the dependent variable and the three-level group factor.
-        - dv_column_name: str
+        • dv_column_name: str
             The dependent variable column to analyze.
-        - group_column_name: str = "case_code_position_1"
+        • group_column_name: str = "case_code_position_1"
             The grouping factor with levels CC, CH, and DIV.
-        - covariance_type: str | None = None
+        • covariance_type: str | None = None
             Optional statsmodels covariance type. If None, uses the classical pooled-variance OLS fit.
             If you later want a robustness variant, you can set this to "HC3".
 
     Notes:
-        - This is the closest implementation of what the preregistration says for the confirmatory
+        • This is the closest implementation of what the preregistration says for the confirmatory
           between-subjects analysis: one pooled first-vignette model with planned contrasts.
-        - The returned rows have the same basic structure as the Welch rows so they can drop into the
+        • The returned rows have the same basic structure as the Welch rows so they can drop into the
           existing pipeline with minimal disruption.
 
     Returns:
-        - pd.DataFrame
+        • pd.DataFrame
             One row for CH vs CC and one row for DIV vs CC.
     """
     "======================================="
@@ -1365,7 +1468,7 @@ def run_one_sample_t_test_on_delta(dataframe: pd.DataFrame, delta_column_name: s
     One-sample t-test of a delta column against 0, equivalent to a paired test.
 
     Returns:
-        Dict with test summary and Cohen's dz.
+        • Dict with test summary and Cohen's dz.
     """
     delta_values = pd.to_numeric(dataframe[delta_column_name], errors="coerce").to_numpy(dtype=float)
     delta_values = delta_values[~np.isnan(delta_values)]
@@ -1437,7 +1540,7 @@ def compute_group_summaries(general_settings: GeneralSettings, force_rebuild: bo
     Produces long-format descriptive statistics for Plotly-friendly grouping.
 
     Returns:
-        DataFrame with columns:
+        • DataFrame with columns:
             - inclusion_filter
             - story_condition
             - load_condition
@@ -1481,7 +1584,7 @@ def compute_group_summaries(general_settings: GeneralSettings, force_rebuild: bo
             "punishment": ("clark_punish_cc", "clark_punish_ch", "clark_punish_div"),
         }
 
-        for story_condition_value in ["all", "parade", "trolley"]:
+        for story_condition_value in ["all", "firework", "trolley"]:
             for load_condition_value in ["all", "high", "low"]:
                 subset = analysis_dataframe.copy()
 
@@ -1606,13 +1709,13 @@ def compute_twoafc_counts(general_settings: GeneralSettings, force_rebuild: bool
     Produces 2AFC frequency tables matching the manuscript-ready style.
 
     Returns:
-        DataFrame with columns:
+        • DataFrame with columns:
             - inclusion_filter
             - story_condition
             - comparison
             - operator
             - count
-        Or, if table_form=True:
+          Or, if table_form=True:
             - inclusion_filter
             - story_condition
             - operator
@@ -1694,7 +1797,7 @@ def compute_twoafc_counts(general_settings: GeneralSettings, force_rebuild: bool
                     )
 
         add_counts_for_subset(analysis_dataframe, "all")
-        add_counts_for_subset(analysis_dataframe[analysis_dataframe["story_condition"] == "parade"], "parade")
+        add_counts_for_subset(analysis_dataframe[analysis_dataframe["story_condition"] == "firework"], "firework")
         add_counts_for_subset(analysis_dataframe[analysis_dataframe["story_condition"] == "trolley"], "trolley")
 
         dataframes[inclusion_filter] = pd.DataFrame(summary_rows)
@@ -1716,12 +1819,12 @@ def compute_correlations(general_settings: GeneralSettings, force_rebuild: bool 
     """
     Computes basic correlations among Clark blame/wrongness/punishment.
 
-    We compute correlations in two ways:
-        - Between-subjects first vignette (one row per participant)
-        - Within-subject pooled across three vignettes by averaging per participant
+    I compute correlations in two ways:
+        • Between-subjects first vignette (one row per participant)
+        • Within-subject pooled across three vignettes by averaging per participant
 
     Returns:
-        DataFrame with correlation results.
+        • DataFrame with correlation results.
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
@@ -1818,10 +1921,10 @@ def compute_individual_difference_regressions(general_settings: GeneralSettings,
     Runs exploratory regressions predicting shielding deltas from individual differences.
 
     Models (OLS):
-        delta ~ load_condition + story_condition + crt_score + individualism_score
+        • delta ~ load_condition + story_condition + crt_score + individualism_score
 
     Returns:
-        A tidy table with coefficient estimates and p-values.
+        • A tidy table with coefficient estimates and p-values.
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
@@ -1909,12 +2012,12 @@ def compute_consistency_effects(general_settings: GeneralSettings, force_rebuild
     Primary consistency contrast:
         Compare CH ratings depending on whether CH was encountered first vs CC encountered first.
 
-    We implement:
-        - CH rating among CH-first vs CC-first participants.
-        - CC rating among CH-first vs CC-first participants.
+    I implement:
+        • CH rating among CH-first vs CC-first participants.
+        • CC rating among CH-first vs CC-first participants.
 
     Returns:
-        DataFrame of exploratory Welch tests.
+        • DataFrame of exploratory Welch tests.
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
@@ -1984,13 +2087,13 @@ def compute_consistency_effects(general_settings: GeneralSettings, force_rebuild
 def compute_triangulation_results(general_settings: GeneralSettings, force_rebuild: bool | None = None) -> pd.DataFrame:
     """
     Triangulation analyses linking:
-        - within-subject numeric deltas (e.g., Clark blame CH-CC)
-        - 2AFC categorical judgments (e.g., "CH > CC", "CH ≥ CC", "CH ≤ CC", "CH < CC")
+        • within-subject numeric deltas (e.g., Clark blame CH-CC)
+        • 2AFC categorical judgments (e.g., "CH > CC", "CH ≥ CC", "CH ≤ CC", "CH < CC")
 
     Outputs:
-        - Pearson and Spearman correlations between delta and a 0-3 coding of the 2AFC response
-        - Logistic regressions predicting the probability of a pro-shielding 2AFC response from the numeric delta
-        - Simple concordance rates
+        • Pearson and Spearman correlations between delta and a 0-3 coding of the 2AFC response
+        • Logistic regressions predicting the probability of a pro-shielding 2AFC response from the numeric delta
+        • Simple concordance rates
 
     Coding (as suggested in the analysis notes):
         strict greater: 3
@@ -2135,23 +2238,19 @@ def compute_triangulation_results(general_settings: GeneralSettings, force_rebui
     return dataframe_triangulation
 
 
-def run_confirmatory_and_exploratory_tests(
-    general_settings: GeneralSettings, 
-    confirmatory_between_subjects_method: str = "welch",
-    confirmatory_pooled_ols_covariance_type: str | None = None,
-    force_rebuild: bool | None = None
-) -> pd.DataFrame:
+def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, confirmatory_between_subjects_method: str = "welch", 
+                                           confirmatory_pooled_ols_covariance_type: str | None = None, force_rebuild: bool | None = None) -> pd.DataFrame:
     """
     Runs the primary confirmatory tests plus a structured set of exploratory tests.
 
     Confirmatory (preregistered):
-        - Between-subjects, included only:
+        • Between-subjects, included only:
             H1: first_vignette_clark_blame CH vs CC (two-sided)
             H2: first_vignette_clark_blame DIV vs CC (two-sided)
-        - Holm correction across these two p-values.
+        • Holm correction across these two p-values.
 
     Returns:
-        Long-format table of test results with metadata columns.
+        • Long-format table of test results with metadata columns.
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
@@ -2290,7 +2389,7 @@ def run_confirmatory_and_exploratory_tests(
             append_test_row(delta_test, "exploratory", inclusion_filter, "all", "all", f"Within-subject delta vs 0 ({inclusion_filter}): {label}")
 
         "Exploratory: subgroup tests by story_condition and load_condition (included only)"
-        for story_condition_value in ["parade", "trolley"]:
+        for story_condition_value in ["firework", "trolley"]:
             subset_story = analysis_dataframe[analysis_dataframe["story_condition"] == story_condition_value]
 
             for dv_column_name, label in [("first_vignette_clark_blame", "Clark blame"), ("first_vignette_clark_wrong", "Clark wrongness"), ("first_vignette_clark_punish", "Clark punishment")]:
@@ -2422,7 +2521,7 @@ def _compute_model_based_linear_contrast_row(
         • inclusion_filter: str
             - included_only or all_finishers.
         • story_condition: str
-            - all, parade, or trolley.
+            - all, firework, or trolley.
         • contrast_label: str
             - CH - CC, DIV - CC, or CH - DIV.
         • display_label: str
@@ -2503,7 +2602,7 @@ def _compute_model_based_linear_contrast_row(
     }
 
 
-def _extract_model_coefficient_rows(
+def _extract_model_coefficient_rows_from_fitted_results(
     fitted_model_result: Any,
     model_name: str,
     model_variant: str,
@@ -2645,7 +2744,7 @@ def compute_first_vignette_clark_blame_integrated_models(
 
         analysis_dataframe["story_condition"] = pd.Categorical(
             analysis_dataframe["story_condition"],
-            categories=["parade", "trolley"],
+            categories=["firework", "trolley"],
             ordered=True,
         )
         analysis_dataframe["case_code_position_1"] = pd.Categorical(
@@ -2665,7 +2764,7 @@ def compute_first_vignette_clark_blame_integrated_models(
         model_formula_string = (
             "first_vignette_clark_blame ~ "
             "C(case_code_position_1, Treatment(reference='CC')) * "
-            "C(story_condition, Treatment(reference='parade'))"
+            "C(story_condition, Treatment(reference='firework'))"
         )
 
         fitted_model_result = smf.ols(
@@ -2719,16 +2818,16 @@ def compute_first_vignette_clark_blame_integrated_models(
 
         "Coefficient rows"
         coefficient_meaning_dictionary = {
-            "Intercept": "Predicted mean for CC in the firework/parade story family.",
-            "C(case_code_position_1, Treatment(reference='CC'))[T.CH]": "CH - CC in the firework/parade story family.",
-            "C(case_code_position_1, Treatment(reference='CC'))[T.DIV]": "DIV - CC in the firework/parade story family.",
-            "C(story_condition, Treatment(reference='parade'))[T.trolley]": "How the CC baseline changes in trolley relative to firework/parade.",
-            "C(case_code_position_1, Treatment(reference='CC'))[T.CH]:C(story_condition, Treatment(reference='parade'))[T.trolley]": "How the CH - CC contrast changes in trolley relative to firework/parade.",
-            "C(case_code_position_1, Treatment(reference='CC'))[T.DIV]:C(story_condition, Treatment(reference='parade'))[T.trolley]": "How the DIV - CC contrast changes in trolley relative to firework/parade.",
+            "Intercept": "Predicted mean for CC in the firework story family.",
+            "C(case_code_position_1, Treatment(reference='CC'))[T.CH]": "CH - CC in the firework story family.",
+            "C(case_code_position_1, Treatment(reference='CC'))[T.DIV]": "DIV - CC in the firework story family.",
+            "C(story_condition, Treatment(reference='firework'))[T.trolley]": "How the CC baseline changes in trolley relative to firework.",
+            "C(case_code_position_1, Treatment(reference='CC'))[T.CH]:C(story_condition, Treatment(reference='firework'))[T.trolley]": "How the CH - CC contrast changes in trolley relative to firework.",
+            "C(case_code_position_1, Treatment(reference='CC'))[T.DIV]:C(story_condition, Treatment(reference='firework'))[T.trolley]": "How the DIV - CC contrast changes in trolley relative to firework.",
         }
 
         output_rows.extend(
-            _extract_model_coefficient_rows(
+            _extract_model_coefficient_rows_from_fitted_results(
                 fitted_model_result=fitted_model_result,
                 model_name="first_vignette_condition_story_model",
                 model_variant="primary_hc3_ols",
@@ -2751,13 +2850,13 @@ def compute_first_vignette_clark_blame_integrated_models(
             pooled_grid_group_a = pd.DataFrame(
                 {
                     "case_code_position_1": [contrast_group_a_value, contrast_group_a_value],
-                    "story_condition": ["parade", "trolley"],
+                    "story_condition": ["firework", "trolley"],
                 }
             )
             pooled_grid_group_b = pd.DataFrame(
                 {
                     "case_code_position_1": [contrast_group_b_value, contrast_group_b_value],
-                    "story_condition": ["parade", "trolley"],
+                    "story_condition": ["firework", "trolley"],
                 }
             )
 
@@ -2781,7 +2880,7 @@ def compute_first_vignette_clark_blame_integrated_models(
                 )
             )
 
-            for story_condition_value in ["parade", "trolley"]:
+            for story_condition_value in ["firework", "trolley"]:
                 story_grid_group_a = pd.DataFrame(
                     {
                         "case_code_position_1": [contrast_group_a_value],
@@ -2854,7 +2953,7 @@ def compute_first_vignette_clark_blame_integrated_models(
                     "n_model_rows": n_model_rows,
                     "n_unique_participants": n_unique_participants,
                     "formula_string": model_formula_string,
-                    "analysis_meaning": "Omnibus test of whether the condition contrasts differ across the firework/parade and trolley story families.",
+                    "analysis_meaning": "Omnibus test of whether the condition contrasts differ across the firework and trolley story families.",
                     "likely_manuscript_use": "Supplement or story-robustness paragraph",
                 }
             )
@@ -2923,8 +3022,8 @@ def compute_within_subject_clark_blame_integrated_models(
               condition × story + vignette_position
           because that is the model from which the pooled and story-specific contrasts are easiest to read.
         • A secondary position-sensitivity model is also fit:
-              condition × vignette_position + story
-          to test whether the condition pattern changes across absolute vignette position.
+              condition × vignette_position + story to test whether the 
+              condition pattern changes across absolute vignette position.
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
@@ -3007,7 +3106,7 @@ def compute_within_subject_clark_blame_integrated_models(
 
         analysis_dataframe_long["story_condition"] = pd.Categorical(
             analysis_dataframe_long["story_condition"],
-            categories=["parade", "trolley"],
+            categories=["firework", "trolley"],
             ordered=True,
         )
         analysis_dataframe_long["vignette_condition"] = pd.Categorical(
@@ -3024,7 +3123,7 @@ def compute_within_subject_clark_blame_integrated_models(
         primary_formula_string = (
             "clark_rating_value ~ "
             "C(vignette_condition, Treatment(reference='CC')) * "
-            "C(story_condition, Treatment(reference='parade')) + "
+            "C(story_condition, Treatment(reference='firework')) + "
             "C(vignette_position, Treatment(reference=1))"
         )
 
@@ -3040,7 +3139,7 @@ def compute_within_subject_clark_blame_integrated_models(
             "clark_rating_value ~ "
             "C(vignette_condition, Treatment(reference='CC')) * "
             "C(vignette_position, Treatment(reference=1)) + "
-            "C(story_condition, Treatment(reference='parade'))"
+            "C(story_condition, Treatment(reference='firework'))"
         )
 
         fitted_position_sensitivity_model_result = smf.gee(
@@ -3094,18 +3193,18 @@ def compute_within_subject_clark_blame_integrated_models(
 
         "Primary-model coefficient rows"
         primary_coefficient_meaning_dictionary = {
-            "Intercept": "Predicted mean for CC when it appears first in the firework/parade story family.",
-            "C(vignette_condition, Treatment(reference='CC'))[T.CH]": "CH - CC when the vignette is first in the firework/parade story family.",
-            "C(vignette_condition, Treatment(reference='CC'))[T.DIV]": "DIV - CC when the vignette is first in the firework/parade story family.",
-            "C(story_condition, Treatment(reference='parade'))[T.trolley]": "How the CC baseline shifts in trolley relative to firework/parade.",
+            "Intercept": "Predicted mean for CC when it appears first in the firework story family.",
+            "C(vignette_condition, Treatment(reference='CC'))[T.CH]": "CH - CC when the vignette is first in the firework story family.",
+            "C(vignette_condition, Treatment(reference='CC'))[T.DIV]": "DIV - CC when the vignette is first in the firework story family.",
+            "C(story_condition, Treatment(reference='firework'))[T.trolley]": "How the CC baseline shifts in trolley relative to firework.",
             "C(vignette_position, Treatment(reference=1))[T.2]": "How appearing second changes the overall baseline relative to first.",
             "C(vignette_position, Treatment(reference=1))[T.3]": "How appearing third changes the overall baseline relative to first.",
-            "C(vignette_condition, Treatment(reference='CC'))[T.CH]:C(story_condition, Treatment(reference='parade'))[T.trolley]": "How the CH - CC contrast changes in trolley relative to firework/parade.",
-            "C(vignette_condition, Treatment(reference='CC'))[T.DIV]:C(story_condition, Treatment(reference='parade'))[T.trolley]": "How the DIV - CC contrast changes in trolley relative to firework/parade.",
+            "C(vignette_condition, Treatment(reference='CC'))[T.CH]:C(story_condition, Treatment(reference='firework'))[T.trolley]": "How the CH - CC contrast changes in trolley relative to firework.",
+            "C(vignette_condition, Treatment(reference='CC'))[T.DIV]:C(story_condition, Treatment(reference='firework'))[T.trolley]": "How the DIV - CC contrast changes in trolley relative to firework.",
         }
 
         output_rows.extend(
-            _extract_model_coefficient_rows(
+            _extract_model_coefficient_rows_from_fitted_results(
                 fitted_model_result=fitted_primary_model_result,
                 model_name="within_subject_condition_position_model",
                 model_variant="primary_gee_condition_story_plus_position",
@@ -3132,7 +3231,7 @@ def compute_within_subject_clark_blame_integrated_models(
                         "story_condition": story_condition_value,
                         "vignette_position": vignette_position_value,
                     }
-                    for story_condition_value in ["parade", "trolley"]
+                    for story_condition_value in ["firework", "trolley"]
                     for vignette_position_value in [1, 2, 3]
                 ]
             )
@@ -3143,7 +3242,7 @@ def compute_within_subject_clark_blame_integrated_models(
                         "story_condition": story_condition_value,
                         "vignette_position": vignette_position_value,
                     }
-                    for story_condition_value in ["parade", "trolley"]
+                    for story_condition_value in ["firework", "trolley"]
                     for vignette_position_value in [1, 2, 3]
                 ]
             )
@@ -3168,7 +3267,7 @@ def compute_within_subject_clark_blame_integrated_models(
                 )
             )
 
-            for story_condition_value in ["parade", "trolley"]:
+            for story_condition_value in ["firework", "trolley"]:
                 story_grid_group_a = pd.DataFrame(
                     [
                         {
@@ -3465,7 +3564,9 @@ def fit_within_subject_condition_position_model(
 "=========================================================================================="
 
 def _normalize_story_condition_input(story_condition: str | Any = None) -> str | None:
-    """Normalizes story-condition filters to the canonical values used in the cleaned dataframe."""
+    """
+    Normalizes story-condition filters to the canonical values used in the cleaned dataframe.
+    """
 
     if story_condition is None:
         return None
@@ -3482,17 +3583,18 @@ def _normalize_story_condition_input(story_condition: str | Any = None) -> str |
         "firework_show",
         "parade",
     }:
-        # NOTE: The cleaned dataframe currently uses "parade" for the fireworks-style story family.
-        return "parade"
+        return "firework"
 
     raise ValueError(
-        "Unrecognized story_condition. Expected one of: None (pooled), 'trolley', or 'fireworks/parade'. "
+        "Unrecognized story_condition. Expected one of: None (pooled), 'trolley', or 'firework'. "
         f"Got: {story_condition!r}"
     )
 
 
 def _normalize_load_condition_input(cognitive_load: str | Any = None) -> str | None:
-    """Normalizes cognitive-load filters to the canonical values used in the cleaned dataframe."""
+    """
+    Normalizes cognitive-load filters to the canonical values used in the cleaned dataframe.
+    """
 
     if cognitive_load is None:
         return None
@@ -3512,7 +3614,9 @@ def _normalize_load_condition_input(cognitive_load: str | Any = None) -> str | N
 
 
 def _normalize_subjects_input(subjects: str | Any = None) -> str:
-    """Normalizes the subjects-display option for plotting."""
+    """
+    Normalizes the subjects-display option for plotting.
+    """
 
     if subjects is None:
         return "both"
@@ -3532,7 +3636,9 @@ def _normalize_subjects_input(subjects: str | Any = None) -> str:
 
 
 def _normalize_dependent_variable_input(dependent_variable: str | Any = "blame") -> tuple[str, str, tuple[float, float] | None]:
-    """Normalizes a DV string to: (column_suffix, display_label, bounded_y_range_or_None)."""
+    """
+    Normalizes a DV string to: (column_suffix, display_label, bounded_y_range_or_None).
+    """
 
     dv_normalized = str(dependent_variable).strip().lower()
     if dv_normalized in {"blame", "blameworthiness"}:
@@ -3540,7 +3646,7 @@ def _normalize_dependent_variable_input(dependent_variable: str | Any = "blame")
     if dv_normalized in {"wrong", "wrongness"}:
         return "wrong", "Wrongness", [0.8, 9.2]
     if dv_normalized in {"punish", "punishment", "years", "prison"}:
-        # Punishment is not bounded in the same way; we compute a range later.
+        "Punishment is not bounded in the same way; I compute a range later."
         return "punish", "Punishment (years)", None
 
     raise ValueError(
@@ -3550,7 +3656,9 @@ def _normalize_dependent_variable_input(dependent_variable: str | Any = "blame")
 
 
 def _hsla_color(hue: int, saturation_percent: int = 100, lightness_percent: int = 50, alpha: float = 0.9) -> str:
-    """Creates an hsla() color string compatible with Plotly."""
+    """
+    Creates an hsla() color string compatible with Plotly.
+    """
 
     return f"hsla({hue}, {saturation_percent}%, {lightness_percent}%, {alpha})"
 
@@ -3582,8 +3690,6 @@ def _normalize_condition_subset_input(conditions: Sequence[str] | str | Any | No
         • ValueError
             - If one or more condition labels cannot be recognized.
     """
-    import re
-
     if conditions is None:
         return ["CC", "CH", "DIV"]
 
@@ -3825,12 +3931,8 @@ def _format_p_value_for_display(p_value: float | int | None) -> str:
     return formatted_string
 
 
-def _get_filtered_plotting_dataframe(
-    general_settings: GeneralSettings,
-    story_condition: str | Any = None,
-    cognitive_load: str | Any = None,
-    only_included_participants: bool = True,
-) -> pd.DataFrame:
+def _get_filtered_plotting_dataframe(general_settings: GeneralSettings, story_condition: str | Any = None, 
+                                     cognitive_load: str | Any = None, only_included_participants: bool = True) -> pd.DataFrame:
     """
     Load the cleaned dataframe and apply the standard plotting filters.
 
@@ -3839,7 +3941,7 @@ def _get_filtered_plotting_dataframe(
             - Bundle of settings, including file paths and names.
         • story_condition: str | Any
             - If None, pool story families.
-            - If 'fireworks'/'parade' or 'trolley', filter to that story condition.
+            - If 'firework' or 'trolley', filter to that story condition.
         • cognitive_load: str | Any
             - If None, pool load conditions.
             - If 'high' or 'low', filter to that load condition.
@@ -3935,7 +4037,7 @@ def plot_ratings_by_vignette_condition(
     dv: str | Any = "blame",
     figure_type: str | Any = None,
     subjects: str | Any = None,
-    include_proximate_agent: bool = False,
+    include_proximate_agent: bool = True,
     story_condition: str | Any = None,
     cognitive_load: str | Any = None,
     only_included_participants: bool = True,
@@ -3964,7 +4066,7 @@ def plot_ratings_by_vignette_condition(
               panel as additional categories.
         • story_condition: str | Any
             - If None, pool stories.
-            - If 'fireworks'/'parade' or 'trolley', filter to that story condition.
+            - If 'firework' or 'trolley', filter to that story condition.
         • cognitive_load: str | Any
             - If None, pool cognitive load.
             - If 'high' or 'low', filter to that load condition.
@@ -4011,9 +4113,9 @@ def plot_ratings_by_vignette_condition(
             analysis_dataframe["load_condition"] == cognitive_load_normalized
         ].copy()
 
-    # ------------------------------
-    # Long-form dataframes
-    # ------------------------------
+    "------------------------------"
+    "---- Long-form dataframes ----"
+    "------------------------------"
 
     explicit_box_width = 0.46
 
@@ -4233,9 +4335,9 @@ def plot_ratings_by_vignette_condition(
             row=current_row,
         )
 
-    # ------------------------------
-    # Toggle visibility
-    # ------------------------------
+    "------------------------------"
+    "------ Toggle visibility -----"
+    "------------------------------"
 
     if include_toggle_dropdown:
         box_visible_mask = [trace_type == "box" for trace_type in trace_type_labels]
@@ -4244,9 +4346,9 @@ def plot_ratings_by_vignette_condition(
         for trace, visible in zip(fig.data, visible_mask_to_apply):
             trace.visible = visible
 
-    # ------------------------------
-    # Mean-difference brackets
-    # ------------------------------
+    "------------------------------"
+    "-- Mean-difference brackets --"
+    "------------------------------"
 
     def add_mean_difference_brackets(
         panel_long_dataframe: pd.DataFrame,
@@ -4312,7 +4414,7 @@ def plot_ratings_by_vignette_condition(
         second_gap_midpoint_x = (ch_right_edge_x + div_left_edge_x) / 2
 
         new_shapes = [
-            # CC mean line: from right edge of CC box to left edge of DIV box
+            # "CC mean line: from right edge of CC box to left edge of DIV box"
             dict(
                 type="line",
                 xref=xaxis_ref,
@@ -4324,7 +4426,7 @@ def plot_ratings_by_vignette_condition(
                 line=dict(color="hsla(0, 0%, 0%, 0.65)", width=3.5, dash="dash"),
                 layer="below",
             ),
-            # CH mean line: from right edge of CC box to left edge of CH box
+            # "CH mean line: from right edge of CC box to left edge of CH box"
             dict(
                 type="line",
                 xref=xaxis_ref,
@@ -4336,7 +4438,7 @@ def plot_ratings_by_vignette_condition(
                 line=dict(color="hsla(0, 0%, 0%, 0.65)", width=3.5, dash="dash"),
                 layer="below",
             ),
-            # DIV mean line: from right edge of CH box to left edge of DIV box
+            # "DIV mean line: from right edge of CH box to left edge of DIV box"
             dict(
                 type="line",
                 xref=xaxis_ref,
@@ -4500,9 +4602,9 @@ def plot_ratings_by_vignette_condition(
                 yaxis_ref=yaxis_ref_within,
             )
 
-    # ------------------------------
-    # Layout and axes
-    # ------------------------------
+    "------------------------------"
+    "------- Layout and axes ------"
+    "------------------------------"
 
     title_prefix = {
         "blame": "Blame Ratings",
@@ -4511,7 +4613,7 @@ def plot_ratings_by_vignette_condition(
     }[dv_suffix]
 
     fig_title = f"{title_prefix} by Vignette Condition"
-    if story_condition == "fireworks":
+    if story_condition == "firework":
         fig_title += " - Firework Story"
     elif story_condition == "trolley":
         fig_title += " - Trolley Story"
@@ -4625,1005 +4727,15 @@ def plot_ratings_by_vignette_condition(
 
     fig.update_layout(title_x=0.5, title_xanchor="center", title_font_size=44, margin=margins)
 
-    # ------------------------------
-    # Export
-    # ------------------------------
+    "------------------------------"
+    "----------- Export -----------"
+    "------------------------------"
 
     if export_html:
         story_tag = "pooled" if story_condition_normalized is None else story_condition_normalized
         load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
         proximate_tag = "with_proximate" if include_proximate_agent else "distal_only"
-        file_name = f"ratings_{dv_suffix}_{subjects_setting}_{story_tag}_{load_tag}_{proximate_tag}"
-        _export_plotly_figure_html(
-            fig=fig,
-            general_settings=general_settings,
-            file_name=file_name
-        )
-
-    return fig
-
-
-def plot_within_subject_pairwise_comparison_matrix(
-    general_settings: GeneralSettings,
-    dv: str | Any = "blame",
-    include_proximate_agent: bool = True,
-    story_condition: str | Any = None,
-    cognitive_load: str | Any = None,
-    only_included_participants: bool = True,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Build a compact upper-triangular within-subject comparison matrix.
-
-    Each non-empty cell reports the paired comparison corresponding to:
-        column minus row
-
-    and includes:
-        • mean difference
-        • Cohen's dz
-        • p-value from a paired t-test
-
-    Arguments:
-        • dv: str | Any
-            - Which dependent variable to use. Supported: 'blame', 'wrong', 'punishment'.
-        • include_proximate_agent: bool
-            - If True, include CC Proximate and CH Proximate in addition to the three distal categories.
-        • story_condition: str | Any
-            - If None, pool stories.
-            - If 'fireworks'/'parade' or 'trolley', filter to that story condition.
-        • cognitive_load: str | Any
-            - If None, pool load conditions.
-            - If 'high' or 'low', filter to that load condition.
-        • only_included_participants: bool
-            - If True, restrict to participants who passed all comprehension checks.
-
-    Returns:
-        • tuple[pd.DataFrame, pd.DataFrame]
-            - pairwise_long_dataframe:
-                tidy row-per-comparison statistics
-            - formatted_matrix_dataframe:
-                upper-triangular matrix of formatted cell strings
-    """
-    dv_suffix, _, _ = _normalize_dependent_variable_input(dv)
-
-    analysis_dataframe = _get_filtered_plotting_dataframe(
-        general_settings=general_settings,
-        story_condition=story_condition,
-        cognitive_load=cognitive_load,
-        only_included_participants=only_included_participants,
-    )
-
-    if dv_suffix == "blame":
-        ordered_category_metadata = [
-            ("CC Distal", "clark_blame_cc"),
-            ("CH Distal", "clark_blame_ch"),
-            ("DIV Distal", "clark_blame_div"),
-        ]
-        if include_proximate_agent:
-            ordered_category_metadata += [
-                ("CC Proximate", "proximate_blame_cc"),
-                ("CH Proximate", "proximate_blame_ch"),
-            ]
-    elif dv_suffix == "wrong":
-        ordered_category_metadata = [
-            ("CC Distal", "clark_wrong_cc"),
-            ("CH Distal", "clark_wrong_ch"),
-            ("DIV Distal", "clark_wrong_div"),
-        ]
-        if include_proximate_agent:
-            ordered_category_metadata += [
-                ("CC Proximate", "proximate_wrong_cc"),
-                ("CH Proximate", "proximate_wrong_ch"),
-            ]
-    else:
-        ordered_category_metadata = [
-            ("CC Distal", "clark_punish_cc"),
-            ("CH Distal", "clark_punish_ch"),
-            ("DIV Distal", "clark_punish_div"),
-        ]
-        if include_proximate_agent:
-            ordered_category_metadata += [
-                ("CC Proximate", "proximate_punish_cc"),
-                ("CH Proximate", "proximate_punish_ch"),
-            ]
-
-    missing_required_columns = [
-        column_name
-        for _, column_name in ordered_category_metadata
-        if column_name not in analysis_dataframe.columns
-    ]
-    if missing_required_columns:
-        raise KeyError(
-            "Missing one or more expected rating columns for the pairwise comparison matrix: "
-            + ", ".join(repr(column_name) for column_name in missing_required_columns)
-        )
-
-    category_summary_rows: list[dict[str, Any]] = []
-    for category_label, column_name in ordered_category_metadata:
-        values = pd.to_numeric(analysis_dataframe[column_name], errors="coerce").dropna()
-        category_summary_rows.append(
-            {
-                "category_label": category_label,
-                "column_name": column_name,
-                "n": int(values.shape[0]),
-                "mean": float(values.mean()) if values.shape[0] > 0 else np.nan,
-                "std": float(values.std(ddof=1)) if values.shape[0] > 1 else np.nan,
-            }
-        )
-
-    category_summary_dataframe = pd.DataFrame(category_summary_rows)
-
-    pairwise_rows: list[dict[str, Any]] = []
-    formatted_matrix_dataframe = pd.DataFrame(
-        "",
-        index=[category_label for category_label, _ in ordered_category_metadata],
-        columns=[category_label for category_label, _ in ordered_category_metadata],
-        dtype=object,
-    )
-
-    for row_index, (row_label, row_column_name) in enumerate(ordered_category_metadata):
-        for column_index, (column_label, column_column_name) in enumerate(ordered_category_metadata):
-            if row_index == column_index:
-                formatted_matrix_dataframe.loc[row_label, column_label] = "—"
-                continue
-
-            if column_index < row_index:
-                formatted_matrix_dataframe.loc[row_label, column_label] = ""
-                continue
-
-            paired_dataframe = analysis_dataframe[[row_column_name, column_column_name]].copy()
-            paired_dataframe[row_column_name] = pd.to_numeric(paired_dataframe[row_column_name], errors="coerce")
-            paired_dataframe[column_column_name] = pd.to_numeric(paired_dataframe[column_column_name], errors="coerce")
-            paired_dataframe = paired_dataframe.dropna()
-
-            paired_difference_values = (
-                paired_dataframe[column_column_name] - paired_dataframe[row_column_name]
-            ).to_numpy(dtype=float)
-
-            n_pairs = int(paired_difference_values.shape[0])
-            mean_difference = float(np.mean(paired_difference_values)) if n_pairs > 0 else np.nan
-
-            if n_pairs > 1:
-                t_statistic, p_value = stats.ttest_1samp(paired_difference_values, popmean=0.0)
-                standard_deviation_of_difference = float(np.std(paired_difference_values, ddof=1))
-                if standard_deviation_of_difference == 0:
-                    cohen_dz = 0.0 if mean_difference == 0 else np.nan
-                else:
-                    cohen_dz = mean_difference / standard_deviation_of_difference
-            else:
-                t_statistic = np.nan
-                p_value = np.nan
-                cohen_dz = np.nan
-
-            pairwise_rows.append(
-                {
-                    "row_label": row_label,
-                    "column_label": column_label,
-                    "row_column_name": row_column_name,
-                    "column_column_name": column_column_name,
-                    "n_pairs": n_pairs,
-                    "mean_difference_column_minus_row": mean_difference,
-                    "t_statistic": float(t_statistic) if not pd.isna(t_statistic) else np.nan,
-                    "p_value": float(p_value) if not pd.isna(p_value) else np.nan,
-                    "cohen_dz": float(cohen_dz) if not pd.isna(cohen_dz) else np.nan,
-                }
-            )
-
-            formatted_matrix_dataframe.loc[row_label, column_label] = (
-                f"Δ={mean_difference:+.2f}<br>"
-                f"dz={cohen_dz:+.2f}<br>"
-                f"p={_format_p_value_for_display(p_value)}"
-            )
-
-    pairwise_long_dataframe = pd.DataFrame(pairwise_rows)
-
-    formatted_header_labels = []
-    for _, category_summary_row in category_summary_dataframe.iterrows():
-        formatted_header_labels.append(
-            f"{category_summary_row['category_label']}<br>"
-            f"M={category_summary_row['mean']:.2f}, "
-            f"SD={category_summary_row['std']:.2f}"
-        )
-
-    formatted_matrix_dataframe.index = formatted_header_labels
-    formatted_matrix_dataframe.columns = formatted_header_labels
-
-    return pairwise_long_dataframe, formatted_matrix_dataframe
-
-
-def plot_within_subject_pairwise_comparison_table(
-    general_settings: GeneralSettings,
-    dv: str | Any = "blame",
-    include_proximate_agent: bool = True,
-    story_condition: str | Any = None,
-    cognitive_load: str | Any = None,
-    only_included_participants: bool = True,
-    export_html: bool = True,
-    export_csv: bool = True,
-    base_hue: int = 210,
-) -> tuple["object", pd.DataFrame]:
-    """
-    Render a Plotly table summarizing the within-subject pairwise comparisons among the key rating series.
-
-    Cell entries report:
-        • mean difference (column - row)
-        • Cohen's dz
-        • p-value from a paired t-test
-
-    Arguments:
-        • dv: str | Any
-            - Which dependent variable to use. Supported: 'blame', 'wrong', 'punishment'.
-        • include_proximate_agent: bool
-            - If True, include proximate ratings (CC Proximate, CH Proximate).
-        • story_condition: str | Any
-            - If None, pool stories.
-            - If 'fireworks'/'parade' or 'trolley', filter to that story condition.
-        • cognitive_load: str | Any
-            - If None, pool load conditions.
-            - If 'high' or 'low', filter to that load condition.
-        • only_included_participants: bool
-            - If True, restrict to participants who passed all comprehension checks.
-        • export_html: bool
-            - If True, export the Plotly figure to an .html file.
-        • export_csv: bool
-            - If True, export the long statistics and formatted matrix as CSV files.
-        • base_hue: int
-            - Base hue for hsla table styling.
-
-    Returns:
-        • tuple[plotly.graph_objects.Figure, pd.DataFrame]
-            - Plotly table figure
-            - long-format pairwise statistics dataframe
-    """
-    dv_suffix, dv_label, _ = _normalize_dependent_variable_input(dv)
-
-    pairwise_long_dataframe, formatted_matrix_dataframe = plot_within_subject_pairwise_comparison_matrix(
-        dv=dv,
-        include_proximate_agent=include_proximate_agent,
-        story_condition=story_condition,
-        cognitive_load=cognitive_load,
-        only_included_participants=only_included_participants,
-        general_settings=general_settings,
-    )
-
-    header_values = ["Row / Column<br>(cell = column - row)"] + list(formatted_matrix_dataframe.columns)
-    cell_values = [list(formatted_matrix_dataframe.index)] + [
-        formatted_matrix_dataframe[column_name].tolist()
-        for column_name in formatted_matrix_dataframe.columns
-    ]
-
-    header_fill_color = _hsla_color(hue=base_hue, saturation_percent=70, lightness_percent=90, alpha=1.0)
-    cells_fill_color = _hsla_color(hue=base_hue + 20, saturation_percent=25, lightness_percent=98, alpha=1.0)
-    line_color = _hsla_color(hue=0, saturation_percent=0, lightness_percent=60, alpha=0.85)
-
-    n_columns = len(header_values)
-    first_column_width = 260
-    other_column_width = 170
-    column_widths = [first_column_width] + [other_column_width] * (n_columns - 1)
-
-    fig = go.Figure(
-        data=[
-            go.Table(
-                columnwidth=column_widths,
-                header=dict(
-                    values=header_values,
-                    align="center",
-                    fill_color=header_fill_color,
-                    font=dict(family="Calibri", size=18, color="black"),
-                    line=dict(color=line_color, width=1.5),
-                    height=44,
-                ),
-                cells=dict(
-                    values=cell_values,
-                    align="center",
-                    fill_color=cells_fill_color,
-                    font=dict(family="Calibri", size=16, color="black"),
-                    line=dict(color=line_color, width=1.0),
-                    height=58,
-                ),
-            )
-        ]
-    )
-
-    figure_title = f"Within-Subject Pairwise Comparison Matrix ({dv_label})"
-    fig.update_layout(**figure_layout, title=figure_title)
-    fig.update_layout(
-        title_x=0.5,
-        title_xanchor="center",
-        title_font_size=36,
-        margin=dict(l=40, r=40, t=90, b=40),
-    )
-
-    fig.add_annotation(
-        x=0.5,
-        y=1.02,
-        xref="paper",
-        yref="paper",
-        showarrow=False,
-        xanchor="center",
-        yanchor="bottom",
-        font=dict(size=18, family="Calibri", color="black"),
-        bgcolor="hsla(0, 0%, 100%, 0.0)",
-        text="Each non-empty cell reports column - row: mean difference (Δ), Cohen's dz, and paired-test p-value.",
-    )
-
-    story_condition_normalized = _normalize_story_condition_input(story_condition)
-    cognitive_load_normalized = _normalize_load_condition_input(cognitive_load)
-    story_tag = "pooled" if story_condition_normalized is None else story_condition_normalized
-    load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
-    proximate_tag = "with_proximate" if include_proximate_agent else "distal_only"
-
-    file_name_figure = f"pairwise_matrix_{dv_suffix}_{story_tag}_{load_tag}_{proximate_tag}"
-    file_path_tables = general_settings["filing"]["file_paths"]["tables"]
-
-    if export_html:
-        _export_plotly_figure_html(
-            fig=fig,
-            general_settings=general_settings,
-            file_name=file_name_figure
-        )
-
-    if export_csv:
-        pairwise_long_dataframe.to_csv(
-            file_path_tables / f"{file_name_figure}_long.csv",
-            index=False,
-        )
-        formatted_matrix_dataframe.to_csv(
-            file_path_tables / f"{file_name_figure}_matrix.csv",
-            index=True,
-        )
-
-    return fig, pairwise_long_dataframe
-
-
-def plot_trial_order_effects(
-    general_settings: GeneralSettings,
-    dv: str | Any = "blame",
-    conditions: Sequence[str] | str | Any | None = None,
-    average_late_positions: bool = False,
-    story_condition: str | Any = None,
-    cognitive_load: str | Any = None,
-    only_included_participants: bool = True,
-    export_html: bool = True,
-    base_hue: int = 220,
-    confidence_level: float = 0.95,
-    order_analysis_mode: str | Any = None,
-) -> "object":
-    """
-    Create a line chart showing how mean distal-agent ratings vary by vignette position.
-
-    Arguments:
-        • dv: str | Any
-            - Which dependent variable to plot. Supported: 'blame', 'wrong', 'punishment'.
-        • conditions: Sequence[str] | str | Any | None
-            - Which vignette conditions to plot.
-            - Defaults to all three conditions: CC, CH, DIV.
-            - Can also be a subset such as ("CC", "CH") or "CC,CH".
-        • average_late_positions: bool
-            - If False, show separate points for 1st, 2nd, and 3rd position.
-            - If True, collapse 2nd and 3rd into a single "Later (2–3)" group.
-        • story_condition: str | Any
-            - If None, pool stories.
-            - If 'fireworks'/'parade' or 'trolley', filter to that story condition.
-        • cognitive_load: str | Any
-            - If None, pool load.
-            - If 'high' or 'low', filter to that load condition.
-        • only_included_participants: bool
-            - If True, restrict to participants who passed all comprehension checks.
-        • export_html: bool
-            - If True, export the Plotly figure to an .html file.
-        • base_hue: int
-            - Starting hue for hsla colors. Subsequent conditions increment hue by +20.
-        • confidence_level: float
-            - Confidence level for error bars around the means.
-        • order_analysis_mode: str | Any
-            - If None (default), use the new pairwise CC-vs-CH relative-order analysis.
-            - Supported aliases:
-                "relative_cc_ch"
-                "pairwise"
-                "cc_ch"
-                "relative"
-            - If "legacy", "position", or "old", preserve the original analysis that plots
-              mean ratings by absolute vignette position (1st / 2nd / 3rd) across selected conditions.
-            - Note: `conditions` and `average_late_positions` only apply in the legacy mode.            
-
-    Returns:
-        • plotly.graph_objects.Figure
-    """
-    def compute_mean_and_confidence_interval(values: pd.Series) -> tuple[float, float, float, int]:
-        """
-        Compute the mean and a t-based confidence interval for one condition-position cell.
-
-        Arguments:
-            • values: pd.Series
-                - Numeric values for one cell.
-
-        Returns:
-            • tuple[float, float, float, int]
-                - mean_value
-                - ci_lower
-                - ci_upper
-                - n
-        """
-        numeric_values = pd.to_numeric(values, errors="coerce").dropna().to_numpy(dtype=float)
-        n_values = int(numeric_values.shape[0])
-
-        if n_values == 0:
-            return np.nan, np.nan, np.nan, 0
-
-        mean_value = float(np.mean(numeric_values))
-
-        if n_values == 1:
-            return mean_value, mean_value, mean_value, 1
-
-        standard_deviation = float(np.std(numeric_values, ddof=1))
-        standard_error = standard_deviation / np.sqrt(n_values)
-
-        alpha_value = 1 - confidence_level
-        t_critical_value = stats.t.ppf(1 - alpha_value / 2, df=n_values - 1)
-
-        ci_lower = float(mean_value - t_critical_value * standard_error)
-        ci_upper = float(mean_value + t_critical_value * standard_error)
-
-        return mean_value, ci_lower, ci_upper, n_values
-
-    dv_suffix, dv_label, bounded_y_range = _normalize_dependent_variable_input(dv)
-
-    order_analysis_mode_normalized = (
-        "relative_cc_ch"
-        if order_analysis_mode is None
-        else str(order_analysis_mode).strip().lower()
-    )
-
-    if order_analysis_mode_normalized in {"relative_cc_ch", "pairwise", "cc_ch", "relative", "new"}:
-        analysis_dataframe = _get_filtered_plotting_dataframe(
-            general_settings=general_settings,
-            story_condition=story_condition,
-            cognitive_load=cognitive_load,
-            only_included_participants=only_included_participants,
-        )
-
-        cc_value_column_name = f"clark_{dv_suffix}_cc"
-        ch_value_column_name = f"clark_{dv_suffix}_ch"
-
-        required_columns = [
-            "response_id",
-            "case_code_position_1",
-            "case_code_position_2",
-            "case_code_position_3",
-            cc_value_column_name,
-            ch_value_column_name,
-        ]
-        missing_required_columns = [
-            column_name for column_name in required_columns if column_name not in analysis_dataframe.columns
-        ]
-        if missing_required_columns:
-            raise KeyError(
-                "Missing one or more expected columns required for the relative-order analysis: "
-                + ", ".join(repr(column_name) for column_name in missing_required_columns)
-            )
-
-        pairwise_order_dataframe = analysis_dataframe[
-            [
-                "response_id",
-                "case_code_position_1",
-                "case_code_position_2",
-                "case_code_position_3",
-                cc_value_column_name,
-                ch_value_column_name,
-            ]
-        ].copy()
-
-        pairwise_order_dataframe["cc_position"] = np.select(
-            condlist=[
-                pairwise_order_dataframe["case_code_position_1"] == "CC",
-                pairwise_order_dataframe["case_code_position_2"] == "CC",
-                pairwise_order_dataframe["case_code_position_3"] == "CC",
-            ],
-            choicelist=[1, 2, 3],
-            default=np.nan,
-        )
-
-        pairwise_order_dataframe["ch_position"] = np.select(
-            condlist=[
-                pairwise_order_dataframe["case_code_position_1"] == "CH",
-                pairwise_order_dataframe["case_code_position_2"] == "CH",
-                pairwise_order_dataframe["case_code_position_3"] == "CH",
-            ],
-            choicelist=[1, 2, 3],
-            default=np.nan,
-        )
-
-        pairwise_order_dataframe["cc_rating"] = pd.to_numeric(
-            pairwise_order_dataframe[cc_value_column_name],
-            errors="coerce",
-        )
-        pairwise_order_dataframe["ch_rating"] = pd.to_numeric(
-            pairwise_order_dataframe[ch_value_column_name],
-            errors="coerce",
-        )
-
-        pairwise_order_dataframe = pairwise_order_dataframe.dropna(
-            subset=["cc_position", "ch_position", "cc_rating", "ch_rating"]
-        ).copy()
-
-        if pairwise_order_dataframe.shape[0] == 0:
-            raise ValueError(
-                "No valid CC/CH paired observations remain after filtering for the relative-order analysis."
-            )
-
-        pairwise_order_dataframe["relative_order_group"] = np.where(
-            pairwise_order_dataframe["cc_position"] < pairwise_order_dataframe["ch_position"],
-            "CC before CH",
-            "CH before CC",
-        )
-
-        cc_long_dataframe = pd.DataFrame(
-            {
-                "response_id": pairwise_order_dataframe["response_id"],
-                "condition_code": "CC",
-                "condition_label": "Choice-Choice",
-                "relative_position_label": np.where(
-                    pairwise_order_dataframe["cc_position"] < pairwise_order_dataframe["ch_position"],
-                    "Presented first",
-                    "Presented second",
-                ),
-                "relative_order_group": pairwise_order_dataframe["relative_order_group"],
-                "rating_value": pairwise_order_dataframe["cc_rating"],
-            }
-        )
-
-        ch_long_dataframe = pd.DataFrame(
-            {
-                "response_id": pairwise_order_dataframe["response_id"],
-                "condition_code": "CH",
-                "condition_label": "Choice-Chance",
-                "relative_position_label": np.where(
-                    pairwise_order_dataframe["ch_position"] < pairwise_order_dataframe["cc_position"],
-                    "Presented first",
-                    "Presented second",
-                ),
-                "relative_order_group": pairwise_order_dataframe["relative_order_group"],
-                "rating_value": pairwise_order_dataframe["ch_rating"],
-            }
-        )
-
-        relative_order_long_dataframe = pd.concat(
-            [cc_long_dataframe, ch_long_dataframe],
-            ignore_index=True,
-        )
-
-        ordered_relative_position_labels = ["Presented first", "Presented second"]
-        relative_position_to_x_value = {
-            "Presented first": 1.0,
-            "Presented second": 2.0,
-        }
-
-        summary_rows: list[dict[str, Any]] = []
-
-        for selected_condition_code, selected_condition_label in [
-            ("CC", "Choice-Choice"),
-            ("CH", "Choice-Chance"),
-        ]:
-            condition_subset = relative_order_long_dataframe.loc[
-                relative_order_long_dataframe["condition_code"] == selected_condition_code
-            ].copy()
-
-            for ordered_relative_position_label in ordered_relative_position_labels:
-                position_subset = condition_subset.loc[
-                    condition_subset["relative_position_label"] == ordered_relative_position_label,
-                    "rating_value",
-                ]
-
-                mean_value, ci_lower, ci_upper, n_values = compute_mean_and_confidence_interval(position_subset)
-
-                summary_rows.append(
-                    {
-                        "condition_code": selected_condition_code,
-                        "condition_label": selected_condition_label,
-                        "relative_position_label": ordered_relative_position_label,
-                        "position_x_value": relative_position_to_x_value[ordered_relative_position_label],
-                        "mean_value": mean_value,
-                        "ci_lower": ci_lower,
-                        "ci_upper": ci_upper,
-                        "error_plus": ci_upper - mean_value if not np.isnan(ci_upper) else np.nan,
-                        "error_minus": mean_value - ci_lower if not np.isnan(ci_lower) else np.nan,
-                        "n": n_values,
-                    }
-                )
-
-        summary_dataframe = pd.DataFrame(summary_rows)
-
-        fig = go.Figure()
-
-        plotted_condition_order = [
-            ("CC", "Choice-Choice"),
-            ("CH", "Choice-Chance"),
-        ]
-
-        for condition_index, (selected_condition_code, selected_condition_label) in enumerate(plotted_condition_order):
-            line_color = _hsla_color(hue=base_hue + 20 * condition_index, alpha=1.0)
-
-            condition_summary = (
-                summary_dataframe.loc[summary_dataframe["condition_code"] == selected_condition_code]
-                .set_index("relative_position_label")
-                .loc[ordered_relative_position_labels]
-                .reset_index()
-            )
-
-            fig.add_trace(
-                go.Scatter(
-                    x=condition_summary["position_x_value"],
-                    y=condition_summary["mean_value"],
-                    mode="lines+markers",
-                    name=selected_condition_label,
-                    line=dict(color=line_color, width=8),
-                    marker=dict(color=line_color, size=18),
-                    error_y=dict(
-                        type="data",
-                        symmetric=False,
-                        array=condition_summary["error_plus"],
-                        arrayminus=condition_summary["error_minus"],
-                        visible=True,
-                        color=line_color,
-                        thickness=4,
-                        width=6,
-                    ),
-                    customdata=np.stack(
-                        [
-                            condition_summary["relative_position_label"],
-                            condition_summary["n"],
-                            condition_summary["ci_lower"],
-                            condition_summary["ci_upper"],
-                        ],
-                        axis=1,
-                    ),
-                    hovertemplate=(
-                        "<b>%{fullData.name}</b><br>"
-                        "Relative order: %{customdata[0]}<br>"
-                        f"Mean {dv_label.lower()}: "
-                        "%{y:.2f}<br>"
-                        "95% CI: [%{customdata[2]:.2f}, %{customdata[3]:.2f}]<br>"
-                        "n: %{customdata[1]}<extra></extra>"
-                    ),
-                )
-            )
-
-        title_prefix = {
-            "blame": "Distal Blame",
-            "wrong": "Distal Wrongness",
-            "punish": "Distal Punishment",
-        }[dv_suffix]
-
-        fig.update_layout(**figure_layout, title=f"{title_prefix} by Relative CC-CH Order")
-        fig.update_layout(
-            title_x=0.5,
-            title_xanchor="center",
-            title_font_size=44,
-            margin=dict(l=160, r=160, t=100, b=100),
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=0.90,
-                xanchor="center",
-                x=0.5,
-                bgcolor="hsla(0, 0%, 100%, 0.0)",
-            ),
-        )
-
-        x_tick_values = [relative_position_to_x_value[position_label] for position_label in ordered_relative_position_labels]
-
-        fig.update_xaxes(
-            tickmode="array",
-            tickvals=x_tick_values,
-            ticktext=ordered_relative_position_labels,
-            title_text="Relative Order within the CC-CH Pair",
-            range=[min(x_tick_values) - 0.2, max(x_tick_values) + 0.2],
-            zeroline=False,
-            showline=False,
-            mirror=False,
-            tickwidth=0,
-            ticklen=0,
-            ticks="",
-        )
-
-        if bounded_y_range is None:
-            plotted_values = summary_dataframe["mean_value"].dropna().to_numpy(dtype=float)
-            bounded_y_range = [0.0, max(1.0, float(np.nanmax(plotted_values) * 1.10))] if plotted_values.shape[0] > 0 else [0.0, 1.0]
-
-        y_axis_title = {
-            "blame": "Mean Blameworthiness of Distal Agent",
-            "wrong": "Mean Wrongness of Distal Agent",
-            "punish": "Mean Punishment of Distal Agent (years)",
-        }[dv_suffix]
-
-        fig.update_yaxes(
-            title_text=y_axis_title,
-            range=list(bounded_y_range),
-            zeroline=False,
-            showline=False,
-            mirror=False,
-            tickwidth=0,
-            ticklen=0,
-            ticks="",
-        )
-
-        if dv_suffix in {"blame", "wrong"}:
-            fig.update_yaxes(
-                tickvals=[1, 2, 3, 4, 5, 6, 7, 8, 9],
-                ticktext=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-            )
-
-        if export_html:
-            story_condition_normalized = _normalize_story_condition_input(story_condition)
-            cognitive_load_normalized = _normalize_load_condition_input(cognitive_load)
-            story_tag = "pooled" if story_condition_normalized is None else story_condition_normalized
-            load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
-
-            file_name_figure = f"trial_order_relative_cc_ch_{dv_suffix}_{story_tag}_{load_tag}"
-            if export_html:
-                _export_plotly_figure_html(
-                    fig=fig,
-                    general_settings=general_settings,
-                    file_name=file_name_figure
-                )
-
-        return fig
-
-    selected_condition_codes = _normalize_condition_subset_input(conditions)
-
-    analysis_dataframe = _get_filtered_plotting_dataframe(
-        general_settings=general_settings,
-        story_condition=story_condition,
-        cognitive_load=cognitive_load,
-        only_included_participants=only_included_participants,
-    )
-
-    condition_code_to_value_column = {
-        "CC": f"clark_{dv_suffix}_cc",
-        "CH": f"clark_{dv_suffix}_ch",
-        "DIV": f"clark_{dv_suffix}_div",
-    }
-
-    condition_code_to_display_label = {
-        "CC": "Choice-Choice",
-        "CH": "Choice-Chance",
-        "DIV": "Division",
-    }
-
-    missing_required_columns = [
-        column_name
-        for column_name in [
-            "response_id",
-            "case_code_position_1",
-            "case_code_position_2",
-            "case_code_position_3",
-            *[condition_code_to_value_column[condition_code] for condition_code in selected_condition_codes],
-        ]
-        if column_name not in analysis_dataframe.columns
-    ]
-    if missing_required_columns:
-        raise KeyError(
-            "Missing one or more expected columns required for the trial-order figure: "
-            + ", ".join(repr(column_name) for column_name in missing_required_columns)
-        )
-
-    trial_order_rows: list[dict[str, Any]] = []
-
-    for selected_condition_code in selected_condition_codes:
-        value_column_name = condition_code_to_value_column[selected_condition_code]
-
-        temp_dataframe = analysis_dataframe[
-            [
-                "response_id",
-                "case_code_position_1",
-                "case_code_position_2",
-                "case_code_position_3",
-                value_column_name,
-            ]
-        ].copy()
-
-        temp_dataframe["position_numeric"] = np.select(
-            condlist=[
-                temp_dataframe["case_code_position_1"] == selected_condition_code,
-                temp_dataframe["case_code_position_2"] == selected_condition_code,
-                temp_dataframe["case_code_position_3"] == selected_condition_code,
-            ],
-            choicelist=[1, 2, 3],
-            default=np.nan,
-        )
-
-        temp_dataframe["rating_value"] = pd.to_numeric(temp_dataframe[value_column_name], errors="coerce")
-        temp_dataframe["condition_code"] = selected_condition_code
-        temp_dataframe["condition_label"] = condition_code_to_display_label[selected_condition_code]
-
-        trial_order_rows.extend(
-            temp_dataframe[
-                ["response_id", "condition_code", "condition_label", "position_numeric", "rating_value"]
-            ].dropna(subset=["position_numeric", "rating_value"]).to_dict("records")
-        )
-
-    trial_order_long_dataframe = pd.DataFrame(trial_order_rows)
-
-    if average_late_positions:
-        trial_order_long_dataframe["position_group_label"] = np.where(
-            trial_order_long_dataframe["position_numeric"] == 1,
-            "First",
-            "Later (2–3)",
-        )
-        ordered_position_labels = ["First", "Later (2–3)"]
-        position_label_to_x_value = {"First": 1.0, "Later (2–3)": 2.0}
-        x_axis_title = "Vignette Position Group"
-    else:
-        trial_order_long_dataframe["position_group_label"] = trial_order_long_dataframe["position_numeric"].map(
-            {
-                1.0: "1st",
-                2.0: "2nd",
-                3.0: "3rd",
-            }
-        )
-        ordered_position_labels = ["1st", "2nd", "3rd"]
-        position_label_to_x_value = {"1st": 1.0, "2nd": 2.0, "3rd": 3.0}
-        x_axis_title = "Vignette Position"
-
-    summary_rows: list[dict[str, Any]] = []
-
-    for selected_condition_code in selected_condition_codes:
-        selected_condition_label = condition_code_to_display_label[selected_condition_code]
-        condition_subset = trial_order_long_dataframe.loc[
-            trial_order_long_dataframe["condition_code"] == selected_condition_code
-        ].copy()
-
-        for ordered_position_label in ordered_position_labels:
-            position_subset = condition_subset.loc[
-                condition_subset["position_group_label"] == ordered_position_label,
-                "rating_value"
-            ]
-
-            mean_value, ci_lower, ci_upper, n_values = compute_mean_and_confidence_interval(position_subset)
-
-            summary_rows.append(
-                {
-                    "condition_code": selected_condition_code,
-                    "condition_label": selected_condition_label,
-                    "position_group_label": ordered_position_label,
-                    "position_x_value": position_label_to_x_value[ordered_position_label],
-                    "mean_value": mean_value,
-                    "ci_lower": ci_lower,
-                    "ci_upper": ci_upper,
-                    "error_plus": ci_upper - mean_value if not np.isnan(ci_upper) else np.nan,
-                    "error_minus": mean_value - ci_lower if not np.isnan(ci_lower) else np.nan,
-                    "n": n_values,
-                }
-            )
-
-    summary_dataframe = pd.DataFrame(summary_rows)
-    fig = go.Figure()
-
-    for condition_index, selected_condition_code in enumerate(selected_condition_codes):
-        condition_label = condition_code_to_display_label[selected_condition_code]
-        line_color = _hsla_color(hue=base_hue + 20 * condition_index, alpha=1.0)
-        error_color = _hsla_color(hue=base_hue + 20 * condition_index, alpha=8.0)
-
-        condition_summary = (
-            summary_dataframe.loc[summary_dataframe["condition_code"] == selected_condition_code]
-            .set_index("position_group_label")
-            .loc[ordered_position_labels]
-            .reset_index()
-        )
-
-        fig.add_trace(
-            go.Scatter(
-                x=condition_summary["position_x_value"],
-                y=condition_summary["mean_value"],
-                mode="lines+markers",
-                name=condition_label,
-                line=dict(color=line_color, width=8),
-                marker=dict(color=line_color, size=18),
-                error_y=dict(
-                    type="data",
-                    symmetric=False,
-                    array=condition_summary["error_plus"],
-                    arrayminus=condition_summary["error_minus"],
-                    visible=True,
-                    color=line_color,
-                    thickness=4,
-                    width=6,
-                ),
-                customdata=np.stack(
-                    [
-                        condition_summary["position_group_label"],
-                        condition_summary["n"],
-                        condition_summary["ci_lower"],
-                        condition_summary["ci_upper"],
-                    ],
-                    axis=1,
-                ),
-                hovertemplate=(
-                    "<b>%{fullData.name}</b><br>"
-                    "Position: %{customdata[0]}<br>"
-                    f"Mean {dv_label.lower()}: "
-                    "%{y:.2f}<br>"
-                    "95% CI: [%{customdata[2]:.2f}, %{customdata[3]:.2f}]<br>"
-                    "n: %{customdata[1]}<extra></extra>"
-                ),
-            )
-        )
-
-    title_prefix = {
-        "blame": "Distal Blame",
-        "wrong": "Distal Wrongness",
-        "punish": "Distal Punishment",
-    }[dv_suffix]
-
-    title_suffix = " by Vignette Position" if not average_late_positions else " by First vs. Later Vignette Position"
-    fig.update_layout(**figure_layout, title=f"{title_prefix}{title_suffix}")
-
-    fig.update_layout(
-        title_x=0.5,
-        title_xanchor="center",
-        title_font_size=44,
-        margin=dict(l=440, r=440, t=100, b=100),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom", y=0.935,
-            xanchor="center", x=0.5,
-            bgcolor="hsla(0, 0%, 100%, 0.0)",
-        ),
-    )
-
-    x_tick_values = [position_label_to_x_value[position_label] for position_label in ordered_position_labels]
-
-    fig.update_xaxes(
-        tickmode="array",
-        tickvals=x_tick_values,
-        ticktext=ordered_position_labels,
-        title_text=x_axis_title,
-        range=[min(x_tick_values) - 0.2, max(x_tick_values) + 0.2],
-        scaleanchor="y", scaleratio=6,
-        zeroline=False,
-        showline=False,
-        mirror=False,
-        tickwidth=0,
-        ticklen=0,
-        ticks="",
-    )
-
-    if bounded_y_range is None:
-        plotted_values = summary_dataframe["mean_value"].dropna().to_numpy(dtype=float)
-        bounded_y_range = [0.0, max(1.0, float(np.nanmax(plotted_values) * 1.10))] if plotted_values.shape[0] > 0 else [0.0, 1.0]
-
-    y_axis_title = {
-        "blame": "Mean Blameworthiness of Distal Agent",
-        "wrong": "Mean Wrongness of Distal Agent",
-        "punish": "Mean Punishment of Distal Agent (years)",
-    }[dv_suffix]
-
-    fig.update_yaxes(
-        title_text=y_axis_title,
-        range=list(bounded_y_range),
-        zeroline=False,
-        showline=False,
-        mirror=False,
-        tickwidth=0,
-        ticklen=0,
-        ticks="",
-    )
-
-    if dv_suffix in {"blame", "wrong"}:
-        fig.update_yaxes(
-            tickvals=[1, 2, 3, 4, 5, 6, 7, 8, 9],
-            ticktext=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-        )
-
-    if export_html:
-        story_condition_normalized = _normalize_story_condition_input(story_condition)
-        cognitive_load_normalized = _normalize_load_condition_input(cognitive_load)
-        story_tag = "pooled" if story_condition_normalized is None else story_condition_normalized
-        load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
-        positions_tag = "first_vs_later" if average_late_positions else "all_positions"
-        conditions_tag = "_".join(condition_code.lower() for condition_code in selected_condition_codes)
-
-        file_name_figure = f"trial_order_{dv_suffix}_{conditions_tag}_{story_tag}_{load_tag}_{positions_tag}"
+        file_name_figure = f"figure_3_ratings_{dv_suffix}_{subjects_setting}_{story_tag}_{load_tag}_{proximate_tag}"
         _export_plotly_figure_html(
             fig=fig,
             general_settings=general_settings,
@@ -5661,7 +4773,7 @@ def plot_participant_level_shielding_heatmap(
             - If True, annotate psychologically relevant regions of the heat map.
         • story_condition: str | Any
             - If None, pool stories.
-            - If 'fireworks'/'parade' or 'trolley', filter to that story condition.
+            - If 'firework' or 'trolley', filter to that story condition.
         • cognitive_load: str | Any
             - If None, pool load conditions.
             - If 'high' or 'low', filter to that load condition.
@@ -5856,7 +4968,7 @@ def plot_participant_level_shielding_heatmap(
     marginal_ticktext=['', '20', '40', '60', '80']
 
     if include_marginals:
-        # Top histogram
+        "Top histogram"
         fig.update_xaxes(
             row=1,
             col=1,
@@ -5888,7 +5000,7 @@ def plot_participant_level_shielding_heatmap(
             mirror=False,
         )
 
-        # Right histogram
+        "Right histogram"
         fig.update_xaxes(
             row=2,
             col=2,
@@ -5920,15 +5032,14 @@ def plot_participant_level_shielding_heatmap(
             mirror=False,
         )
 
-        # Blank top-right panel
+        "Blank top-right panel"
         fig.update_xaxes(visible=False, row=1, col=2)
         fig.update_yaxes(visible=False, row=1, col=2)
 
-        # Heat map panel
+        "Heat map panel"
         fig.update_xaxes(
             row=2,
             col=1,
-            # title_text="CH - CC",
             title_text="Choice-Chance - Choice-Choice (CH - CC)",
             range=x_axis_range,
             tickvals=heat_tickvals, 
@@ -5944,7 +5055,6 @@ def plot_participant_level_shielding_heatmap(
         fig.update_yaxes(
             row=2,
             col=1,
-            # title_text="DIV - CC",
             title_text="Division - Choice-Choice (DIV - CC)",
             range=y_axis_range,
             tickvals=heat_tickvals, 
@@ -6120,7 +5230,7 @@ def plot_participant_level_shielding_heatmap(
         load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
         marginals_tag = "with_marginals" if include_marginals else "heat_only"
 
-        file_name_figure = f"shielding_heatmap_{dv_suffix}_{story_tag}_{load_tag}_{marginals_tag}"
+        file_name_figure = f"figure_4_shielding_heatmap_{dv_suffix}_{story_tag}_{load_tag}_{marginals_tag}"
         _export_plotly_figure_html(
             fig=fig,
             general_settings=general_settings,
@@ -6128,6 +5238,337 @@ def plot_participant_level_shielding_heatmap(
         )
 
     return fig
+
+
+def plot_within_subject_pairwise_comparisons(
+    general_settings: GeneralSettings,
+    dv: str | Any = "blame",
+    include_proximate_agent: bool = True,
+    story_condition: str | Any = None,
+    cognitive_load: str | Any = None,
+    only_included_participants: bool = True,
+    export_html: bool = True,
+    export_csv: bool = False,
+    base_hue: int = 210,
+) -> tuple["object", pd.DataFrame]:
+    """
+    Render a Plotly table summarizing the within-subject pairwise comparisons among the key rating series.
+
+    Cell entries report:
+        • mean difference (column - row)
+        • Cohen's dz
+        • p-value from a paired t-test
+
+    Arguments:
+        • dv: str | Any
+            - Which dependent variable to use. Supported: 'blame', 'wrong', 'punishment'.
+        • include_proximate_agent: bool
+            - If True, include proximate ratings (CC Proximate, CH Proximate).
+        • story_condition: str | Any
+            - If None, pool stories.
+            - If 'firework' or 'trolley', filter to that story condition.
+        • cognitive_load: str | Any
+            - If None, pool load conditions.
+            - If 'high' or 'low', filter to that load condition.
+        • only_included_participants: bool
+            - If True, restrict to participants who passed all comprehension checks.
+        • export_html: bool
+            - If True, export the Plotly figure to an .html file.
+        • export_csv: bool
+            - If True, export the long statistics and formatted matrix as CSV files.
+        • base_hue: int
+            - Base hue for hsla table styling.
+
+    Returns:
+        • tuple[plotly.graph_objects.Figure, pd.DataFrame]
+            - Plotly table figure
+            - long-format pairwise statistics dataframe
+    """
+    def plot_within_subject_pairwise_comparison_matrix(
+        general_settings: GeneralSettings,
+        dv: str | Any = "blame",
+        include_proximate_agent: bool = True,
+        story_condition: str | Any = None,
+        cognitive_load: str | Any = None,
+        only_included_participants: bool = True,
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Build a compact upper-triangular within-subject comparison matrix.
+
+        Each non-empty cell reports the paired comparison corresponding to:
+            column minus row
+
+        and includes:
+            • mean difference
+            • Cohen's dz
+            • p-value from a paired t-test
+
+        Arguments:
+            • dv: str | Any
+                - Which dependent variable to use. Supported: 'blame', 'wrong', 'punishment'.
+            • include_proximate_agent: bool
+                - If True, include CC Proximate and CH Proximate in addition to the three distal categories.
+            • story_condition: str | Any
+                - If None, pool stories.
+                - If 'firework' or 'trolley', filter to that story condition.
+            • cognitive_load: str | Any
+                - If None, pool load conditions.
+                - If 'high' or 'low', filter to that load condition.
+            • only_included_participants: bool
+                - If True, restrict to participants who passed all comprehension checks.
+
+        Returns:
+            • tuple[pd.DataFrame, pd.DataFrame]
+                - pairwise_long_dataframe:
+                    tidy row-per-comparison statistics
+                - formatted_matrix_dataframe:
+                    upper-triangular matrix of formatted cell strings
+        """
+        dv_suffix, _, _ = _normalize_dependent_variable_input(dv)
+
+        analysis_dataframe = _get_filtered_plotting_dataframe(
+            general_settings=general_settings,
+            story_condition=story_condition,
+            cognitive_load=cognitive_load,
+            only_included_participants=only_included_participants,
+        )
+
+        if dv_suffix == "blame":
+            ordered_category_metadata = [
+                ("CC Distal", "clark_blame_cc"),
+                ("CH Distal", "clark_blame_ch"),
+                ("DIV Distal", "clark_blame_div"),
+            ]
+            if include_proximate_agent:
+                ordered_category_metadata += [
+                    ("CC Proximate", "proximate_blame_cc"),
+                    ("CH Proximate", "proximate_blame_ch"),
+                ]
+        elif dv_suffix == "wrong":
+            ordered_category_metadata = [
+                ("CC Distal", "clark_wrong_cc"),
+                ("CH Distal", "clark_wrong_ch"),
+                ("DIV Distal", "clark_wrong_div"),
+            ]
+            if include_proximate_agent:
+                ordered_category_metadata += [
+                    ("CC Proximate", "proximate_wrong_cc"),
+                    ("CH Proximate", "proximate_wrong_ch"),
+                ]
+        else:
+            ordered_category_metadata = [
+                ("CC Distal", "clark_punish_cc"),
+                ("CH Distal", "clark_punish_ch"),
+                ("DIV Distal", "clark_punish_div"),
+            ]
+            if include_proximate_agent:
+                ordered_category_metadata += [
+                    ("CC Proximate", "proximate_punish_cc"),
+                    ("CH Proximate", "proximate_punish_ch"),
+                ]
+
+        missing_required_columns = [
+            column_name
+            for _, column_name in ordered_category_metadata
+            if column_name not in analysis_dataframe.columns
+        ]
+        if missing_required_columns:
+            raise KeyError(
+                "Missing one or more expected rating columns for the pairwise comparison matrix: "
+                + ", ".join(repr(column_name) for column_name in missing_required_columns)
+            )
+
+        category_summary_rows: list[dict[str, Any]] = []
+        for category_label, column_name in ordered_category_metadata:
+            values = pd.to_numeric(analysis_dataframe[column_name], errors="coerce").dropna()
+            category_summary_rows.append(
+                {
+                    "category_label": category_label,
+                    "column_name": column_name,
+                    "n": int(values.shape[0]),
+                    "mean": float(values.mean()) if values.shape[0] > 0 else np.nan,
+                    "std": float(values.std(ddof=1)) if values.shape[0] > 1 else np.nan,
+                }
+            )
+
+        category_summary_dataframe = pd.DataFrame(category_summary_rows)
+
+        pairwise_rows: list[dict[str, Any]] = []
+        formatted_matrix_dataframe = pd.DataFrame(
+            "",
+            index=[category_label for category_label, _ in ordered_category_metadata],
+            columns=[category_label for category_label, _ in ordered_category_metadata],
+            dtype=object,
+        )
+
+        for row_index, (row_label, row_column_name) in enumerate(ordered_category_metadata):
+            for column_index, (column_label, column_column_name) in enumerate(ordered_category_metadata):
+                if row_index == column_index:
+                    formatted_matrix_dataframe.loc[row_label, column_label] = "—"
+                    continue
+
+                if column_index < row_index:
+                    formatted_matrix_dataframe.loc[row_label, column_label] = ""
+                    continue
+
+                paired_dataframe = analysis_dataframe[[row_column_name, column_column_name]].copy()
+                paired_dataframe[row_column_name] = pd.to_numeric(paired_dataframe[row_column_name], errors="coerce")
+                paired_dataframe[column_column_name] = pd.to_numeric(paired_dataframe[column_column_name], errors="coerce")
+                paired_dataframe = paired_dataframe.dropna()
+
+                paired_difference_values = (
+                    paired_dataframe[column_column_name] - paired_dataframe[row_column_name]
+                ).to_numpy(dtype=float)
+
+                n_pairs = int(paired_difference_values.shape[0])
+                mean_difference = float(np.mean(paired_difference_values)) if n_pairs > 0 else np.nan
+
+                if n_pairs > 1:
+                    t_statistic, p_value = stats.ttest_1samp(paired_difference_values, popmean=0.0)
+                    standard_deviation_of_difference = float(np.std(paired_difference_values, ddof=1))
+                    if standard_deviation_of_difference == 0:
+                        cohen_dz = 0.0 if mean_difference == 0 else np.nan
+                    else:
+                        cohen_dz = mean_difference / standard_deviation_of_difference
+                else:
+                    t_statistic = np.nan
+                    p_value = np.nan
+                    cohen_dz = np.nan
+
+                pairwise_rows.append(
+                    {
+                        "row_label": row_label,
+                        "column_label": column_label,
+                        "row_column_name": row_column_name,
+                        "column_column_name": column_column_name,
+                        "n_pairs": n_pairs,
+                        "mean_difference_column_minus_row": mean_difference,
+                        "t_statistic": float(t_statistic) if not pd.isna(t_statistic) else np.nan,
+                        "p_value": float(p_value) if not pd.isna(p_value) else np.nan,
+                        "cohen_dz": float(cohen_dz) if not pd.isna(cohen_dz) else np.nan,
+                    }
+                )
+
+                formatted_matrix_dataframe.loc[row_label, column_label] = (
+                    f"Δ={mean_difference:+.2f}<br>"
+                    f"dz={cohen_dz:+.2f}<br>"
+                    f"p={_format_p_value_for_display(p_value)}"
+                )
+
+        pairwise_long_dataframe = pd.DataFrame(pairwise_rows)
+
+        formatted_header_labels = []
+        for _, category_summary_row in category_summary_dataframe.iterrows():
+            formatted_header_labels.append(
+                f"{category_summary_row['category_label']}<br>"
+                f"M={category_summary_row['mean']:.2f}, "
+                f"SD={category_summary_row['std']:.2f}"
+            )
+
+        formatted_matrix_dataframe.index = formatted_header_labels
+        formatted_matrix_dataframe.columns = formatted_header_labels
+
+        return pairwise_long_dataframe, formatted_matrix_dataframe
+
+    dv_suffix, dv_label, _ = _normalize_dependent_variable_input(dv)
+
+    pairwise_long_dataframe, formatted_matrix_dataframe = plot_within_subject_pairwise_comparison_matrix(
+        dv=dv,
+        include_proximate_agent=include_proximate_agent,
+        story_condition=story_condition,
+        cognitive_load=cognitive_load,
+        only_included_participants=only_included_participants,
+        general_settings=general_settings,
+    )
+
+    header_values = ["Row / Column<br>(cell = column - row)"] + list(formatted_matrix_dataframe.columns)
+    cell_values = [list(formatted_matrix_dataframe.index)] + [
+        formatted_matrix_dataframe[column_name].tolist()
+        for column_name in formatted_matrix_dataframe.columns
+    ]
+
+    header_fill_color = _hsla_color(hue=base_hue, saturation_percent=70, lightness_percent=90, alpha=1.0)
+    cells_fill_color = _hsla_color(hue=base_hue + 20, saturation_percent=25, lightness_percent=98, alpha=1.0)
+    line_color = _hsla_color(hue=0, saturation_percent=0, lightness_percent=60, alpha=0.85)
+
+    n_columns = len(header_values)
+    first_column_width = 260
+    other_column_width = 170
+    column_widths = [first_column_width] + [other_column_width] * (n_columns - 1)
+
+    fig = go.Figure(
+        data=[
+            go.Table(
+                columnwidth=column_widths,
+                header=dict(
+                    values=header_values,
+                    align="center",
+                    fill_color=header_fill_color,
+                    font=dict(family="Calibri", size=18, color="black"),
+                    line=dict(color=line_color, width=1.5),
+                    height=44,
+                ),
+                cells=dict(
+                    values=cell_values,
+                    align="center",
+                    fill_color=cells_fill_color,
+                    font=dict(family="Calibri", size=16, color="black"),
+                    line=dict(color=line_color, width=1.0),
+                    height=58,
+                ),
+            )
+        ]
+    )
+
+    figure_title = f"Within-Subject Pairwise Comparison Matrix ({dv_label})"
+    fig.update_layout(**figure_layout, title=figure_title)
+    fig.update_layout(
+        title_x=0.5,
+        title_xanchor="center",
+        title_font_size=36,
+        margin=dict(l=40, r=40, t=90, b=40),
+    )
+
+    fig.add_annotation(
+        x=0.5,
+        y=1.02,
+        xref="paper",
+        yref="paper",
+        showarrow=False,
+        xanchor="center",
+        yanchor="bottom",
+        font=dict(size=18, family="Calibri", color="black"),
+        bgcolor="hsla(0, 0%, 100%, 0.0)",
+        text="Each non-empty cell reports column - row: mean difference (Δ), Cohen's dz, and paired-test p-value.",
+    )
+
+    story_condition_normalized = _normalize_story_condition_input(story_condition)
+    cognitive_load_normalized = _normalize_load_condition_input(cognitive_load)
+    story_tag = "pooled" if story_condition_normalized is None else story_condition_normalized
+    load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
+    proximate_tag = "with_proximate" if include_proximate_agent else "distal_only"
+
+    file_name_figure = f"figure_x_pairwise_matrix_{dv_suffix}_{story_tag}_{load_tag}_{proximate_tag}"
+    file_path_tables = general_settings["filing"]["file_paths"]["tables"]
+
+    if export_html:
+        _export_plotly_figure_html(
+            fig=fig,
+            general_settings=general_settings,
+            file_name=file_name_figure
+        )
+
+    if export_csv:
+        pairwise_long_dataframe.to_csv(
+            file_path_tables / f"{file_name_figure}_long.csv",
+            index=False,
+        )
+        formatted_matrix_dataframe.to_csv(
+            file_path_tables / f"{file_name_figure}_matrix.csv",
+            index=True,
+        )
+
+    return fig, pairwise_long_dataframe
 
 
 def plot_shielding_effects_by_cognitive_load(
@@ -6167,7 +5608,7 @@ def plot_shielding_effects_by_cognitive_load(
             - Otherwise, include a dropdown that toggles between box and violin.
         • story_condition: str | Any
             - If None, pool stories.
-            - If 'fireworks'/'parade' or 'trolley', filter to that story condition.
+            - If 'firework' or 'trolley', filter to that story condition.
         • only_included_participants: bool
             - If True, restrict to participants who passed all comprehension checks.
         • export_html: bool
@@ -6573,7 +6014,946 @@ def plot_shielding_effects_by_cognitive_load(
         delta_tag = "_".join(delta_name.lower() for delta_name in selected_delta_types)
         figure_type_tag = initial_view if include_toggle_dropdown else figure_type_normalized
 
-        file_name_figure = f"shielding_by_load_{dv_suffix}_{delta_tag}_{figure_type_tag}_{story_tag}"
+        file_name_figure = f"figure_6_shielding_by_load_{dv_suffix}_{delta_tag}_{figure_type_tag}_{story_tag}"
+        _export_plotly_figure_html(
+            fig=fig,
+            general_settings=general_settings,
+            file_name=file_name_figure
+        )
+
+    return fig
+
+
+def plot_trial_order_effects_line_graph(
+    general_settings: GeneralSettings,
+    dv: str | Any = "blame",
+    conditions: Sequence[str] | str | Any | None = None,
+    average_late_positions: bool = False,
+    story_condition: str | Any = None,
+    cognitive_load: str | Any = None,
+    only_included_participants: bool = True,
+    export_html: bool = True,
+    base_hue: int = 220,
+    confidence_level: float = 0.95,
+    order_analysis_mode: str | Any = "legacy",
+) -> "object":
+    """
+    Create a line chart showing how mean distal-agent ratings vary by vignette position.
+
+    Arguments:
+        • dv: str | Any
+            - Which dependent variable to plot. Supported: 'blame', 'wrong', 'punishment'.
+        • conditions: Sequence[str] | str | Any | None
+            - Which vignette conditions to plot.
+            - Defaults to all three conditions: CC, CH, DIV.
+            - Can also be a subset such as ("CC", "CH") or "CC,CH".
+        • average_late_positions: bool
+            - If False, show separate points for 1st, 2nd, and 3rd position.
+            - If True, collapse 2nd and 3rd into a single "Later (2–3)" group.
+        • story_condition: str | Any
+            - If None, pool stories.
+            - If 'firework' or 'trolley', filter to that story condition.
+        • cognitive_load: str | Any
+            - If None, pool load.
+            - If 'high' or 'low', filter to that load condition.
+        • only_included_participants: bool
+            - If True, restrict to participants who passed all comprehension checks.
+        • export_html: bool
+            - If True, export the Plotly figure to an .html file.
+        • base_hue: int
+            - Starting hue for hsla colors. Subsequent conditions increment hue by +20.
+        • confidence_level: float
+            - Confidence level for error bars around the means.
+        • order_analysis_mode: str | Any
+            - If None (default), use the new pairwise CC-vs-CH relative-order analysis.
+            - Supported aliases:
+                "relative_cc_ch"
+                "pairwise"
+                "cc_ch"
+                "relative"
+            - If "legacy", "position", or "old", preserve the original analysis that plots
+              mean ratings by absolute vignette position (1st / 2nd / 3rd) across selected conditions.
+            - Note: `conditions` and `average_late_positions` only apply in the legacy mode.            
+
+    Returns:
+        • plotly.graph_objects.Figure
+    """
+    def compute_mean_and_confidence_interval(values: pd.Series) -> tuple[float, float, float, int]:
+        """
+        Compute the mean and a t-based confidence interval for one condition-position cell.
+
+        Arguments:
+            • values: pd.Series
+                - Numeric values for one cell.
+
+        Returns:
+            • tuple[float, float, float, int]
+                - mean_value
+                - ci_lower
+                - ci_upper
+                - n
+        """
+        numeric_values = pd.to_numeric(values, errors="coerce").dropna().to_numpy(dtype=float)
+        n_values = int(numeric_values.shape[0])
+
+        if n_values == 0:
+            return np.nan, np.nan, np.nan, 0
+
+        mean_value = float(np.mean(numeric_values))
+
+        if n_values == 1:
+            return mean_value, mean_value, mean_value, 1
+
+        standard_deviation = float(np.std(numeric_values, ddof=1))
+        standard_error = standard_deviation / np.sqrt(n_values)
+
+        alpha_value = 1 - confidence_level
+        t_critical_value = stats.t.ppf(1 - alpha_value / 2, df=n_values - 1)
+
+        ci_lower = float(mean_value - t_critical_value * standard_error)
+        ci_upper = float(mean_value + t_critical_value * standard_error)
+
+        return mean_value, ci_lower, ci_upper, n_values
+
+    dv_suffix, dv_label, bounded_y_range = _normalize_dependent_variable_input(dv)
+
+    order_analysis_mode_normalized = (
+        "relative_cc_ch"
+        if order_analysis_mode is None
+        else str(order_analysis_mode).strip().lower()
+    )
+
+    if order_analysis_mode_normalized in {"relative_cc_ch", "pairwise", "cc_ch", "relative", "new"}:
+        analysis_dataframe = _get_filtered_plotting_dataframe(
+            general_settings=general_settings,
+            story_condition=story_condition,
+            cognitive_load=cognitive_load,
+            only_included_participants=only_included_participants,
+        )
+
+        cc_value_column_name = f"clark_{dv_suffix}_cc"
+        ch_value_column_name = f"clark_{dv_suffix}_ch"
+
+        required_columns = [
+            "response_id",
+            "case_code_position_1",
+            "case_code_position_2",
+            "case_code_position_3",
+            cc_value_column_name,
+            ch_value_column_name,
+        ]
+        missing_required_columns = [
+            column_name for column_name in required_columns if column_name not in analysis_dataframe.columns
+        ]
+        if missing_required_columns:
+            raise KeyError(
+                "Missing one or more expected columns required for the relative-order analysis: "
+                + ", ".join(repr(column_name) for column_name in missing_required_columns)
+            )
+
+        pairwise_order_dataframe = analysis_dataframe[
+            [
+                "response_id",
+                "case_code_position_1",
+                "case_code_position_2",
+                "case_code_position_3",
+                cc_value_column_name,
+                ch_value_column_name,
+            ]
+        ].copy()
+
+        pairwise_order_dataframe["cc_position"] = np.select(
+            condlist=[
+                pairwise_order_dataframe["case_code_position_1"] == "CC",
+                pairwise_order_dataframe["case_code_position_2"] == "CC",
+                pairwise_order_dataframe["case_code_position_3"] == "CC",
+            ],
+            choicelist=[1, 2, 3],
+            default=np.nan,
+        )
+
+        pairwise_order_dataframe["ch_position"] = np.select(
+            condlist=[
+                pairwise_order_dataframe["case_code_position_1"] == "CH",
+                pairwise_order_dataframe["case_code_position_2"] == "CH",
+                pairwise_order_dataframe["case_code_position_3"] == "CH",
+            ],
+            choicelist=[1, 2, 3],
+            default=np.nan,
+        )
+
+        pairwise_order_dataframe["cc_rating"] = pd.to_numeric(
+            pairwise_order_dataframe[cc_value_column_name],
+            errors="coerce",
+        )
+        pairwise_order_dataframe["ch_rating"] = pd.to_numeric(
+            pairwise_order_dataframe[ch_value_column_name],
+            errors="coerce",
+        )
+
+        pairwise_order_dataframe = pairwise_order_dataframe.dropna(
+            subset=["cc_position", "ch_position", "cc_rating", "ch_rating"]
+        ).copy()
+
+        if pairwise_order_dataframe.shape[0] == 0:
+            raise ValueError(
+                "No valid CC/CH paired observations remain after filtering for the relative-order analysis."
+            )
+
+        pairwise_order_dataframe["relative_order_group"] = np.where(
+            pairwise_order_dataframe["cc_position"] < pairwise_order_dataframe["ch_position"],
+            "CC before CH",
+            "CH before CC",
+        )
+
+        cc_long_dataframe = pd.DataFrame(
+            {
+                "response_id": pairwise_order_dataframe["response_id"],
+                "condition_code": "CC",
+                "condition_label": "Choice-Choice",
+                "relative_position_label": np.where(
+                    pairwise_order_dataframe["cc_position"] < pairwise_order_dataframe["ch_position"],
+                    "Presented first",
+                    "Presented second",
+                ),
+                "relative_order_group": pairwise_order_dataframe["relative_order_group"],
+                "rating_value": pairwise_order_dataframe["cc_rating"],
+            }
+        )
+
+        ch_long_dataframe = pd.DataFrame(
+            {
+                "response_id": pairwise_order_dataframe["response_id"],
+                "condition_code": "CH",
+                "condition_label": "Choice-Chance",
+                "relative_position_label": np.where(
+                    pairwise_order_dataframe["ch_position"] < pairwise_order_dataframe["cc_position"],
+                    "Presented first",
+                    "Presented second",
+                ),
+                "relative_order_group": pairwise_order_dataframe["relative_order_group"],
+                "rating_value": pairwise_order_dataframe["ch_rating"],
+            }
+        )
+
+        relative_order_long_dataframe = pd.concat(
+            [cc_long_dataframe, ch_long_dataframe],
+            ignore_index=True,
+        )
+
+        ordered_relative_position_labels = ["Presented first", "Presented second"]
+        relative_position_to_x_value = {
+            "Presented first": 1.0,
+            "Presented second": 2.0,
+        }
+
+        summary_rows: list[dict[str, Any]] = []
+
+        for selected_condition_code, selected_condition_label in [
+            ("CC", "Choice-Choice"),
+            ("CH", "Choice-Chance"),
+        ]:
+            condition_subset = relative_order_long_dataframe.loc[
+                relative_order_long_dataframe["condition_code"] == selected_condition_code
+            ].copy()
+
+            for ordered_relative_position_label in ordered_relative_position_labels:
+                position_subset = condition_subset.loc[
+                    condition_subset["relative_position_label"] == ordered_relative_position_label,
+                    "rating_value",
+                ]
+
+                mean_value, ci_lower, ci_upper, n_values = compute_mean_and_confidence_interval(position_subset)
+
+                summary_rows.append(
+                    {
+                        "condition_code": selected_condition_code,
+                        "condition_label": selected_condition_label,
+                        "relative_position_label": ordered_relative_position_label,
+                        "position_x_value": relative_position_to_x_value[ordered_relative_position_label],
+                        "mean_value": mean_value,
+                        "ci_lower": ci_lower,
+                        "ci_upper": ci_upper,
+                        "error_plus": ci_upper - mean_value if not np.isnan(ci_upper) else np.nan,
+                        "error_minus": mean_value - ci_lower if not np.isnan(ci_lower) else np.nan,
+                        "n": n_values,
+                    }
+                )
+
+        summary_dataframe = pd.DataFrame(summary_rows)
+
+        fig = go.Figure()
+
+        plotted_condition_order = [
+            ("CC", "Choice-Choice"),
+            ("CH", "Choice-Chance"),
+        ]
+
+        for condition_index, (selected_condition_code, selected_condition_label) in enumerate(plotted_condition_order):
+            line_color = _hsla_color(hue=base_hue + 20 * condition_index, alpha=1.0)
+
+            condition_summary = (
+                summary_dataframe.loc[summary_dataframe["condition_code"] == selected_condition_code]
+                .set_index("relative_position_label")
+                .loc[ordered_relative_position_labels]
+                .reset_index()
+            )
+
+            fig.add_trace(
+                go.Scatter(
+                    x=condition_summary["position_x_value"],
+                    y=condition_summary["mean_value"],
+                    mode="lines+markers",
+                    name=selected_condition_label,
+                    line=dict(color=line_color, width=8),
+                    marker=dict(color=line_color, size=18),
+                    error_y=dict(
+                        type="data",
+                        symmetric=False,
+                        array=condition_summary["error_plus"],
+                        arrayminus=condition_summary["error_minus"],
+                        visible=True,
+                        color=line_color,
+                        thickness=4,
+                        width=6,
+                    ),
+                    customdata=np.stack(
+                        [
+                            condition_summary["relative_position_label"],
+                            condition_summary["n"],
+                            condition_summary["ci_lower"],
+                            condition_summary["ci_upper"],
+                        ],
+                        axis=1,
+                    ),
+                    hovertemplate=(
+                        "<b>%{fullData.name}</b><br>"
+                        "Relative order: %{customdata[0]}<br>"
+                        f"Mean {dv_label.lower()}: "
+                        "%{y:.2f}<br>"
+                        "95% CI: [%{customdata[2]:.2f}, %{customdata[3]:.2f}]<br>"
+                        "n: %{customdata[1]}<extra></extra>"
+                    ),
+                )
+            )
+
+        title_prefix = {
+            "blame": "Distal Blame",
+            "wrong": "Distal Wrongness",
+            "punish": "Distal Punishment",
+        }[dv_suffix]
+
+        fig.update_layout(**figure_layout, title=f"{title_prefix} by Relative CC-CH Order")
+        fig.update_layout(
+            title_x=0.5,
+            title_xanchor="center",
+            title_font_size=44,
+            margin=dict(l=160, r=160, t=100, b=100),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=0.90,
+                xanchor="center",
+                x=0.5,
+                bgcolor="hsla(0, 0%, 100%, 0.0)",
+            ),
+        )
+
+        x_tick_values = [relative_position_to_x_value[position_label] for position_label in ordered_relative_position_labels]
+
+        fig.update_xaxes(
+            tickmode="array",
+            tickvals=x_tick_values,
+            ticktext=ordered_relative_position_labels,
+            title_text="Relative Order within the CC-CH Pair",
+            range=[min(x_tick_values) - 0.2, max(x_tick_values) + 0.2],
+            zeroline=False,
+            showline=False,
+            mirror=False,
+            tickwidth=0,
+            ticklen=0,
+            ticks="",
+        )
+
+        if bounded_y_range is None:
+            plotted_values = summary_dataframe["mean_value"].dropna().to_numpy(dtype=float)
+            bounded_y_range = [0.0, max(1.0, float(np.nanmax(plotted_values) * 1.10))] if plotted_values.shape[0] > 0 else [0.0, 1.0]
+
+        y_axis_title = {
+            "blame": "Mean Blameworthiness of Distal Agent",
+            "wrong": "Mean Wrongness of Distal Agent",
+            "punish": "Mean Punishment of Distal Agent (years)",
+        }[dv_suffix]
+
+        fig.update_yaxes(
+            title_text=y_axis_title,
+            range=list(bounded_y_range),
+            zeroline=False,
+            showline=False,
+            mirror=False,
+            tickwidth=0,
+            ticklen=0,
+            ticks="",
+        )
+
+        if dv_suffix in {"blame", "wrong"}:
+            fig.update_yaxes(
+                tickvals=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+                ticktext=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+            )
+
+        if export_html:
+            story_condition_normalized = _normalize_story_condition_input(story_condition)
+            cognitive_load_normalized = _normalize_load_condition_input(cognitive_load)
+            story_tag = "pooled" if story_condition_normalized is None else story_condition_normalized
+            load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
+
+            file_name_figure = f"figure_7_trial_order_relative_cc_ch_{dv_suffix}_{story_tag}_{load_tag}"
+            if export_html:
+                _export_plotly_figure_html(
+                    fig=fig,
+                    general_settings=general_settings,
+                    file_name=file_name_figure
+                )
+
+        return fig
+
+    selected_condition_codes = _normalize_condition_subset_input(conditions)
+
+    analysis_dataframe = _get_filtered_plotting_dataframe(
+        general_settings=general_settings,
+        story_condition=story_condition,
+        cognitive_load=cognitive_load,
+        only_included_participants=only_included_participants,
+    )
+
+    condition_code_to_value_column = {
+        "CC": f"clark_{dv_suffix}_cc",
+        "CH": f"clark_{dv_suffix}_ch",
+        "DIV": f"clark_{dv_suffix}_div",
+    }
+
+    condition_code_to_display_label = {
+        "CC": "Choice-Choice",
+        "CH": "Choice-Chance",
+        "DIV": "Division",
+    }
+
+    missing_required_columns = [
+        column_name
+        for column_name in [
+            "response_id",
+            "case_code_position_1",
+            "case_code_position_2",
+            "case_code_position_3",
+            *[condition_code_to_value_column[condition_code] for condition_code in selected_condition_codes],
+        ]
+        if column_name not in analysis_dataframe.columns
+    ]
+    if missing_required_columns:
+        raise KeyError(
+            "Missing one or more expected columns required for the trial-order figure: "
+            + ", ".join(repr(column_name) for column_name in missing_required_columns)
+        )
+
+    trial_order_rows: list[dict[str, Any]] = []
+
+    for selected_condition_code in selected_condition_codes:
+        value_column_name = condition_code_to_value_column[selected_condition_code]
+
+        temp_dataframe = analysis_dataframe[
+            [
+                "response_id",
+                "case_code_position_1",
+                "case_code_position_2",
+                "case_code_position_3",
+                value_column_name,
+            ]
+        ].copy()
+
+        temp_dataframe["position_numeric"] = np.select(
+            condlist=[
+                temp_dataframe["case_code_position_1"] == selected_condition_code,
+                temp_dataframe["case_code_position_2"] == selected_condition_code,
+                temp_dataframe["case_code_position_3"] == selected_condition_code,
+            ],
+            choicelist=[1, 2, 3],
+            default=np.nan,
+        )
+
+        temp_dataframe["rating_value"] = pd.to_numeric(temp_dataframe[value_column_name], errors="coerce")
+        temp_dataframe["condition_code"] = selected_condition_code
+        temp_dataframe["condition_label"] = condition_code_to_display_label[selected_condition_code]
+
+        trial_order_rows.extend(
+            temp_dataframe[
+                ["response_id", "condition_code", "condition_label", "position_numeric", "rating_value"]
+            ].dropna(subset=["position_numeric", "rating_value"]).to_dict("records")
+        )
+
+    trial_order_long_dataframe = pd.DataFrame(trial_order_rows)
+
+    if average_late_positions:
+        trial_order_long_dataframe["position_group_label"] = np.where(
+            trial_order_long_dataframe["position_numeric"] == 1,
+            "First",
+            "Later (2–3)",
+        )
+        ordered_position_labels = ["First", "Later (2–3)"]
+        position_label_to_x_value = {"First": 1.0, "Later (2–3)": 2.0}
+        x_axis_title = "Vignette Position Group"
+    else:
+        trial_order_long_dataframe["position_group_label"] = trial_order_long_dataframe["position_numeric"].map(
+            {
+                1.0: "1st",
+                2.0: "2nd",
+                3.0: "3rd",
+            }
+        )
+        ordered_position_labels = ["1st", "2nd", "3rd"]
+        position_label_to_x_value = {"1st": 1.0, "2nd": 2.0, "3rd": 3.0}
+        x_axis_title = "Vignette Position"
+
+    summary_rows: list[dict[str, Any]] = []
+
+    for selected_condition_code in selected_condition_codes:
+        selected_condition_label = condition_code_to_display_label[selected_condition_code]
+        condition_subset = trial_order_long_dataframe.loc[
+            trial_order_long_dataframe["condition_code"] == selected_condition_code
+        ].copy()
+
+        for ordered_position_label in ordered_position_labels:
+            position_subset = condition_subset.loc[
+                condition_subset["position_group_label"] == ordered_position_label,
+                "rating_value"
+            ]
+
+            mean_value, ci_lower, ci_upper, n_values = compute_mean_and_confidence_interval(position_subset)
+
+            summary_rows.append(
+                {
+                    "condition_code": selected_condition_code,
+                    "condition_label": selected_condition_label,
+                    "position_group_label": ordered_position_label,
+                    "position_x_value": position_label_to_x_value[ordered_position_label],
+                    "mean_value": mean_value,
+                    "ci_lower": ci_lower,
+                    "ci_upper": ci_upper,
+                    "error_plus": ci_upper - mean_value if not np.isnan(ci_upper) else np.nan,
+                    "error_minus": mean_value - ci_lower if not np.isnan(ci_lower) else np.nan,
+                    "n": n_values,
+                }
+            )
+
+    summary_dataframe = pd.DataFrame(summary_rows)
+    fig = go.Figure()
+
+    for condition_index, selected_condition_code in enumerate(selected_condition_codes):
+        condition_label = condition_code_to_display_label[selected_condition_code]
+        line_color = _hsla_color(hue=base_hue + 20 * condition_index, alpha=1.0)
+        error_color = _hsla_color(hue=base_hue + 20 * condition_index, alpha=8.0)
+
+        condition_summary = (
+            summary_dataframe.loc[summary_dataframe["condition_code"] == selected_condition_code]
+            .set_index("position_group_label")
+            .loc[ordered_position_labels]
+            .reset_index()
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=condition_summary["position_x_value"],
+                y=condition_summary["mean_value"],
+                mode="lines+markers",
+                name=condition_label,
+                line=dict(color=line_color, width=8),
+                marker=dict(color=line_color, size=18),
+                error_y=dict(
+                    type="data",
+                    symmetric=False,
+                    array=condition_summary["error_plus"],
+                    arrayminus=condition_summary["error_minus"],
+                    visible=True,
+                    color=line_color,
+                    thickness=4,
+                    width=6,
+                ),
+                customdata=np.stack(
+                    [
+                        condition_summary["position_group_label"],
+                        condition_summary["n"],
+                        condition_summary["ci_lower"],
+                        condition_summary["ci_upper"],
+                    ],
+                    axis=1,
+                ),
+                hovertemplate=(
+                    "<b>%{fullData.name}</b><br>"
+                    "Position: %{customdata[0]}<br>"
+                    f"Mean {dv_label.lower()}: "
+                    "%{y:.2f}<br>"
+                    "95% CI: [%{customdata[2]:.2f}, %{customdata[3]:.2f}]<br>"
+                    "n: %{customdata[1]}<extra></extra>"
+                ),
+            )
+        )
+
+    title_prefix = {
+        "blame": "Distal Blame",
+        "wrong": "Distal Wrongness",
+        "punish": "Distal Punishment",
+    }[dv_suffix]
+
+    title_suffix = " by Vignette Position" if not average_late_positions else " by First vs. Later Vignette Position"
+    fig.update_layout(**figure_layout, title=f"{title_prefix}{title_suffix}")
+
+    fig.update_layout(
+        title_x=0.5,
+        title_xanchor="center",
+        title_font_size=44,
+        margin=dict(l=440, r=440, t=100, b=100),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom", y=0.935,
+            xanchor="center", x=0.5,
+            bgcolor="hsla(0, 0%, 100%, 0.0)",
+        ),
+    )
+
+    x_tick_values = [position_label_to_x_value[position_label] for position_label in ordered_position_labels]
+
+    fig.update_xaxes(
+        tickmode="array",
+        tickvals=x_tick_values,
+        ticktext=ordered_position_labels,
+        title_text=x_axis_title,
+        range=[min(x_tick_values) - 0.2, max(x_tick_values) + 0.2],
+        scaleanchor="y", scaleratio=6,
+        zeroline=False,
+        showline=False,
+        mirror=False,
+        tickwidth=0,
+        ticklen=0,
+        ticks="",
+    )
+
+    if bounded_y_range is None:
+        plotted_values = summary_dataframe["mean_value"].dropna().to_numpy(dtype=float)
+        bounded_y_range = [0.0, max(1.0, float(np.nanmax(plotted_values) * 1.10))] if plotted_values.shape[0] > 0 else [0.0, 1.0]
+
+    y_axis_title = {
+        "blame": "Mean Blameworthiness of Distal Agent",
+        "wrong": "Mean Wrongness of Distal Agent",
+        "punish": "Mean Punishment of Distal Agent (years)",
+    }[dv_suffix]
+
+    fig.update_yaxes(
+        title_text=y_axis_title,
+        range=list(bounded_y_range),
+        zeroline=False,
+        showline=False,
+        mirror=False,
+        tickwidth=0,
+        ticklen=0,
+        ticks="",
+    )
+
+    if dv_suffix in {"blame", "wrong"}:
+        fig.update_yaxes(
+            tickvals=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+            ticktext=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        )
+
+    if export_html:
+        story_condition_normalized = _normalize_story_condition_input(story_condition)
+        cognitive_load_normalized = _normalize_load_condition_input(cognitive_load)
+        story_tag = "pooled" if story_condition_normalized is None else story_condition_normalized
+        load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
+        positions_tag = "first_vs_later" if average_late_positions else "all_positions"
+        conditions_tag = "_".join(condition_code.lower() for condition_code in selected_condition_codes)
+
+        file_name_figure = f"figure_7_trial_order_{dv_suffix}_{conditions_tag}_{story_tag}_{load_tag}_{positions_tag}"
+        _export_plotly_figure_html(
+            fig=fig,
+            general_settings=general_settings,
+            file_name=file_name_figure
+        )
+
+    return fig
+
+
+def plot_blameworthiness_wrongness_correlate(
+    general_settings: GeneralSettings,
+    aggregation_level: str | Any = "participant_mean",
+    condition: str | Any = None,
+    story_condition: str | Any = None,
+    cognitive_load: str | Any = None,
+    only_included_participants: bool = True,
+    export_html: bool = True,
+    base_hue: int = 260,
+    all_ratings: bool = False,
+    include_proximate_agent: bool = True,
+    jitter_strength: float = 0.15,
+) -> "object":
+    """
+    Plot the relationship between blame and wrongness.
+
+    Arguments:
+        • aggregation_level: str | Any
+            - If 'participant_mean', average each participant across the three distal conditions.
+            - If 'condition_rows', create one row per participant × condition (CC, CH, DIV).
+            - Only used when all_ratings=False.
+        • condition: str | Any
+            - Optional condition restriction. Supports: 'CC', 'CH', 'DIV', or None.
+            - Only used when aggregation_level='condition_rows' and all_ratings=False.
+        • story_condition: str | Any
+            - If None, pool stories.
+            - If 'firework' or 'trolley', filter to that story condition.
+        • cognitive_load: str | Any
+            - If None, pool load conditions.
+            - If 'high' or 'low', filter to that load condition.
+        • only_included_participants: bool
+            - If True, restrict to participants who passed all comprehension checks.
+        • export_html: bool
+            - If True, export the Plotly figure to an .html file.
+        • base_hue: int
+            - Starting hue for hsla colors.
+        • all_ratings: bool
+            - If True, plot all individual rating pairs across vignettes with jitter instead of
+              aggregated participant means or condition rows. Ignores aggregation_level and condition.
+        • include_proximate_agent: bool
+            - If True, include CC Proximate and CH Proximate rating pairs.
+            - Only used when all_ratings=True.
+        • jitter_strength: float
+            - Standard deviation of Gaussian jitter applied to x and y when all_ratings=True.
+              Jitter is purely aesthetic and does not affect the correlation or trendline.
+
+    Returns:
+        • plotly.graph_objects.Figure
+    """
+    analysis_dataframe = _get_filtered_plotting_dataframe(
+        general_settings=general_settings,
+        story_condition=story_condition,
+        cognitive_load=cognitive_load,
+        only_included_participants=only_included_participants,
+    )
+
+    if all_ratings:
+        ordered_rating_pairs = [
+            ("CC Distal", "clark_blame_cc", "clark_wrong_cc"),
+            ("CH Distal", "clark_blame_ch", "clark_wrong_ch"),
+            ("DIV Distal", "clark_blame_div", "clark_wrong_div"),
+        ]
+        if include_proximate_agent:
+            ordered_rating_pairs += [
+                ("CC Proximate", "proximate_blame_cc", "proximate_wrong_cc"),
+                ("CH Proximate", "proximate_blame_ch", "proximate_wrong_ch"),
+            ]
+
+        missing_required_columns = [
+            column_name
+            for _, blame_column_name, wrong_column_name in ordered_rating_pairs
+            for column_name in [blame_column_name, wrong_column_name]
+            if column_name not in analysis_dataframe.columns
+        ]
+        if missing_required_columns:
+            raise KeyError(
+                "Missing one or more expected columns required for the all-ratings blame–wrongness plot: "
+                + ", ".join(repr(column_name) for column_name in missing_required_columns)
+            )
+
+        pooled_rows: list[dict[str, Any]] = []
+        for series_label, blame_column_name, wrong_column_name in ordered_rating_pairs:
+            temp_dataframe = pd.DataFrame(
+                {
+                    "series_label": series_label,
+                    "blame_value": pd.to_numeric(analysis_dataframe[blame_column_name], errors="coerce"),
+                    "wrong_value": pd.to_numeric(analysis_dataframe[wrong_column_name], errors="coerce"),
+                }
+            ).dropna(subset=["blame_value", "wrong_value"])
+            pooled_rows.extend(temp_dataframe.to_dict("records"))
+
+        plotting_dataframe = pd.DataFrame(pooled_rows)
+
+        figure_title = "Blame vs. Wrongness Across All Ratings"
+        if include_proximate_agent:
+            figure_title += " (Distal + Proximate)"
+        else:
+            figure_title += " (Distal Only)"
+
+    else:
+        aggregation_level_normalized = str(aggregation_level).strip().lower()
+
+        if aggregation_level_normalized == "participant_mean":
+            plotting_dataframe = pd.DataFrame(
+                {
+                    "blame_value": analysis_dataframe[
+                        ["clark_blame_cc", "clark_blame_ch", "clark_blame_div"]
+                    ].mean(axis=1, skipna=True),
+                    "wrong_value": analysis_dataframe[
+                        ["clark_wrong_cc", "clark_wrong_ch", "clark_wrong_div"]
+                    ].mean(axis=1, skipna=True),
+                }
+            ).dropna()
+
+            figure_title = "Blame vs. Wrongness (Participant Means)"
+        else:
+            selected_condition_codes = _normalize_condition_subset_input(condition)
+
+            condition_rows = []
+            for selected_condition_code in selected_condition_codes:
+                blame_column_name = f"clark_blame_{selected_condition_code.lower()}"
+                wrong_column_name = f"clark_wrong_{selected_condition_code.lower()}"
+                condition_label = {
+                    "CC": "Choice-Choice",
+                    "CH": "Choice-Chance",
+                    "DIV": "Division",
+                }[selected_condition_code]
+
+                temp_dataframe = pd.DataFrame(
+                    {
+                        "condition_label": condition_label,
+                        "blame_value": pd.to_numeric(analysis_dataframe[blame_column_name], errors="coerce"),
+                        "wrong_value": pd.to_numeric(analysis_dataframe[wrong_column_name], errors="coerce"),
+                    }
+                )
+                condition_rows.append(temp_dataframe)
+
+            plotting_dataframe = pd.concat(condition_rows, ignore_index=True).dropna()
+            figure_title = "Blame vs. Wrongness (Participant × Condition Rows)"
+
+    if plotting_dataframe.shape[0] < 5:
+        raise ValueError("Not enough valid observations remain to create the blame–wrongness plot.")
+
+    "Compute correlation and trendline on clean data before any jitter is applied"
+    slope_value, intercept_value, pearson_r_value, pearson_p_value, _ = stats.linregress(
+        plotting_dataframe["blame_value"],
+        plotting_dataframe["wrong_value"],
+    )
+
+    x_grid = np.linspace(
+        float(plotting_dataframe["blame_value"].min()),
+        float(plotting_dataframe["blame_value"].max()),
+        200,
+    )
+    fitted_y_values = intercept_value + slope_value * x_grid
+
+    "Apply jitter to plot coordinates only, after statistics are computed"
+    if jitter_strength > 0:
+        rng = np.random.default_rng(seed=42)
+        plot_blame = plotting_dataframe["blame_value"] + rng.normal(0, jitter_strength, size=len(plotting_dataframe))
+        plot_wrong = plotting_dataframe["wrong_value"] + rng.normal(0, jitter_strength, size=len(plotting_dataframe))
+    else:
+        plot_blame = plotting_dataframe["blame_value"]
+        plot_wrong = plotting_dataframe["wrong_value"]
+
+    point_color = _hsla_color(hue=base_hue - 20, alpha=0.45)
+    line_color = _hsla_color(hue=base_hue, alpha=1.0)
+
+    fig = go.Figure()
+
+    if all_ratings:
+        fig.add_trace(
+            go.Scatter(
+                x=plot_blame,
+                y=plot_wrong,
+                mode="markers",
+                marker=dict(color=point_color, size=8),
+                customdata=np.stack([plotting_dataframe["series_label"]], axis=1),
+                showlegend=False,
+                hovertemplate=(
+                    "Series: %{customdata[0]}<br>"
+                    "Blame: %{x:.2f}<br>"
+                    "Wrongness: %{y:.2f}<extra></extra>"
+                ),
+            )
+        )
+    else:
+        fig.add_trace(
+            go.Scatter(
+                x=plot_blame,
+                y=plot_wrong,
+                mode="markers",
+                marker=dict(color=point_color, size=10),
+                showlegend=False,
+                hovertemplate=(
+                    "Blame: %{x:.2f}<br>"
+                    "Wrongness: %{y:.2f}<extra></extra>"
+                ),
+            )
+        )
+
+    fig.add_trace(
+        go.Scatter(
+            x=x_grid,
+            y=fitted_y_values,
+            mode="lines",
+            line=dict(color=line_color, width=8),
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+
+    fig.update_layout(**figure_layout, title=figure_title)
+    fig.update_layout(
+        title_x=0.5,
+        title_xanchor="center",
+        title_font_size=30 if all_ratings else 40,
+        margin=dict(l=585, r=585, t=80, b=90),
+    )
+
+    axes_ranges = [0.8, 9.2]
+    tickvals = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    ticktext = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+    fig.update_xaxes(
+        title_text="Blameworthiness",
+        range=axes_ranges,
+        tickvals=tickvals,
+        ticktext=ticktext,
+        scaleanchor="y",
+        scaleratio=1,
+        zeroline=False,
+        showline=True,
+        mirror=True,
+        tickwidth=0,
+        ticklen=0,
+        ticks="",
+    )
+    fig.update_yaxes(
+        title_text="Wrongness",
+        range=axes_ranges,
+        tickvals=tickvals,
+        ticktext=ticktext,
+        zeroline=False,
+        showline=True,
+        mirror=True,
+        tickwidth=0,
+        ticklen=0,
+        ticks="",
+    )
+
+    fig.add_annotation(
+        x=5, y=1.5, xref='x', yref='y',
+        xanchor="center", yanchor="middle",
+        align="center", showarrow=False,
+        font=dict(size=26, family="Calibri", color="black"),
+        bgcolor="hsla(0, 0%, 100%, 0.75)",
+        text=f"𝑟 = {pearson_r_value:+.2f}<br>𝑝 = {pearson_p_value:.3g}",
+    )
+
+    if export_html:
+        story_condition_normalized = _normalize_story_condition_input(story_condition)
+        cognitive_load_normalized = _normalize_load_condition_input(cognitive_load)
+        story_tag = "pooled" if story_condition_normalized is None else story_condition_normalized
+        load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
+
+        if all_ratings:
+            proximate_tag = "with_proximate" if include_proximate_agent else "distal_only"
+            file_name_figure = f"figure_8_blame_wrongness_all_ratings_{story_tag}_{load_tag}_{proximate_tag}"
+        else:
+            file_name_figure = f"figure_8_blame_wrongness_{aggregation_level_normalized}_{story_tag}_{load_tag}"
+
         _export_plotly_figure_html(
             fig=fig,
             general_settings=general_settings,
@@ -6607,7 +6987,7 @@ def plot_triangulation_2afc_vs_rating_delta(
             - Note: the current 2AFC columns correspond most directly to blame comparisons.
         • story_condition: str | Any
             - If None, pool stories.
-            - If 'fireworks'/'parade' or 'trolley', filter to that story condition.
+            - If 'firework' or 'trolley', filter to that story condition.
         • cognitive_load: str | Any
             - If None, pool load conditions.
             - If 'high' or 'low', filter to that load condition.
@@ -6781,288 +7161,7 @@ def plot_triangulation_2afc_vs_rating_delta(
         story_tag = "pooled" if story_condition_normalized is None else story_condition_normalized
         load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
 
-        file_name_figure = f"triangulation_{comparison_normalized.lower()}_{dv_suffix}_{story_tag}_{load_tag}"
-        _export_plotly_figure_html(
-            fig=fig,
-            general_settings=general_settings,
-            file_name=file_name_figure
-        )
-
-    return fig
-
-
-def plot_blame_wrongness_relationship(
-    general_settings: GeneralSettings,
-    aggregation_level: str | Any = "participant_mean",
-    condition: str | Any = None,
-    story_condition: str | Any = None,
-    cognitive_load: str | Any = None,
-    only_included_participants: bool = True,
-    export_html: bool = True,
-    base_hue: int = 260,
-    all_ratings: bool = False,
-    include_proximate_agent: bool = True,
-    jitter_strength: float = 0.15,
-) -> "object":
-    """
-    Plot the relationship between blame and wrongness.
-
-    Arguments:
-        • aggregation_level: str | Any
-            - If 'participant_mean', average each participant across the three distal conditions.
-            - If 'condition_rows', create one row per participant × condition (CC, CH, DIV).
-            - Only used when all_ratings=False.
-        • condition: str | Any
-            - Optional condition restriction. Supports: 'CC', 'CH', 'DIV', or None.
-            - Only used when aggregation_level='condition_rows' and all_ratings=False.
-        • story_condition: str | Any
-            - If None, pool stories.
-            - If 'fireworks'/'parade' or 'trolley', filter to that story condition.
-        • cognitive_load: str | Any
-            - If None, pool load conditions.
-            - If 'high' or 'low', filter to that load condition.
-        • only_included_participants: bool
-            - If True, restrict to participants who passed all comprehension checks.
-        • export_html: bool
-            - If True, export the Plotly figure to an .html file.
-        • base_hue: int
-            - Starting hue for hsla colors.
-        • all_ratings: bool
-            - If True, plot all individual rating pairs across vignettes with jitter instead of
-              aggregated participant means or condition rows. Ignores aggregation_level and condition.
-        • include_proximate_agent: bool
-            - If True, include CC Proximate and CH Proximate rating pairs.
-            - Only used when all_ratings=True.
-        • jitter_strength: float
-            - Standard deviation of Gaussian jitter applied to x and y when all_ratings=True.
-              Jitter is purely aesthetic and does not affect the correlation or trendline.
-
-    Returns:
-        • plotly.graph_objects.Figure
-    """
-    analysis_dataframe = _get_filtered_plotting_dataframe(
-        general_settings=general_settings,
-        story_condition=story_condition,
-        cognitive_load=cognitive_load,
-        only_included_participants=only_included_participants,
-    )
-
-    if all_ratings:
-        ordered_rating_pairs = [
-            ("CC Distal", "clark_blame_cc", "clark_wrong_cc"),
-            ("CH Distal", "clark_blame_ch", "clark_wrong_ch"),
-            ("DIV Distal", "clark_blame_div", "clark_wrong_div"),
-        ]
-        if include_proximate_agent:
-            ordered_rating_pairs += [
-                ("CC Proximate", "proximate_blame_cc", "proximate_wrong_cc"),
-                ("CH Proximate", "proximate_blame_ch", "proximate_wrong_ch"),
-            ]
-
-        missing_required_columns = [
-            column_name
-            for _, blame_column_name, wrong_column_name in ordered_rating_pairs
-            for column_name in [blame_column_name, wrong_column_name]
-            if column_name not in analysis_dataframe.columns
-        ]
-        if missing_required_columns:
-            raise KeyError(
-                "Missing one or more expected columns required for the all-ratings blame–wrongness plot: "
-                + ", ".join(repr(column_name) for column_name in missing_required_columns)
-            )
-
-        pooled_rows: list[dict[str, Any]] = []
-        for series_label, blame_column_name, wrong_column_name in ordered_rating_pairs:
-            temp_dataframe = pd.DataFrame(
-                {
-                    "series_label": series_label,
-                    "blame_value": pd.to_numeric(analysis_dataframe[blame_column_name], errors="coerce"),
-                    "wrong_value": pd.to_numeric(analysis_dataframe[wrong_column_name], errors="coerce"),
-                }
-            ).dropna(subset=["blame_value", "wrong_value"])
-            pooled_rows.extend(temp_dataframe.to_dict("records"))
-
-        plotting_dataframe = pd.DataFrame(pooled_rows)
-
-        figure_title = "Blame vs. Wrongness Across All Ratings"
-        if include_proximate_agent:
-            figure_title += " (Distal + Proximate)"
-        else:
-            figure_title += " (Distal Only)"
-
-    else:
-        aggregation_level_normalized = str(aggregation_level).strip().lower()
-
-        if aggregation_level_normalized == "participant_mean":
-            plotting_dataframe = pd.DataFrame(
-                {
-                    "blame_value": analysis_dataframe[
-                        ["clark_blame_cc", "clark_blame_ch", "clark_blame_div"]
-                    ].mean(axis=1, skipna=True),
-                    "wrong_value": analysis_dataframe[
-                        ["clark_wrong_cc", "clark_wrong_ch", "clark_wrong_div"]
-                    ].mean(axis=1, skipna=True),
-                }
-            ).dropna()
-
-            figure_title = "Blame vs. Wrongness (Participant Means)"
-        else:
-            selected_condition_codes = _normalize_condition_subset_input(condition)
-
-            condition_rows = []
-            for selected_condition_code in selected_condition_codes:
-                blame_column_name = f"clark_blame_{selected_condition_code.lower()}"
-                wrong_column_name = f"clark_wrong_{selected_condition_code.lower()}"
-                condition_label = {
-                    "CC": "Choice-Choice",
-                    "CH": "Choice-Chance",
-                    "DIV": "Division",
-                }[selected_condition_code]
-
-                temp_dataframe = pd.DataFrame(
-                    {
-                        "condition_label": condition_label,
-                        "blame_value": pd.to_numeric(analysis_dataframe[blame_column_name], errors="coerce"),
-                        "wrong_value": pd.to_numeric(analysis_dataframe[wrong_column_name], errors="coerce"),
-                    }
-                )
-                condition_rows.append(temp_dataframe)
-
-            plotting_dataframe = pd.concat(condition_rows, ignore_index=True).dropna()
-            figure_title = "Blame vs. Wrongness (Participant × Condition Rows)"
-
-    if plotting_dataframe.shape[0] < 5:
-        raise ValueError("Not enough valid observations remain to create the blame–wrongness plot.")
-
-    "Compute correlation and trendline on clean data before any jitter is applied"
-    slope_value, intercept_value, pearson_r_value, pearson_p_value, _ = stats.linregress(
-        plotting_dataframe["blame_value"],
-        plotting_dataframe["wrong_value"],
-    )
-
-    x_grid = np.linspace(
-        float(plotting_dataframe["blame_value"].min()),
-        float(plotting_dataframe["blame_value"].max()),
-        200,
-    )
-    fitted_y_values = intercept_value + slope_value * x_grid
-
-    "Apply jitter to plot coordinates only, after statistics are computed"
-    if jitter_strength > 0:
-        rng = np.random.default_rng(seed=42)
-        plot_blame = plotting_dataframe["blame_value"] + rng.normal(0, jitter_strength, size=len(plotting_dataframe))
-        plot_wrong = plotting_dataframe["wrong_value"] + rng.normal(0, jitter_strength, size=len(plotting_dataframe))
-    else:
-        plot_blame = plotting_dataframe["blame_value"]
-        plot_wrong = plotting_dataframe["wrong_value"]
-
-    point_color = _hsla_color(hue=base_hue, alpha=0.45)
-    line_color = _hsla_color(hue=base_hue + 20, alpha=1.0)
-
-    fig = go.Figure()
-
-    if all_ratings:
-        fig.add_trace(
-            go.Scatter(
-                x=plot_blame,
-                y=plot_wrong,
-                mode="markers",
-                marker=dict(color=point_color, size=8),
-                customdata=np.stack([plotting_dataframe["series_label"]], axis=1),
-                showlegend=False,
-                hovertemplate=(
-                    "Series: %{customdata[0]}<br>"
-                    "Blame: %{x:.2f}<br>"
-                    "Wrongness: %{y:.2f}<extra></extra>"
-                ),
-            )
-        )
-    else:
-        fig.add_trace(
-            go.Scatter(
-                x=plot_blame,
-                y=plot_wrong,
-                mode="markers",
-                marker=dict(color=point_color, size=10),
-                showlegend=False,
-                hovertemplate=(
-                    "Blame: %{x:.2f}<br>"
-                    "Wrongness: %{y:.2f}<extra></extra>"
-                ),
-            )
-        )
-
-    fig.add_trace(
-        go.Scatter(
-            x=x_grid,
-            y=fitted_y_values,
-            mode="lines",
-            line=dict(color=line_color, width=8),
-            showlegend=False,
-            hoverinfo="skip",
-        )
-    )
-
-    fig.update_layout(**figure_layout, title=figure_title)
-    fig.update_layout(
-        title_x=0.5,
-        title_xanchor="center",
-        title_font_size=30 if all_ratings else 40,
-        margin=dict(l=585, r=585, t=80, b=90),
-    )
-
-    axes_ranges = [0.8, 9.2]
-    tickvals = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    ticktext = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-
-    fig.update_xaxes(
-        title_text="Blameworthiness",
-        range=axes_ranges,
-        tickvals=tickvals,
-        ticktext=ticktext,
-        scaleanchor="y",
-        scaleratio=1,
-        zeroline=False,
-        showline=True,
-        mirror=True,
-        tickwidth=0,
-        ticklen=0,
-        ticks="",
-    )
-    fig.update_yaxes(
-        title_text="Wrongness",
-        range=axes_ranges,
-        tickvals=tickvals,
-        ticktext=ticktext,
-        zeroline=False,
-        showline=True,
-        mirror=True,
-        tickwidth=0,
-        ticklen=0,
-        ticks="",
-    )
-
-    fig.add_annotation(
-        x=5, y=1.5, xref='x', yref='y',
-        xanchor="center", yanchor="middle",
-        align="center", showarrow=False,
-        font=dict(size=26, family="Calibri", color="black"),
-        bgcolor="hsla(0, 0%, 100%, 0.75)",
-        text=f"𝑟 = {pearson_r_value:+.2f}<br>𝑝 = {pearson_p_value:.3g}",
-    )
-
-    if export_html:
-        story_condition_normalized = _normalize_story_condition_input(story_condition)
-        cognitive_load_normalized = _normalize_load_condition_input(cognitive_load)
-        story_tag = "pooled" if story_condition_normalized is None else story_condition_normalized
-        load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
-
-        if all_ratings:
-            proximate_tag = "with_proximate" if include_proximate_agent else "distal_only"
-            file_name_figure = f"blame_wrongness_all_ratings_{story_tag}_{load_tag}_{proximate_tag}"
-        else:
-            file_name_figure = f"blame_wrongness_{aggregation_level_normalized}_{story_tag}_{load_tag}"
-
+        file_name_figure = f"figure_x_triangulation_{comparison_normalized.lower()}_{dv_suffix}_{story_tag}_{load_tag}"
         _export_plotly_figure_html(
             fig=fig,
             general_settings=general_settings,
@@ -7115,7 +7214,7 @@ def plot_shielding_by_individual_difference(
             - Ignored when predictor='crt' (CRT scores 0–3 are used directly as categories).
         • story_condition: str | Any
             - If None, pool stories.
-            - If 'fireworks'/'parade' or 'trolley', filter to that story condition.
+            - If 'firework' or 'trolley', filter to that story condition.
         • cognitive_load: str | Any
             - If None, pool load conditions.
             - If 'high' or 'low', filter to that load condition.
@@ -7405,7 +7504,7 @@ def plot_shielding_by_individual_difference(
         delta_tag = "_".join(delta_type_value.lower() for delta_type_value in selected_delta_types)
 
         file_name_figure = (
-            f"shielding_by_{predictor_file_tag}_{dv_suffix}_{delta_tag}_{figure_type_normalized}_{story_tag}_{load_tag}"
+            f"figure_x_shielding_by_{predictor_file_tag}_{dv_suffix}_{delta_tag}_{figure_type_normalized}_{story_tag}_{load_tag}"
         )
         _export_plotly_figure_html(
             fig=fig,
@@ -7458,7 +7557,7 @@ def _load_table_dataframe_from_tables_folder(
 
     if file_path_table.exists():
         try:
-            dataframe_table = pd.read_csv(file_path_table, encoding="utf-8", engine="python")
+            dataframe_table = pd.read_csv(file_path_table, encoding="utf-8-sig", engine="python")
             return {
                 "success": True,
                 "error": False,
@@ -7510,7 +7609,9 @@ def _save_table_dataframe_to_tables_folder(
     return file_path_table
 
 
-def _format_p_value_for_manuscript_table(p_value: float | int | None) -> str:
+def _format_p_value_for_manuscript_table(
+        p_value: float | int | None
+) -> str:
     """
     Format a p-value for manuscript-facing display.
 
@@ -7532,7 +7633,10 @@ def _format_p_value_for_manuscript_table(p_value: float | int | None) -> str:
     return f"{p_value:.4f}"
 
 
-def _format_ci_for_manuscript_table(ci95_lower: float | int | None, ci95_upper: float | int | None) -> str:
+def _format_ci_for_manuscript_table(
+        ci95_lower: float | int | None, 
+        ci95_upper: float | int | None
+) -> str:
     """
     Format a 95% confidence interval for manuscript-facing display.
 
@@ -7568,7 +7672,7 @@ def _pretty_print_table_to_terminal(
     print(dataframe_table.to_string(index=False))
 
 
-def _extract_exact_test_row(
+def _extract_exact_test_row_from_test_csv(
     dataframe_tests: pd.DataFrame,
     dv: str,
     group_a: str,
@@ -7593,7 +7697,7 @@ def _extract_exact_test_row(
         • inclusion_filter: str
             - included_only or all_finishers.
         • story_condition: str
-            - all, parade, trolley.
+            - all, firework, trolley.
         • load_condition: str
             - all, high, low.
         • analysis_family: str | None
@@ -7646,7 +7750,7 @@ def _extract_exact_integrated_contrast_row(
         • inclusion_filter: str
             - included_only or all_finishers.
         • story_condition: str
-            - all, parade, trolley.
+            - all, firework, trolley.
         • contrast_label: str
             - CH - CC, DIV - CC, or CH - DIV.
 
@@ -7674,7 +7778,7 @@ def _extract_exact_integrated_contrast_row(
     return matching_rows.iloc[0]
 
 
-def _build_within_subject_pairwise_blame_matrix_from_cleaned_dataframe(
+def _build_within_subject_pairwise_blame_matrix(
     cleaned_dataframe: pd.DataFrame,
     only_included_participants: bool = True,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -7847,7 +7951,7 @@ def compute_manuscript_table_1_participant_counts(
             "CC": int((subset_dataframe["case_code_position_1"] == "CC").sum()),
             "CH": int((subset_dataframe["case_code_position_1"] == "CH").sum()),
             "DIV": int((subset_dataframe["case_code_position_1"] == "DIV").sum()),
-            "Firework": int((subset_dataframe["story_condition"] == "parade").sum()),
+            "Firework": int((subset_dataframe["story_condition"] == "firework").sum()),
             "Trolley": int((subset_dataframe["story_condition"] == "trolley").sum()),
             "High": int((subset_dataframe["load_condition"] == "high").sum()),
             "Low": int((subset_dataframe["load_condition"] == "low").sum()),
@@ -7944,7 +8048,7 @@ def compute_manuscript_table_2_primary_clark_blame_contrasts(
             ("DIV", "BDIV - BCC"),
         ]:
             if inclusion_filter_value == "included_only":
-                direct_test_row = _extract_exact_test_row(
+                direct_test_row = _extract_exact_test_row_from_test_csv(
                     dataframe_tests=dataframe_tests,
                     dv="first_vignette_clark_blame",
                     group_a=contrast_group_a_value,
@@ -7955,7 +8059,7 @@ def compute_manuscript_table_2_primary_clark_blame_contrasts(
                     analysis_family="confirmatory",
                 )
             else:
-                direct_test_row = _extract_exact_test_row(
+                direct_test_row = _extract_exact_test_row_from_test_csv(
                     dataframe_tests=dataframe_tests,
                     dv="first_vignette_clark_blame",
                     group_a=contrast_group_a_value,
@@ -8100,14 +8204,14 @@ def compute_manuscript_table_3_story_specific_clark_blame_contrasts(
 
     table_rows: list[dict[str, Any]] = []
 
-    story_display_map = {"parade": "Firework", "trolley": "Trolley"}
+    story_display_map = {"firework": "Firework", "trolley": "Trolley"}
     design_display_map = {
         "between_subjects_first_vignette": "Between-subj",
         "within_subjects_repeated_measures": "Within-subj",
     }
     contrast_display_map = {"CH - CC": "BCH - BCC", "DIV - CC": "BDIV - BCC"}
 
-    for story_condition_value in ["parade", "trolley"]:
+    for story_condition_value in ["firework", "trolley"]:
         for analysis_scope_value in ["between_subjects_first_vignette", "within_subjects_repeated_measures"]:
             for contrast_label_value in ["CH - CC", "DIV - CC"]:
                 integrated_row = _extract_exact_integrated_contrast_row(
@@ -8158,7 +8262,7 @@ def compute_manuscript_table_3_story_specific_clark_blame_contrasts(
     return dataframe_table_3
 
 
-def compute_manuscript_table_4_twoafc_distribution(
+def compute_manuscript_table_4_two_alternative_forced_choice_distribution(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -8182,7 +8286,7 @@ def compute_manuscript_table_4_twoafc_distribution(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_4_twoafc_distribution"],
+        table_file_name=table_names["table_4_two_alternative_forced_choice_distribution"],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -8246,7 +8350,7 @@ def compute_manuscript_table_4_twoafc_distribution(
     _save_table_dataframe_to_tables_folder(
         dataframe_table=dataframe_table_4,
         general_settings=general_settings,
-        table_file_name=table_names["table_4_twoafc_distribution"],
+        table_file_name=table_names["table_4_two_alternative_forced_choice_distribution"],
     )
 
     return dataframe_table_4
@@ -8305,7 +8409,7 @@ def compute_supplementary_table_5_within_subject_pairwise_blame_matrix(
     else:
         cleaned_dataframe = cleaned_dataframe.copy()
 
-    formatted_matrix_dataframe, pairwise_long_dataframe = _build_within_subject_pairwise_blame_matrix_from_cleaned_dataframe(
+    formatted_matrix_dataframe, pairwise_long_dataframe = _build_within_subject_pairwise_blame_matrix(
         cleaned_dataframe=cleaned_dataframe,
         only_included_participants=True,
     )
@@ -8327,13 +8431,13 @@ def compute_supplementary_table_5_within_subject_pairwise_blame_matrix(
     }
 
 
-def compute_supplementary_table_s1_cognitive_load_blame_contrasts(
+def compute_supplementary_table_6_cognitive_load_blame_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
 ) -> pd.DataFrame:
     """
-    Compute supplementary Table S1: cognitive-load contrasts for the core blame deltas.
+    Compute supplementary Table 6: cognitive-load contrasts for the core blame deltas.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -8351,7 +8455,7 @@ def compute_supplementary_table_s1_cognitive_load_blame_contrasts(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_s1_cognitive_load_blame_contrasts"],
+        table_file_name=table_names["table_6_cognitive_load_blame_contrasts"],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -8385,7 +8489,7 @@ def compute_supplementary_table_s1_cognitive_load_blame_contrasts(
 
     for load_condition_value in ["all", "high", "low"]:
         for dv_value, contrast_display_label in dv_map.items():
-            row_series = _extract_exact_test_row(
+            row_series = _extract_exact_test_row_from_test_csv(
                 dataframe_tests=dataframe_tests,
                 dv=dv_value,
                 group_a="delta",
@@ -8409,35 +8513,35 @@ def compute_supplementary_table_s1_cognitive_load_blame_contrasts(
                 }
             )
 
-    dataframe_table_s1 = pd.DataFrame(table_rows)
+    dataframe_table_6 = pd.DataFrame(table_rows)
 
     load_sort_order = {"Pooled": 0, "High": 1, "Low": 2}
     contrast_sort_order = {"BCH - BCC": 0, "BDIV - BCC": 1}
 
-    dataframe_table_s1["load_sort_order"] = dataframe_table_s1["Cognitive Load"].map(load_sort_order)
-    dataframe_table_s1["contrast_sort_order"] = dataframe_table_s1["Contrast"].map(contrast_sort_order)
+    dataframe_table_6["load_sort_order"] = dataframe_table_6["Cognitive Load"].map(load_sort_order)
+    dataframe_table_6["contrast_sort_order"] = dataframe_table_6["Contrast"].map(contrast_sort_order)
 
-    dataframe_table_s1 = dataframe_table_s1.sort_values(
+    dataframe_table_6 = dataframe_table_6.sort_values(
         by=["load_sort_order", "contrast_sort_order"],
         kind="stable",
     ).drop(columns=["load_sort_order", "contrast_sort_order"])
 
     _save_table_dataframe_to_tables_folder(
-        dataframe_table=dataframe_table_s1,
+        dataframe_table=dataframe_table_6,
         general_settings=general_settings,
-        table_file_name=table_names["table_s1_cognitive_load_blame_contrasts"],
+        table_file_name=table_names["table_6_cognitive_load_blame_contrasts"],
     )
 
-    return dataframe_table_s1
+    return dataframe_table_6
 
 
-def compute_supplementary_table_s2_secondary_dv_contrasts(
+def compute_supplementary_table_7_secondary_dv_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
 ) -> pd.DataFrame:
     """
-    Compute supplementary Table S2: included-only contrasts across blame, wrongness, and punishment.
+    Compute supplementary Table 7: included-only contrasts across blame, wrongness, and punishment.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -8455,7 +8559,7 @@ def compute_supplementary_table_s2_secondary_dv_contrasts(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_s2_secondary_dv_contrasts"],
+        table_file_name=table_names["table_7_secondary_dv_contrasts"],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -8493,7 +8597,7 @@ def compute_supplementary_table_s2_secondary_dv_contrasts(
 
     for dv_short_label, (between_dv_name, within_dv_prefix, dv_display_label) in dv_display_map.items():
         for contrast_display_label, (between_group_a_value, between_group_b_value, within_dv_suffix) in contrast_map.items():
-            between_row = _extract_exact_test_row(
+            between_row = _extract_exact_test_row_from_test_csv(
                 dataframe_tests=dataframe_tests,
                 dv=between_dv_name,
                 group_a=between_group_a_value,
@@ -8530,7 +8634,7 @@ def compute_supplementary_table_s2_secondary_dv_contrasts(
                 }
             )
 
-            within_row = _extract_exact_test_row(
+            within_row = _extract_exact_test_row_from_test_csv(
                 dataframe_tests=dataframe_tests,
                 dv=f"{within_dv_prefix}_{within_dv_suffix}",
                 group_a="delta",
@@ -8557,37 +8661,37 @@ def compute_supplementary_table_s2_secondary_dv_contrasts(
                 }
             )
 
-    dataframe_table_s2 = pd.DataFrame(table_rows)
+    dataframe_table_7 = pd.DataFrame(table_rows)
 
     dv_sort_order = {"Blame": 0, "Wrongness": 1, "Punishment": 2}
     design_sort_order = {"Between-subj": 0, "Within-subj": 1}
     contrast_sort_order = {"CH - CC": 0, "DIV - CC": 1}
 
-    dataframe_table_s2["dv_sort_order"] = dataframe_table_s2["DV"].map(dv_sort_order)
-    dataframe_table_s2["design_sort_order"] = dataframe_table_s2["Design"].map(design_sort_order)
-    dataframe_table_s2["contrast_sort_order"] = dataframe_table_s2["Contrast"].map(contrast_sort_order)
+    dataframe_table_7["dv_sort_order"] = dataframe_table_7["DV"].map(dv_sort_order)
+    dataframe_table_7["design_sort_order"] = dataframe_table_7["Design"].map(design_sort_order)
+    dataframe_table_7["contrast_sort_order"] = dataframe_table_7["Contrast"].map(contrast_sort_order)
 
-    dataframe_table_s2 = dataframe_table_s2.sort_values(
+    dataframe_table_7 = dataframe_table_7.sort_values(
         by=["dv_sort_order", "design_sort_order", "contrast_sort_order"],
         kind="stable",
     ).drop(columns=["dv_sort_order", "design_sort_order", "contrast_sort_order"])
 
     _save_table_dataframe_to_tables_folder(
-        dataframe_table=dataframe_table_s2,
+        dataframe_table=dataframe_table_7,
         general_settings=general_settings,
-        table_file_name=table_names["table_s2_secondary_dv_contrasts"],
+        table_file_name=table_names["table_7_secondary_dv_contrasts"],
     )
 
-    return dataframe_table_s2
+    return dataframe_table_7
 
 
-def compute_supplementary_table_s3_order_effects_summary(
+def compute_supplementary_table_8_order_effects_summary(
     general_settings: dict[str, Any],
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
 ) -> pd.DataFrame:
     """
-    Compute supplementary Table S3: order-effects summary from the integrated within-subject models.
+    Compute supplementary Table 8: order-effects summary from the integrated within-subject models.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -8605,7 +8709,7 @@ def compute_supplementary_table_s3_order_effects_summary(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_s3_order_effects_summary"],
+        table_file_name=table_names["table_8_order_effects_summary"],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -8679,26 +8783,26 @@ def compute_supplementary_table_s3_order_effects_summary(
             }
         )
 
-    dataframe_table_s3 = pd.DataFrame(table_rows)
+    dataframe_table_8 = pd.DataFrame(table_rows)
 
     effect_sort_order = {
         "Position 2 - Position 1 baseline shift": 0,
         "Position 3 - Position 1 baseline shift": 1,
         "Omnibus condition × position interaction": 2,
     }
-    dataframe_table_s3["effect_sort_order"] = dataframe_table_s3["Effect"].map(effect_sort_order)
-    dataframe_table_s3 = dataframe_table_s3.sort_values(
+    dataframe_table_8["effect_sort_order"] = dataframe_table_8["Effect"].map(effect_sort_order)
+    dataframe_table_8 = dataframe_table_8.sort_values(
         by="effect_sort_order",
         kind="stable",
     ).drop(columns=["effect_sort_order"])
 
     _save_table_dataframe_to_tables_folder(
-        dataframe_table=dataframe_table_s3,
+        dataframe_table=dataframe_table_8,
         general_settings=general_settings,
-        table_file_name=table_names["table_s3_order_effects_summary"],
+        table_file_name=table_names["table_8_order_effects_summary"],
     )
 
-    return dataframe_table_s3
+    return dataframe_table_8
 
 
 def _compute_extra_terminal_statistics_for_manuscript(
@@ -8808,7 +8912,7 @@ def generate_manuscript_and_supplementary_tables(
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_4 = compute_manuscript_table_4_twoafc_distribution(
+    dataframe_table_4 = compute_manuscript_table_4_two_alternative_forced_choice_distribution(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
@@ -8818,17 +8922,17 @@ def generate_manuscript_and_supplementary_tables(
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_s1 = compute_supplementary_table_s1_cognitive_load_blame_contrasts(
+    dataframe_table_6 = compute_supplementary_table_6_cognitive_load_blame_contrasts(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_s2 = compute_supplementary_table_s2_secondary_dv_contrasts(
+    dataframe_table_7 = compute_supplementary_table_7_secondary_dv_contrasts(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_s3 = compute_supplementary_table_s3_order_effects_summary(
+    dataframe_table_8 = compute_supplementary_table_8_order_effects_summary(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
@@ -8857,7 +8961,7 @@ def generate_manuscript_and_supplementary_tables(
         {
             "table_key": "table_4",
             "table_title": "Table 4. 2AFC response distribution",
-            "file_name": table_names["table_4_twoafc_distribution"],
+            "file_name": table_names["table_4_two_alternative_forced_choice_distribution"],
             "table_meaning": "Main-text forced-choice response table.",
         },
         {
@@ -8873,21 +8977,21 @@ def generate_manuscript_and_supplementary_tables(
             "table_meaning": "Supplementary long-form exact statistics for the pairwise blame matrix.",
         },
         {
-            "table_key": "table_s1",
-            "table_title": "Table S1. Cognitive-load blame contrasts",
-            "file_name": table_names["table_s1_cognitive_load_blame_contrasts"],
+            "table_key": "table_6",
+            "table_title": "Table 6. Cognitive-load blame contrasts",
+            "file_name": table_names["table_6_cognitive_load_blame_contrasts"],
             "table_meaning": "Supplementary cognitive-load table for the core blame deltas.",
         },
         {
-            "table_key": "table_s2",
-            "table_title": "Table S2. Secondary DV contrasts",
-            "file_name": table_names["table_s2_secondary_dv_contrasts"],
+            "table_key": "table_7",
+            "table_title": "Table 7. Secondary DV contrasts",
+            "file_name": table_names["table_7_secondary_dv_contrasts"],
             "table_meaning": "Supplementary table spanning blame, wrongness, and punishment.",
         },
         {
-            "table_key": "table_s3",
-            "table_title": "Table S3. Order-effects summary",
-            "file_name": table_names["table_s3_order_effects_summary"],
+            "table_key": "table_8",
+            "table_title": "Table 8. Order-effects summary",
+            "file_name": table_names["table_8_order_effects_summary"],
             "table_meaning": "Supplementary compact summary of baseline position effects and the omnibus condition × position interaction.",
         },
     ]
@@ -8913,9 +9017,9 @@ def generate_manuscript_and_supplementary_tables(
             "TABLE 5. Within-Subject Pairwise Blame Matrix",
             table_5_outputs["formatted_matrix_dataframe"].reset_index().rename(columns={"index": "Row / Column"}),
         )
-        _pretty_print_table_to_terminal("TABLE S1. Cognitive-Load Blame Contrasts", dataframe_table_s1)
-        _pretty_print_table_to_terminal("TABLE S2. Secondary DV Contrasts", dataframe_table_s2)
-        _pretty_print_table_to_terminal("TABLE S3. Order-Effects Summary", dataframe_table_s3)
+        _pretty_print_table_to_terminal("TABLE 6. Cognitive-Load Blame Contrasts", dataframe_table_6)
+        _pretty_print_table_to_terminal("TABLE 7. Secondary DV Contrasts", dataframe_table_7)
+        _pretty_print_table_to_terminal("TABLE 8. Order-Effects Summary", dataframe_table_8)
 
         extra_statistics = _compute_extra_terminal_statistics_for_manuscript(
             general_settings=general_settings,
@@ -8949,11 +9053,12 @@ def generate_manuscript_and_supplementary_tables(
         "table_4": dataframe_table_4,
         "table_5": table_5_outputs["formatted_matrix_dataframe"],
         "table_5_long": table_5_outputs["pairwise_long_dataframe"],
-        "table_s1": dataframe_table_s1,
-        "table_s2": dataframe_table_s2,
-        "table_s3": dataframe_table_s3,
+        "table_6": dataframe_table_6,
+        "table_7": dataframe_table_7,
+        "table_8": dataframe_table_8,
         "table_manifest": dataframe_table_manifest,
     }
+
 
 "=========================================================================================="
 "==================================== Common Variables ===================================="
@@ -8981,12 +9086,12 @@ table_names: dict[str, str] = {
     "table_1_participant_counts": "Table_1_Participant_Counts.csv",
     "table_2_primary_clark_blame_contrasts": "Table_2_Primary_Clark_Blame_Contrasts.csv",
     "table_3_story_specific_clark_blame_contrasts": "Table_3_Story_Specific_Clark_Blame_Contrasts.csv",
-    "table_4_twoafc_distribution": "Table_4_2AFC_Distribution.csv",
+    "table_4_two_alternative_forced_choice_distribution": "Table_4_Two_Alternative_Forced_Choice_Distribution.csv",
     "table_5_within_subject_pairwise_blame_matrix": "Table_5_Within_Subject_Pairwise_Blame_Matrix.csv",
     "table_5_within_subject_pairwise_blame_long": "Table_5_Within_Subject_Pairwise_Blame_Long.csv",
-    "table_s1_cognitive_load_blame_contrasts": "Table_S1_Cognitive_Load_Blame_Contrasts.csv",
-    "table_s2_secondary_dv_contrasts": "Table_S2_Secondary_DV_Contrasts.csv",
-    "table_s3_order_effects_summary": "Table_S3_Order_Effects_Summary.csv",
+    "table_6_cognitive_load_blame_contrasts": "Table_6_Cognitive_Load_Blame_Contrasts.csv",
+    "table_7_secondary_dv_contrasts": "Table_7_Secondary_DV_Contrasts.csv",
+    "table_8_order_effects_summary": "Table_8_Order_Effects_Summary.csv",
     "table_manifest": "Table_Manifest.csv",
 }
 
@@ -8994,14 +9099,17 @@ file_paths: FilePaths = {
     "raw_data":    ROOT / "raw_data",
     "processed":   ROOT / "processed",
     "visuals":     ROOT / "visuals",
+    "images":      ROOT / "images",
     "tables":      ROOT / "tables",
     "root":        ROOT
 }
 
-freeze_timestamp_str = "2/19/2026 10:57:56 PM"
-rebuild_cleaned_dataframe = False
+freeze_timestamp_first = "2/19/2026 10:57:56 PM" 
+freeze_timestamp_last =  "3/20/2026 10:00:09 AM"
+rebuild_cleaned_dataframe = True
+print_tables_to_terminal = True
 create_figures = True
-force_rebuild = False
+force_rebuild = True
 
 default_marker_size = 7
 export_fig = True
@@ -9013,7 +9121,7 @@ figure_layout = dict(
     font=dict(
         family="Calibri",
         size=20,
-        color="black",
+        color="white" if dark_mode else "black",
     ),
     title_x=0.5,
     title_xanchor="center",
@@ -9067,7 +9175,8 @@ general_settings: GeneralSettings = {
     },
     "misc": {
         "rebuild_cleaned_dataframe": rebuild_cleaned_dataframe,
-        "freeze_timestamp_str": freeze_timestamp_str,
+        "freeze_timestamp_first": freeze_timestamp_first,
+        "freeze_timestamp_last": freeze_timestamp_last,
         "force_rebuild": force_rebuild
     }
 }
@@ -9081,7 +9190,7 @@ def main() -> None:
     load_or_build_cleaned_dataframe(general_settings=general_settings, force_rebuild=general_settings["misc"]["rebuild_cleaned_dataframe"])
 
     "Group summaries"
-    compute_group_summaries(general_settings=general_settings, force_rebuild=False)
+    compute_group_summaries(general_settings=general_settings, force_rebuild=None)
 
     "2AFC counts"
     compute_twoafc_counts(general_settings=general_settings, force_rebuild=None, table_form=True)
@@ -9113,23 +9222,33 @@ def main() -> None:
     )
 
     if create_figures:
-        plot_ratings_by_vignette_condition(
-            dv="blame", figure_type="violin", base_hue=200, include_proximate_agent=True,
-            story_condition=None, general_settings=general_settings
-        )
-        plot_within_subject_pairwise_comparison_table(dv="blame", base_hue=220, general_settings=general_settings)
-        plot_trial_order_effects(dv="blame", base_hue=220, order_analysis_mode="legacy", general_settings=general_settings)
-        plot_participant_level_shielding_heatmap(dv="blame", base_hue=220, general_settings=general_settings)
-        plot_shielding_effects_by_cognitive_load(dv="blame", base_hue=200, general_settings=general_settings, delta_type="CH_CC", figure_type="violin")
-        plot_blame_wrongness_relationship(base_hue=200, general_settings=general_settings, all_ratings=True, jitter_strength=0.1)
-        plot_triangulation_2afc_vs_rating_delta(dv="blame", base_hue=200, general_settings=general_settings)
-        plot_shielding_by_individual_difference(dv="blame", base_hue=200, general_settings=general_settings, predictor="indcol")
-        plot_shielding_by_individual_difference(dv="blame", base_hue=200, general_settings=general_settings, predictor="crt")
+        "Figure 3"
+        plot_ratings_by_vignette_condition(      dv="blame", base_hue=base_hue, general_settings=general_settings, figure_type="violin")
+
+        "Figure 4"
+        plot_participant_level_shielding_heatmap(dv="blame", base_hue=base_hue, general_settings=general_settings, include_marginals=True)
+
+        "Table 5"
+        plot_within_subject_pairwise_comparisons(dv="blame", base_hue=base_hue, general_settings=general_settings, include_proximate_agent=True)
+
+        "Figure 6"
+        plot_shielding_effects_by_cognitive_load(dv="blame", base_hue=base_hue, general_settings=general_settings, delta_type="CH_CC", figure_type="violin")
+
+        "Figure 7"
+        plot_trial_order_effects_line_graph(     dv="blame", base_hue=base_hue, general_settings=general_settings, order_analysis_mode="legacy")
+
+        "Figure 8"
+        plot_blameworthiness_wrongness_correlate(            base_hue=base_hue, general_settings=general_settings, all_ratings=True, jitter_strength=0.1)
+
+        "Additional Figures"
+        plot_triangulation_2afc_vs_rating_delta( dv="blame", base_hue=base_hue, general_settings=general_settings, comparison="CH_CC")
+        plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="indcol")
+        plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="crt")
 
     "Tables in the order they appear in the paper"
     generate_manuscript_and_supplementary_tables(
+        print_tables_to_terminal=print_tables_to_terminal,
         general_settings=general_settings,
-        print_tables_to_terminal=False,
         force_rebuild=None,
     )
 

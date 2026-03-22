@@ -1,0 +1,199 @@
+Responsibility Shielding OSF Preregistration - Greg Stanley
+
+Overview
+Research questions or hypotheses
+Let B_CC, B_CH, and B_DIV denote the mean blameworthiness rating for Clark in the first vignette encountered (between-subjects), in the Choice–Choice, Choice–Chance, and Division conditions respectively.
+Confirmatory Hypotheses
+H1 (Shielding/No-shield contrast): Participants will rate Clark as more blameworthy in the Choice-Chance condition than in the Choice-Choice condition: B_CH not equal to B_CC
+H2 (Division baseline vs shielded sequential): Participants will rate Clark as more blameworthy in the Division condition than in the Choice–Choice condition: B_DIV not equal to B_CC
+I expect B_CH to be greater than B_CC and for B_DIV to be greater than B_CC, but the official hypothesis in each case uses a "not equal to" operator.
+The Responsibility Shielding Effect, if found, is min(B_CH, B_DIV) - B_CC.
+Exploratory: Compare CH vs DIV (direction not preregistered), and test whether effects replicate similarly across the two story scenarios (fireworks vs trolley).
+Exploratory: The strength of the Responsibility Shielding Effect will be positively correlated with individualism, as measured by the INDCOL, negatively with reflectivity as measured by the CRT, and positively with the cognitive load manipulation. 
+
+Foreknowledge of data or evidence
+Data does not yet exist. No part of the data that will be used for this analysis plan exists, and no part will be generated until after this plan is registered.
+
+Explanation of foreknowledge and managing unintended influences
+Pilot data were collected to debug materials and are excluded from all preregistered confirmatory analyses; confirmatory analyses will use only data collected after the registration timestamp.
+
+Research Design
+Study type
+Randomized Experiment: Must include random assignment of subjects to treatments or conditions. This usually includes lab experiments, field experiments, intervention experiments, randomized controlled trials, and A/B testing.
+
+Intention for causal interpretation
+Direct inference on causal relationship(s): This study is intended to infer or estimate a causal relationship between two or more variables. It is designed specifically for the purposes of causal inference or identification.
+
+Blinding of experimental treatments
+No blinding is involved.
+
+Additional blinding during research or analysis
+Participants are not informed of the study hypotheses or the existence/nature of alternative conditions. Condition assignment and stimulus presentation are automated by Qualtrics, and outcomes are self-report (no coder judgments).
+
+Study design
+Participants complete a web-based Qualtrics study. Design includes:
+
+Between-subjects factors (randomized):
+
+Story scenario: fireworks/pyrotechnic vs trolley
+
+First vignette condition: Choice–Choice vs Choice–Chance vs Division
+
+Cognitive load condition: high vs low (digit-span style manipulation; included as a secondary moderator)
+
+Within-subject component:
+Each participant reads all three main vignette structures (CC, CH, DIV) in counterbalanced order; however, the primary confirmatory analyses use only the first vignette encountered (between-subjects) to avoid carryover and consistency effects.
+
+Primary outcome:
+Clark blameworthiness rating (1–9 scale) after the vignette.
+
+Secondary outcomes:
+Punishment recommendation (years of prison) and forced-choice comparison items (2AFC) probing within-subject comparative judgments. Additional exploratory measures include CRT and INDCOL.
+
+Comprehension checks and exclusions:
+Participants failing comprehension checks are excluded from confirmatory analyses; incomplete surveys are excluded.
+
+Responsibility_Shielding_Analysis.py
+Responsibility_Shielding.qsf
+Responsibility_Shielding.txt
+Randomization
+This study uses simple randomization for all between-subject factors.
+
+Sampling
+Data collection procedures
+Population / sampling frame: University of Michigan undergraduate subject pool participants recruited via SONA.
+
+Recruitment method: Online study listing in SONA; participants complete a Qualtrics survey.
+
+Eligibility: Age 18+; English fluency sufficient to read vignettes; no additional restrictions.
+
+Procedure overview: Participants provide consent, receive instructions, complete the cognitive load manipulation (memorize a number), read and respond to multiple moral vignettes, complete forced‑choice comparisons and comprehension checks, then complete CRT, INDCOL, and demographics, and finally receive a completion code / credit confirmation.
+
+Expected duration: ~30 minutes.
+
+Data preparation: Data are exported from Qualtrics and preprocessed into an analysis‑ready dataset via a preregistered script (dropping Qualtrics metadata fields, harmonizing variable names, and constructing derived variables described below).
+
+Data collection procedures - File upload
+No files selected
+
+Sample size
+Target N is determined by subject pool credit availability. The planned sample is approximately N = 240 completed participants (0.5 SONA credit each), although the sample may increase if Subject Pool allocates more subject hours, which often happens later in the school semester.
+
+Randomization is expected to yield roughly equal cell sizes for the primary between‑subjects comparison across the three initial‑condition groups (approximately n ≈ 80 per initial condition), though small deviations due to attrition/exclusions are expected.
+
+Sample size rationale
+Primary sample size is constrained by the available subject pool credit (time/credit budget), not by a sequential stopping rule based on outcomes.
+
+Sensitivity note: With n≈80 per group for a two‑group comparison, power is approximately 0.80 to detect standardized mean differences on the order of d≈0.45 with α=0.05 (two‑tailed). Interaction tests (e.g., story × condition) are expected to be less powered.
+
+Starting and stopping rules
+Pilot vs confirmatory boundary: Pilot data collected prior to this OSF registration were used only for refining materials and procedures and will not be included in confirmatory analyses. Confirmatory data collection begins only after the timestamp of this registration.
+
+Stopping rule: Data collection ends when the study exhausts the subject‑pool credit allocation available for the semester (expected ~120 hours; may increase due to administrative reallocation) or at the end of the semester. No stopping decisions will be made based on observed outcomes.
+
+Variables
+Manipulated variables
+Causal‑structure condition (3 levels; presented within‑subjects but used as between‑subjects for confirmatory test via the first vignette encountered):
+• Choice‑Choice (sequential two‑agent)
+• Choice‑Chance (sequential with downstream non‑agentic link)
+• Division (two‑agent conjunctive causation / simultaneous choice structure)
+
+Story family (2 levels; between‑subjects): fireworks/pyrotechnic scenario vs trolley scenario.
+
+Cognitive load (2 levels; between‑subjects): high vs low working‑memory load during vignette responses (implemented via a number‑memory task).
+
+No files selected
+
+Measured variables
+Primary outcome: Clark blame rating after each vignette (9‑point Likert; 1 = not blameworthy at all, 9 = extremely blameworthy). Confirmatory analyses use Clark blame after the first main vignette only.
+
+Secondary outcomes:
+• Clark wrongness ratings (9‑point Likert)
+• Punishment recommendation (years in prison; exploratory)
+• Proximate agent (“Bill”) blame/wrongness/punishment ratings where applicable (secondary/diagnostic)
+• 2AFC forced‑choice comparisons (secondary): CC vs CH, CC vs DIV, and (optionally) CH vs DIV, plus follow‑up “roughly equal vs one is more blameworthy” items
+• Cognitive load manipulation check: number recall accuracy
+• Comprehension checks (true/false): ensure participants understood the stated probabilities and that each actor had an action available that would have prevented harm
+• CRT score
+• INDCOL scale scores
+• Demographics (age, gender, etc.)
+• Qualtrics metadata (duration, etc.) retained for quality checks but not central to confirmatory inference.
+
+Measured variables - File upload
+No files selected
+
+Indices
+• CRT total score: number correct (0–X, depending on CRT length).
+• INDCOL score(s): computed per the scale’s scoring instructions (e.g., mean of relevant items; reverse‑coding where appropriate).
+• Load accuracy: binary (correct/incorrect recall).
+• 2AFC composite coding: For each forced‑choice pair, participants first choose a direction, then indicate whether they believe the two are roughly equal vs different. We will report:
+(a) the fraction choosing each direction in the forced choice, and
+(b) among those who indicate “different,” the directional fraction choosing CH over CC (and DIV over CC).
+
+• Within‑subject deltas (exploratory): CH−CC and DIV−CC computed within participant using Clark blame ratings.
+
+Indices - File upload
+No files selected
+
+Analysis Plan
+Statistical models
+Primary confirmatory analysis (between‑subjects, blame DV):
+Outcome: Clark blame rating after the first main vignette encountered.
+Predictor: first‑encountered causal‑structure condition (3‑level factor: CC, CH, DIV).
+Model: OLS regression (equivalently one‑way ANOVA), with planned contrasts.
+
+Planned contrasts (confirmatory):
+
+CH vs CC (expected CH > CC)
+
+DIV vs CC (expected DIV > CC)
+
+Covariate handling: Primary confirmatory tests will pool across story family and cognitive load, but we will also report models including story family and load as covariates (and optionally condition × story, condition × load interactions) as secondary analyses.
+
+Secondary analyses (exploratory or clearly labeled secondary):
+• Mixed‑effects model (random intercept for participant) predicting Clark blame across all three within‑subject conditions.
+• 2AFC outcomes analyzed descriptively (proportions with 95% CIs) and, if desired, with logistic regression predicting the probability of choosing CH over CC (or DIV over CC).
+• Proximate‑agent ratings: compare Bill blame in competent vs brain‑injury versions (diagnostic that the non‑agentic manipulation affects Bill‑blame as intended).
+• Moderation: test whether cognitive load, CRT, or INDCOL predict the strength of deltas (e.g., CH−CC) or predict 2AFC directional choices.
+
+Assumption checks: Given Likert outcomes, we will treat the 9‑point scale as approximately continuous for OLS; we will also report robustness checks using nonparametric tests (e.g., Mann‑Whitney) or ordinal regression where feasible.
+
+Statistical models - File upload
+No files selected
+
+Transformations
+Likert outcomes will be analyzed as numeric 1–9 without transformation.
+
+Punishment (years) is expected to be skewed; punishment analyses are exploratory and will be reported using both raw values and, if needed, a log(x+1) transformation or rank‑based tests as robustness checks.
+
+Inference criteria
+Alpha: 0.05 (two‑tailed) for the confirmatory family of tests on the primary DV.
+
+Multiple comparisons: The two planned confirmatory contrasts (CH vs CC; DIV vs CC) will be treated as a small family and controlled using Holm‑Bonferroni correction across these two tests. All other analyses will be labeled as secondary or exploratory and interpreted accordingly.
+
+Effect sizes: For pairwise contrasts we will report standardized mean differences (Cohen’s d) with confidence intervals; for omnibus effects we will report partial eta‑squared (or equivalent).
+
+Data inclusion and exclusion
+Inclusion: participants who consent, are age 18+, and complete the survey.
+
+Primary exclusion: participants who fail any of the comprehension checks (must be 100% correct).
+
+Additional exclusions: duplicate entries (same respondent), incomplete responses, or technical failures (e.g., missing primary DV).
+
+Manipulation check handling: cognitive load recall accuracy will not be used as an exclusion criterion in confirmatory analyses; it will be reported as a manipulation check and used in secondary robustness analyses (e.g., rerunning key contrasts among those who recalled correctly).
+
+Missing data
+Qualtrics forces responses on key items; missing data is expected primarily from attrition (participants not finishing). Incomplete surveys will be excluded from confirmatory analyses. Otherwise analyses will be conducted on complete cases.
+
+Other planned analysis
+Compare patterns across story families (fireworks vs trolley) to evaluate generality (secondary).
+
+Examine whether the within‑subject deltas (CH−CC; DIV−CC) are smaller than the between‑subjects first‑vignette effects, consistent with consistency pressures (exploratory).
+
+Analyze 2AFC “equal vs different” endorsements as an indicator of how sharply participants distinguish conditions (secondary).
+
+Exploratory analyses of punishment recommendations, including whether participants recommend incapacitation even when blame is low (e.g., brain‑injury proximate agent).
+
+Other
+Context and additional information
+Pilot data were collected prior to registration to refine vignette clarity and reduce ceiling effects; these pilot participants will not be included in confirmatory analyses. All study materials (stimuli, Qualtrics export template, and preregistered analysis code) are stored in the associated OSF project and will be time‑stamped by this registration. The confirmatory analysis script was prepared prior to confirmatory data collection.
