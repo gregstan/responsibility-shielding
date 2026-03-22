@@ -1,6 +1,6 @@
 ﻿DV,Design,Contrast,Estimate,95% CI,p-value,p_value_raw,p_value_holm,p_value_reported,source_file,source_row_note
-Blame,Between-subj,CH - CC,1.03,"[0.55, 1.51]",7.86e-05,3.929982726030633e-05,7.859965452061266e-05,7.859965452061266e-05,tests.csv,H1: CH vs CC on first vignette (Clark blame)
-Blame,Between-subj,DIV - CC,0.67,"[0.16, 1.18]",0.0108,0.01080760870773179,0.01080760870773179,0.01080760870773179,tests.csv,H2: DIV vs CC on first vignette (Clark blame)
+Blame,Between-subj,CH - CC,1.03,"[0.54, 1.51]",8.19e-05,4.0963010406136734e-05,8.192602081227347e-05,8.192602081227347e-05,tests.csv,H1: CH vs CC on first vignette (Clark blame)
+Blame,Between-subj,DIV - CC,0.67,"[0.18, 1.15]",0.0070,0.007008009963601719,0.007008009963601719,0.007008009963601719,tests.csv,H2: DIV vs CC on first vignette (Clark blame)
 Blame,Within-subj,CH - CC,1.0,"[0.79, 1.22]",3.58e-18,3.5818915283669664e-18,,3.5818915283669664e-18,tests.csv,Within-subject delta vs 0 (included_only): Clark blame CH-CC
 Blame,Within-subj,DIV - CC,0.6,"[0.40, 0.81]",2.19e-08,2.186749024411211e-08,,2.186749024411211e-08,tests.csv,Within-subject delta vs 0 (included_only): Clark blame DIV-CC
 Wrongness,Between-subj,CH - CC,0.43,"[-0.12, 0.98]",0.1258,0.12582980255835008,,0.12582980255835008,tests.csv,Between-subject first vignette (included): CH vs CC on Clark wrongness

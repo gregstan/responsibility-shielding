@@ -123,6 +123,7 @@ The repository is organized so that the paper’s outputs can be matched directl
 
 > Interactive HTML versions live in [`visuals/`](visuals/)
 > Double-click any Plotly `.html` file in `visuals/` to open it in a browser as an interactive figure.
+> analysis.py does **not recreate the static images** used in the paper but you can download the .png Plotly images from your browser tab.
 
 ### Experimental Stimlui - Vignette Illustrations
 - **Trolley -  Choice-Choice** → [`images/stimuli/rshielding_trolley_choice-chance_dark_mode.png`](images/stimuli/rshielding_trolley_choice-chance_dark_mode.png) 
