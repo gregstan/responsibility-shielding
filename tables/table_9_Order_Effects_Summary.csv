@@ -1,4 +1,0 @@
-﻿Effect,Estimate,95% CI,p-value,p_value_raw,source_file,source_row_note
-Position 2 - Position 1 baseline shift,0.35,"[0.16, 0.55]",4.19e-04,0.0004186432186276869,integrated_blame_models.csv,How appearing second changes the overall baseline relative to first.
-Position 3 - Position 1 baseline shift,0.38,"[0.17, 0.59]",3.81e-04,0.00038100947405287163,integrated_blame_models.csv,How appearing third changes the overall baseline relative to first.
-Omnibus condition × position interaction,,,0.9709,0.9708549546907204,integrated_blame_models.csv,Omnibus test of whether the repeated-measures condition contrasts depend on vignette position.

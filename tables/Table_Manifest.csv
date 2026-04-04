@@ -7,5 +7,5 @@ table_5,Table 5. 2AFC response distribution,table_5_Two_Alternative_Forced_Choic
 table_6,Table 6. Within-subject pairwise blame matrix,table_6_Within_Subject_Pairwise_Blame_Matrix.csv,Supplementary formatted upper-triangular pairwise matrix for blame.
 table_6_long,Table 6 long-form backing table,table_6_Within_Subject_Pairwise_Blame_Long.csv,Supplementary long-form exact statistics for the pairwise blame matrix.
 table_7,Table 7. Cognitive-load blame contrasts,table_7_Cognitive_Load_Blame_Contrasts.csv,Supplementary cognitive-load table for the core blame deltas.
-table_8,Table 8. Secondary DV contrasts,table_8_Secondary_DV_Contrasts.csv,"Supplementary table spanning blame, wrongness, and punishment."
-table_9,Table 9. Order-effects summary,table_9_Order_Effects_Summary.csv,Supplementary compact summary of baseline position effects and the omnibus condition × position interaction.
+table_8,Table 8. Order-effects summary,table_8_Order_Effects_Summary.csv,Supplementary compact summary of baseline position effects and the omnibus condition × position interaction.
+table_9,Table 9. Secondary DV contrasts,table_9_Secondary_DV_Contrasts.csv,"Supplementary table spanning blame, wrongness, and punishment."

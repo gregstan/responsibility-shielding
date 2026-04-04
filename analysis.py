@@ -60,8 +60,8 @@ class TableNames(TypedDict):
     table_6_within_subject_pairwise_blame_matrix: Path
     table_6_within_subject_pairwise_blame_long: Path
     table_7_cognitive_load_blame_contrasts: Path
-    table_8_secondary_dv_contrasts: Path
-    table_9_order_effects_summary: Path
+    table_8_order_effects_summary: Path
+    table_9_secondary_dv_contrasts: Path
     table_manifest: Path
 
 class FilePaths(TypedDict):
@@ -86,10 +86,12 @@ class Visuals(TypedDict):
     base_hue: int
 
 class MiscSettings(TypedDict):
+    confirmatory_between_subjects_method: str
     rebuild_cleaned_dataframe: bool
     print_tables_to_terminal: bool
     freeze_timestamp_first: str
     freeze_timestamp_last: str
+    use_integrated_models: bool
     force_rebuild: bool
     
 class GeneralSettings(TypedDict):
@@ -2245,8 +2247,7 @@ def compute_triangulation_results(general_settings: GeneralSettings, force_rebui
     return dataframe_triangulation
 
 
-def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, confirmatory_between_subjects_method: str = "pooled_ols", 
-                                           confirmatory_pooled_ols_covariance_type: str | None = None, force_rebuild: bool | None = None) -> pd.DataFrame:
+def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, confirmatory_pooled_ols_covariance_type: str | None = None, force_rebuild: bool | None = None) -> pd.DataFrame:
     """
     Runs the primary confirmatory tests plus a structured set of exploratory tests.
 
@@ -2297,7 +2298,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         confirmatory_subset = analysis_dataframe.copy()
 
         confirmatory_between_subjects_method_normalized = str(
-            confirmatory_between_subjects_method
+            general_settings["misc"]["confirmatory_between_subjects_method"],
         ).strip().lower()
 
         if confirmatory_between_subjects_method_normalized == "welch":
@@ -8532,199 +8533,12 @@ def compute_manuscript_table_3_primary_clark_blame_contrasts(
     force_rebuild: bool | None = None,
 ) -> pd.DataFrame:
     """
-    Compute manuscript Table 2: primary Clark-blame contrasts.
+    Compute manuscript Table 3: primary Clark-blame contrasts.
 
     Arguments:
         • general_settings: GeneralSettings
         • cleaned_dataframe: pd.DataFrame | None
         • force_rebuild: bool | None
-
-    Returns:
-        • pd.DataFrame
-            - Manuscript-facing Table 2.
-    """
-    if force_rebuild is None:
-        force_rebuild = general_settings["misc"]["force_rebuild"]
-
-    table_names = general_settings["filing"]["table_names"]
-
-    table_extraction = _load_table_dataframe_from_tables_folder(
-        general_settings=general_settings,
-        table_file_name=table_names["table_3_primary_clark_blame_contrasts"],
-        force_rebuild=force_rebuild,
-    )
-    if table_extraction["success"]:
-        return table_extraction["dataframe"]
-    if table_extraction["error"]:
-        raise Exception(table_extraction["message"])
-
-    if cleaned_dataframe is None:
-        cleaned_dataframe = load_or_build_cleaned_dataframe(
-            general_settings=general_settings,
-            force_rebuild=False,
-        )
-    else:
-        cleaned_dataframe = cleaned_dataframe.copy()
-
-    "Force the confirmatory tests table to use pooled OLS, regardless of the current user setting."
-    table_generation_settings = copy.deepcopy(general_settings)
-    confirmatory_method_in_settings = str(
-        general_settings["misc"].get("confirmatory_between_subjects_method", "pooled_ols")
-    ).strip().lower()
-    table_generation_settings["misc"]["confirmatory_between_subjects_method"] = "pooled_ols"
-
-    tests_force_rebuild = force_rebuild or confirmatory_method_in_settings != "pooled_ols"
-
-    dataframe_tests = run_confirmatory_and_exploratory_tests(
-        general_settings=table_generation_settings,
-        force_rebuild=tests_force_rebuild,
-    )
-
-    dataframe_integrated_models = compute_integrated_clark_blame_results(
-        general_settings=general_settings,
-        cleaned_dataframe=cleaned_dataframe,
-        force_rebuild=force_rebuild,
-    )
-
-    table_rows: list[dict[str, Any]] = []
-
-    for inclusion_filter_value, inclusion_display_label in [
-        ("included_only", "Included"),
-        ("all_finishers", "Everyone"),
-    ]:
-        for contrast_group_a_value, contrast_display_label in [
-            ("CH", "BCH - BCC"),
-            ("DIV", "BDIV - BCC"),
-        ]:
-            if inclusion_filter_value == "included_only":
-                direct_test_row = _extract_exact_test_row_from_test_csv(
-                    dataframe_tests=dataframe_tests,
-                    dv="first_vignette_clark_blame",
-                    group_a=contrast_group_a_value,
-                    group_b="CC",
-                    inclusion_filter="included_only",
-                    story_condition="all",
-                    load_condition="all",
-                    analysis_family="confirmatory",
-                )
-            else:
-                direct_test_row = _extract_exact_test_row_from_test_csv(
-                    dataframe_tests=dataframe_tests,
-                    dv="first_vignette_clark_blame",
-                    group_a=contrast_group_a_value,
-                    group_b="CC",
-                    inclusion_filter="all_finishers",
-                    story_condition="all",
-                    load_condition="all",
-                    analysis_family=None,
-                )
-
-            reported_p_value = (
-                direct_test_row["p_value_holm"]
-                if inclusion_filter_value == "included_only" and pd.notna(direct_test_row["p_value_holm"])
-                else direct_test_row["p_value"]
-            )
-
-            table_rows.append(
-                {
-                    "Inclusion": inclusion_display_label,
-                    "Design": "Between-subj",
-                    "Contrast": contrast_display_label,
-                    "Estimate": round(float(direct_test_row["mean_difference_a_minus_b"]), 2),
-                    "95% CI": _format_ci_for_manuscript_table(direct_test_row["ci95_lower"], direct_test_row["ci95_upper"]),
-                    "p-value": _format_p_value_for_manuscript_table(reported_p_value),
-                    "p_value_raw": float(direct_test_row["p_value"]),
-                    "p_value_holm": (
-                        float(direct_test_row["p_value_holm"])
-                        if pd.notna(direct_test_row["p_value_holm"])
-                        else np.nan
-                    ),
-                    "p_value_reported": float(reported_p_value),
-                    "p_value_correction": (
-                        "Holm corrected"
-                        if inclusion_filter_value == "included_only" and pd.notna(direct_test_row["p_value_holm"])
-                        else "Unadjusted"
-                    ),
-                    "source_file": "tests.csv",
-                    "source_row_note": direct_test_row["notes"],
-                }
-            )
-
-        for contrast_label_value, contrast_display_label in [
-            ("CH - CC", "BCH - BCC"),
-            ("DIV - CC", "BDIV - BCC"),
-        ]:
-            integrated_row = _extract_exact_integrated_contrast_row(
-                dataframe_integrated_models=dataframe_integrated_models,
-                analysis_scope="within_subjects_repeated_measures",
-                inclusion_filter=inclusion_filter_value,
-                story_condition="all",
-                contrast_label=contrast_label_value,
-            )
-
-            table_rows.append(
-                {
-                    "Inclusion": inclusion_display_label,
-                    "Design": "Within-subj",
-                    "Contrast": contrast_display_label,
-                    "Estimate": round(float(integrated_row["estimate"]), 2),
-                    "95% CI": _format_ci_for_manuscript_table(integrated_row["ci95_lower"], integrated_row["ci95_upper"]),
-                    "p-value": _format_p_value_for_manuscript_table(integrated_row["p_value"]),
-                    "p_value_raw": float(integrated_row["p_value"]),
-                    "p_value_holm": np.nan,
-                    "p_value_reported": float(integrated_row["p_value"]),
-                    "p_value_correction": "Unadjusted",
-                    "source_file": "integrated_blame_models.csv",
-                    "source_row_note": integrated_row["analysis_meaning"],
-                }
-            )
-
-    dataframe_table_3 = pd.DataFrame(table_rows)
-
-    inclusion_sort_order = {"Included": 0, "Everyone": 1}
-    design_sort_order = {"Between-subj": 0, "Within-subj": 1}
-    contrast_sort_order = {"BCH - BCC": 0, "BDIV - BCC": 1}
-
-    dataframe_table_3["inclusion_sort_order"] = dataframe_table_3["Inclusion"].map(inclusion_sort_order)
-    dataframe_table_3["design_sort_order"] = dataframe_table_3["Design"].map(design_sort_order)
-    dataframe_table_3["contrast_sort_order"] = dataframe_table_3["Contrast"].map(contrast_sort_order)
-
-    dataframe_table_3 = dataframe_table_3.sort_values(
-        by=["inclusion_sort_order", "design_sort_order", "contrast_sort_order"],
-        kind="stable",
-    ).drop(
-        columns=["inclusion_sort_order", "design_sort_order", "contrast_sort_order"],
-    )
-
-    _save_table_dataframe_to_tables_folder(
-        dataframe_table=dataframe_table_3,
-        general_settings=general_settings,
-        table_file_name=table_names["table_3_primary_clark_blame_contrasts"],
-    )
-
-    return dataframe_table_3
-
-
-def compute_manuscript_table_3_primary_clark_blame_contrasts(
-    general_settings: GeneralSettings,
-    cleaned_dataframe: pd.DataFrame | None = None,
-    force_rebuild: bool | None = None,
-    use_integrated_models: bool = False,
-    confirmatory_between_subjects_method: str = "pooled_ols",
-) -> pd.DataFrame:
-    """
-    Compute manuscript Table 3 (or local Table 3): primary Clark-blame contrasts.
-
-    Arguments:
-        • general_settings: GeneralSettings
-        • cleaned_dataframe: pd.DataFrame | None
-        • force_rebuild: bool | None
-        • use_integrated_models: bool
-            - If True, use the current integrated-model rows for the within-subject entries.
-            - If False, extract all rows from tests.csv.
-        • confirmatory_between_subjects_method: str
-            - "pooled_ols" or "welch"
-            - Passed directly to run_confirmatory_and_exploratory_tests(...).
 
     Returns:
         • pd.DataFrame
@@ -8733,9 +8547,11 @@ def compute_manuscript_table_3_primary_clark_blame_contrasts(
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
 
+    use_integrated_models = general_settings["misc"]["use_integrated_models"]
+
     table_names = general_settings["filing"]["table_names"]
 
-    base_table_file_name = table_names["table_2_primary_clark_blame_contrasts"]
+    base_table_file_name = table_names["table_3_primary_clark_blame_contrasts"]
     table_file_name = (
         base_table_file_name.replace(".csv", "_Integrated.csv")
         if use_integrated_models
@@ -8762,7 +8578,6 @@ def compute_manuscript_table_3_primary_clark_blame_contrasts(
 
     dataframe_tests = run_confirmatory_and_exploratory_tests(
         general_settings=general_settings,
-        confirmatory_between_subjects_method=confirmatory_between_subjects_method,
         force_rebuild=force_rebuild,
     )
 
@@ -8926,7 +8741,7 @@ def compute_manuscript_table_4_story_specific_clark_blame_contrasts(
     force_rebuild: bool | None = None,
 ) -> pd.DataFrame:
     """
-    Compute manuscript Table 3: story-specific Clark-blame contrasts for included participants.
+    Compute manuscript Table 4: story-specific Clark-blame contrasts.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -8935,16 +8750,25 @@ def compute_manuscript_table_4_story_specific_clark_blame_contrasts(
 
     Returns:
         • pd.DataFrame
-            - Manuscript-facing Table 3.
+            - Manuscript-facing story-specific contrast table.
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
 
+    use_integrated_models = general_settings["misc"]["use_integrated_models"]
+
     table_names = general_settings["filing"]["table_names"]
+
+    base_table_file_name = table_names["table_4_story_specific_clark_blame_contrasts"]
+    table_file_name = (
+        base_table_file_name.replace(".csv", "_Integrated.csv")
+        if use_integrated_models
+        else base_table_file_name
+    )
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_4_story_specific_clark_blame_contrasts"],
+        table_file_name=table_file_name,
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -8960,43 +8784,105 @@ def compute_manuscript_table_4_story_specific_clark_blame_contrasts(
     else:
         cleaned_dataframe = cleaned_dataframe.copy()
 
-    dataframe_integrated_models = compute_integrated_clark_blame_results(
-        general_settings=general_settings,
-        cleaned_dataframe=cleaned_dataframe,
-        force_rebuild=force_rebuild,
-    )
+    if use_integrated_models:
+        dataframe_integrated_models = compute_integrated_clark_blame_results(
+            general_settings=general_settings,
+            cleaned_dataframe=cleaned_dataframe,
+            force_rebuild=force_rebuild,
+        )
+    else:
+        dataframe_tests = run_confirmatory_and_exploratory_tests(
+            general_settings=general_settings,
+            force_rebuild=force_rebuild,
+        )
 
     table_rows: list[dict[str, Any]] = []
 
     story_display_map = {"firework": "Firework", "trolley": "Trolley"}
-    design_display_map = {
-        "between_subjects_first_vignette": "Between-subj",
-        "within_subjects_repeated_measures": "Within-subj",
-    }
-    contrast_display_map = {"CH - CC": "BCH - BCC", "DIV - CC": "BDIV - BCC"}
+    contrast_metadata = [
+        ("CH", "BCH - BCC", "clark_blame_ch_minus_cc", "CH - CC"),
+        ("DIV", "BDIV - BCC", "clark_blame_div_minus_cc", "DIV - CC"),
+    ]
 
     for story_condition_value in ["firework", "trolley"]:
-        for analysis_scope_value in ["between_subjects_first_vignette", "within_subjects_repeated_measures"]:
-            for contrast_label_value in ["CH - CC", "DIV - CC"]:
-                integrated_row = _extract_exact_integrated_contrast_row(
-                    dataframe_integrated_models=dataframe_integrated_models,
-                    analysis_scope=analysis_scope_value,
+        if use_integrated_models:
+            for analysis_scope_value, design_display_label in [
+                ("between_subjects_first_vignette", "Between-subj"),
+                ("within_subjects_repeated_measures", "Within-subj"),
+            ]:
+                for _, contrast_display_label, _, integrated_contrast_label in contrast_metadata:
+                    integrated_row = _extract_exact_integrated_contrast_row(
+                        dataframe_integrated_models=dataframe_integrated_models,
+                        analysis_scope=analysis_scope_value,
+                        inclusion_filter="included_only",
+                        story_condition=story_condition_value,
+                        contrast_label=integrated_contrast_label,
+                    )
+
+                    table_rows.append(
+                        {
+                            "Story": story_display_map[story_condition_value],
+                            "Design": design_display_label,
+                            "Contrast": contrast_display_label,
+                            "Estimate": round(float(integrated_row["estimate"]), 2),
+                            "95% CI": _format_ci_for_manuscript_table(integrated_row["ci95_lower"], integrated_row["ci95_upper"]),
+                            "p-value": _format_p_value_for_manuscript_table(integrated_row["p_value"]),
+                            "p_value_raw": float(integrated_row["p_value"]),
+                            "source_file": "integrated_blame_models.csv",
+                            "source_row_note": integrated_row["analysis_meaning"],
+                        }
+                    )
+
+        else:
+            "Between-subject story-specific rows from tests.csv"
+            for between_group_a_value, contrast_display_label, within_dv_name, _ in contrast_metadata:
+                between_row = _extract_exact_test_row_from_test_csv(
+                    dataframe_tests=dataframe_tests,
+                    dv="first_vignette_clark_blame",
+                    group_a=between_group_a_value,
+                    group_b="CC",
                     inclusion_filter="included_only",
                     story_condition=story_condition_value,
-                    contrast_label=contrast_label_value,
+                    load_condition="all",
+                    analysis_family="exploratory",
                 )
 
                 table_rows.append(
                     {
                         "Story": story_display_map[story_condition_value],
-                        "Design": design_display_map[analysis_scope_value],
-                        "Contrast": contrast_display_map[contrast_label_value],
-                        "Estimate": round(float(integrated_row["estimate"]), 2),
-                        "95% CI": _format_ci_for_manuscript_table(integrated_row["ci95_lower"], integrated_row["ci95_upper"]),
-                        "p-value": _format_p_value_for_manuscript_table(integrated_row["p_value"]),
-                        "p_value_raw": float(integrated_row["p_value"]),
-                        "source_file": "integrated_blame_models.csv",
-                        "source_row_note": integrated_row["analysis_meaning"],
+                        "Design": "Between-subj",
+                        "Contrast": contrast_display_label,
+                        "Estimate": round(float(between_row["mean_difference_a_minus_b"]), 2),
+                        "95% CI": _format_ci_for_manuscript_table(between_row["ci95_lower"], between_row["ci95_upper"]),
+                        "p-value": _format_p_value_for_manuscript_table(between_row["p_value"]),
+                        "p_value_raw": float(between_row["p_value"]),
+                        "source_file": "tests.csv",
+                        "source_row_note": between_row["notes"],
+                    }
+                )
+
+                within_row = _extract_exact_test_row_from_test_csv(
+                    dataframe_tests=dataframe_tests,
+                    dv=within_dv_name,
+                    group_a="delta",
+                    group_b="0",
+                    inclusion_filter="included_only",
+                    story_condition=story_condition_value,
+                    load_condition="all",
+                    analysis_family=None,
+                )
+
+                table_rows.append(
+                    {
+                        "Story": story_display_map[story_condition_value],
+                        "Design": "Within-subj",
+                        "Contrast": contrast_display_label,
+                        "Estimate": round(float(within_row["mean_difference_a_minus_b"]), 2),
+                        "95% CI": _format_ci_for_manuscript_table(within_row["ci95_lower"], within_row["ci95_upper"]),
+                        "p-value": _format_p_value_for_manuscript_table(within_row["p_value"]),
+                        "p_value_raw": float(within_row["p_value"]),
+                        "source_file": "tests.csv",
+                        "source_row_note": within_row["notes"],
                     }
                 )
 
@@ -9020,7 +8906,7 @@ def compute_manuscript_table_4_story_specific_clark_blame_contrasts(
     _save_table_dataframe_to_tables_folder(
         dataframe_table=dataframe_table_4,
         general_settings=general_settings,
-        table_file_name=table_names["table_4_story_specific_clark_blame_contrasts"],
+        table_file_name=table_file_name,
     )
 
     return dataframe_table_4
@@ -9032,7 +8918,7 @@ def compute_manuscript_table_5_two_alternative_forced_choice_distribution(
     force_rebuild: bool | None = None,
 ) -> pd.DataFrame:
     """
-    Compute manuscript Table 4: the 2AFC response distribution table.
+    Compute manuscript Table 5: the 2AFC response distribution table.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -9041,7 +8927,6 @@ def compute_manuscript_table_5_two_alternative_forced_choice_distribution(
 
     Returns:
         • pd.DataFrame
-            - Manuscript-facing Table 4.
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
@@ -9126,7 +9011,7 @@ def compute_supplementary_table_6_within_subject_pairwise_blame_matrix(
     force_rebuild: bool | None = None,
 ) -> dict[str, pd.DataFrame]:
     """
-    Compute supplementary Table 5: the within-subject pairwise blame matrix, plus its long-form backing table.
+    Compute supplementary Table 6: the within-subject pairwise blame matrix, plus its long-form backing table.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -9198,10 +9083,10 @@ def compute_supplementary_table_6_within_subject_pairwise_blame_matrix(
 def compute_supplementary_table_7_cognitive_load_blame_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
-    force_rebuild: bool | None = None,
+    force_rebuild: bool | None = None
 ) -> pd.DataFrame:
     """
-    Compute supplementary Table 6: cognitive-load contrasts for the core blame deltas.
+    Compute supplementary Table 7: cognitive-load contrasts for the core blame deltas.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -9299,13 +9184,199 @@ def compute_supplementary_table_7_cognitive_load_blame_contrasts(
     return dataframe_table_7
 
 
-def compute_supplementary_table_8_secondary_dv_contrasts(
+def compute_supplementary_table_8_order_effects_summary(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
 ) -> pd.DataFrame:
     """
-    Compute supplementary Table 7: included-only contrasts across blame, wrongness, and punishment.
+    Compute supplementary Table 8: order-effects summary.
+
+    Arguments:
+        • general_settings: GeneralSettings
+        • cleaned_dataframe: pd.DataFrame | None
+        • force_rebuild: bool | None
+
+    Returns:
+        • pd.DataFrame
+            - Manuscript-facing order-effects summary table.
+    """
+    if force_rebuild is None:
+        force_rebuild = general_settings["misc"]["force_rebuild"]
+
+    use_integrated_models = general_settings["misc"]["use_integrated_models"]
+
+    table_names = general_settings["filing"]["table_names"]
+
+    base_table_file_name = table_names["table_8_order_effects_summary"]
+    table_file_name = (
+        base_table_file_name.replace(".csv", "_Integrated.csv")
+        if use_integrated_models
+        else base_table_file_name
+    )
+
+    table_extraction = _load_table_dataframe_from_tables_folder(
+        general_settings=general_settings,
+        table_file_name=table_file_name,
+        force_rebuild=force_rebuild,
+    )
+    if table_extraction["success"]:
+        return table_extraction["dataframe"]
+    if table_extraction["error"]:
+        raise Exception(table_extraction["message"])
+
+    if cleaned_dataframe is None:
+        cleaned_dataframe = load_or_build_cleaned_dataframe(
+            general_settings=general_settings,
+            force_rebuild=False,
+        )
+    else:
+        cleaned_dataframe = cleaned_dataframe.copy()
+
+    if use_integrated_models:
+        dataframe_integrated_models = compute_integrated_clark_blame_results(
+            general_settings=general_settings,
+            cleaned_dataframe=cleaned_dataframe,
+            force_rebuild=force_rebuild,
+        )
+
+        table_rows: list[dict[str, Any]] = []
+
+        coefficient_rows = dataframe_integrated_models.loc[
+            (dataframe_integrated_models["analysis_scope"] == "within_subjects_repeated_measures")
+            & (dataframe_integrated_models["row_type"] == "coefficient")
+            & (dataframe_integrated_models["inclusion_filter"] == "included_only")
+            & (dataframe_integrated_models["term_name"].isin([
+                "C(vignette_position, Treatment(reference=1))[T.2]",
+                "C(vignette_position, Treatment(reference=1))[T.3]",
+            ]))
+        ].copy()
+
+        coefficient_display_map = {
+            "C(vignette_position, Treatment(reference=1))[T.2]": "Position 2 - Position 1 baseline shift",
+            "C(vignette_position, Treatment(reference=1))[T.3]": "Position 3 - Position 1 baseline shift",
+        }
+
+        for _, coefficient_row in coefficient_rows.iterrows():
+            table_rows.append(
+                {
+                    "Effect": coefficient_display_map[coefficient_row["term_name"]],
+                    "Estimate": round(float(coefficient_row["estimate"]), 2),
+                    "95% CI": _format_ci_for_manuscript_table(coefficient_row["ci95_lower"], coefficient_row["ci95_upper"]),
+                    "p-value": _format_p_value_for_manuscript_table(coefficient_row["p_value"]),
+                    "p_value_raw": float(coefficient_row["p_value"]),
+                    "source_file": "integrated_blame_models.csv",
+                    "source_row_note": coefficient_row["analysis_meaning"],
+                }
+            )
+
+        omnibus_row_mask = (
+            (dataframe_integrated_models["analysis_scope"] == "within_subjects_repeated_measures")
+            & (dataframe_integrated_models["row_type"] == "omnibus_test")
+            & (dataframe_integrated_models["inclusion_filter"] == "included_only")
+            & (dataframe_integrated_models["contrast_label"] == "condition_by_position_interaction")
+        )
+        omnibus_rows = dataframe_integrated_models.loc[omnibus_row_mask].copy()
+
+        if omnibus_rows.shape[0] == 1:
+            omnibus_row = omnibus_rows.iloc[0]
+            table_rows.append(
+                {
+                    "Effect": "Omnibus condition × position interaction",
+                    "Estimate": "",
+                    "95% CI": "",
+                    "p-value": _format_p_value_for_manuscript_table(omnibus_row["p_value"]),
+                    "p_value_raw": float(omnibus_row["p_value"]),
+                    "source_file": "integrated_blame_models.csv",
+                    "source_row_note": omnibus_row["analysis_meaning"],
+                }
+            )
+
+        dataframe_table_8 = pd.DataFrame(table_rows)
+
+        effect_sort_order = {
+            "Position 2 - Position 1 baseline shift": 0,
+            "Position 3 - Position 1 baseline shift": 1,
+            "Omnibus condition × position interaction": 2,
+        }
+        dataframe_table_8["effect_sort_order"] = dataframe_table_8["Effect"].map(effect_sort_order)
+        dataframe_table_8 = dataframe_table_8.sort_values(
+            by="effect_sort_order",
+            kind="stable",
+        ).drop(columns=["effect_sort_order"])
+
+    else:
+        dataframe_consistency_effects = compute_consistency_effects(
+            general_settings=general_settings,
+            force_rebuild=force_rebuild,
+        )
+
+        table_rows: list[dict[str, Any]] = []
+
+        dv_display_map = {
+            "clark_blame": "Blame",
+            "clark_wrong": "Wrongness",
+            "clark_punish": "Punishment",
+        }
+
+        comparison_suffixes = [
+            ("CH rating when CH-first vs when CC-first", "CH rating when CH first vs CC first"),
+            ("CC rating when CH-first vs when CC-first", "CC rating when CH first vs CC first"),
+        ]
+
+        for dv_prefix, dv_display_label in dv_display_map.items():
+            for raw_comparison_suffix, comparison_display_label in comparison_suffixes:
+                row_series = _extract_exact_consistency_row_from_csv(
+                    dataframe_consistency_effects=dataframe_consistency_effects,
+                    inclusion_filter="included_only",
+                    comparison=f"{dv_prefix}: {raw_comparison_suffix}",
+                )
+
+                table_rows.append(
+                    {
+                        "DV": dv_display_label,
+                        "Comparison": comparison_display_label,
+                        "Estimate": round(float(row_series["mean_difference_a_minus_b"]), 2),
+                        "95% CI": _format_ci_for_manuscript_table(row_series["ci95_lower"], row_series["ci95_upper"]),
+                        "p-value": _format_p_value_for_manuscript_table(row_series["p_value"]),
+                        "p_value_raw": float(row_series["p_value"]),
+                        "source_file": "consistency_effects.csv",
+                        "source_row_note": row_series["comparison"],
+                    }
+                )
+
+        dataframe_table_8 = pd.DataFrame(table_rows)
+
+        dv_sort_order = {"Blame": 0, "Wrongness": 1, "Punishment": 2}
+        comparison_sort_order = {
+            "CH rating when CH first vs CC first": 0,
+            "CC rating when CH first vs CC first": 1,
+        }
+
+        dataframe_table_8["dv_sort_order"] = dataframe_table_8["DV"].map(dv_sort_order)
+        dataframe_table_8["comparison_sort_order"] = dataframe_table_8["Comparison"].map(comparison_sort_order)
+
+        dataframe_table_8 = dataframe_table_8.sort_values(
+            by=["dv_sort_order", "comparison_sort_order"],
+            kind="stable",
+        ).drop(columns=["dv_sort_order", "comparison_sort_order"])
+
+    _save_table_dataframe_to_tables_folder(
+        dataframe_table=dataframe_table_8,
+        general_settings=general_settings,
+        table_file_name=table_file_name,
+    )
+
+    return dataframe_table_8
+
+
+def compute_supplementary_table_9_secondary_dv_contrasts(
+    general_settings: GeneralSettings,
+    cleaned_dataframe: pd.DataFrame | None = None,
+    force_rebuild: bool | None = None,
+) -> pd.DataFrame:
+    """
+    Compute supplementary Table 9: included-only contrasts across blame, wrongness, and punishment.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -9323,7 +9394,7 @@ def compute_supplementary_table_8_secondary_dv_contrasts(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_8_secondary_dv_contrasts"],
+        table_file_name=table_names["table_9_secondary_dv_contrasts"],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -9339,11 +9410,8 @@ def compute_supplementary_table_8_secondary_dv_contrasts(
     else:
         cleaned_dataframe = cleaned_dataframe.copy()
 
-    table_generation_settings = copy.deepcopy(general_settings)
-    table_generation_settings["misc"]["confirmatory_between_subjects_method"] = "pooled_ols"
-
     dataframe_tests = run_confirmatory_and_exploratory_tests(
-        general_settings=table_generation_settings,
+        general_settings=general_settings,
         force_rebuild=force_rebuild,
     )
 
@@ -9425,145 +9493,25 @@ def compute_supplementary_table_8_secondary_dv_contrasts(
                 }
             )
 
-    dataframe_table_8 = pd.DataFrame(table_rows)
+    dataframe_table_9 = pd.DataFrame(table_rows)
 
     dv_sort_order = {"Blame": 0, "Wrongness": 1, "Punishment": 2}
     design_sort_order = {"Between-subj": 0, "Within-subj": 1}
     contrast_sort_order = {"CH - CC": 0, "DIV - CC": 1}
 
-    dataframe_table_8["dv_sort_order"] = dataframe_table_8["DV"].map(dv_sort_order)
-    dataframe_table_8["design_sort_order"] = dataframe_table_8["Design"].map(design_sort_order)
-    dataframe_table_8["contrast_sort_order"] = dataframe_table_8["Contrast"].map(contrast_sort_order)
+    dataframe_table_9["dv_sort_order"] = dataframe_table_9["DV"].map(dv_sort_order)
+    dataframe_table_9["design_sort_order"] = dataframe_table_9["Design"].map(design_sort_order)
+    dataframe_table_9["contrast_sort_order"] = dataframe_table_9["Contrast"].map(contrast_sort_order)
 
-    dataframe_table_8 = dataframe_table_8.sort_values(
+    dataframe_table_9 = dataframe_table_9.sort_values(
         by=["dv_sort_order", "design_sort_order", "contrast_sort_order"],
         kind="stable",
     ).drop(columns=["dv_sort_order", "design_sort_order", "contrast_sort_order"])
 
     _save_table_dataframe_to_tables_folder(
-        dataframe_table=dataframe_table_8,
-        general_settings=general_settings,
-        table_file_name=table_names["table_8_secondary_dv_contrasts"],
-    )
-
-    return dataframe_table_8
-
-
-def compute_supplementary_table_9_order_effects_summary(
-    general_settings: dict[str, Any],
-    cleaned_dataframe: pd.DataFrame | None = None,
-    force_rebuild: bool | None = None,
-) -> pd.DataFrame:
-    """
-    Compute supplementary Table 8: order-effects summary from the integrated within-subject models.
-
-    Arguments:
-        • general_settings: GeneralSettings
-        • cleaned_dataframe: pd.DataFrame | None
-        • force_rebuild: bool | None
-
-    Returns:
-        • pd.DataFrame
-            - Compact order-effects summary table.
-    """
-    if force_rebuild is None:
-        force_rebuild = general_settings["misc"]["force_rebuild"]
-
-    table_names = general_settings["filing"]["table_names"]
-
-    table_extraction = _load_table_dataframe_from_tables_folder(
-        general_settings=general_settings,
-        table_file_name=table_names["table_9_order_effects_summary"],
-        force_rebuild=force_rebuild,
-    )
-    if table_extraction["success"]:
-        return table_extraction["dataframe"]
-    if table_extraction["error"]:
-        raise Exception(table_extraction["message"])
-
-    if cleaned_dataframe is None:
-        cleaned_dataframe = load_or_build_cleaned_dataframe(
-            general_settings=general_settings,
-            force_rebuild=False,
-        )
-    else:
-        cleaned_dataframe = cleaned_dataframe.copy()
-
-    dataframe_integrated_models = compute_integrated_clark_blame_results(
-        general_settings=general_settings,
-        cleaned_dataframe=cleaned_dataframe,
-        force_rebuild=force_rebuild,
-    )
-
-    table_rows: list[dict[str, Any]] = []
-
-    coefficient_rows = dataframe_integrated_models.loc[
-        (dataframe_integrated_models["analysis_scope"] == "within_subjects_repeated_measures")
-        & (dataframe_integrated_models["row_type"] == "coefficient")
-        & (dataframe_integrated_models["inclusion_filter"] == "included_only")
-        & (dataframe_integrated_models["term_name"].isin([
-            "C(vignette_position, Treatment(reference=1))[T.2]",
-            "C(vignette_position, Treatment(reference=1))[T.3]",
-        ]))
-    ].copy()
-
-    coefficient_display_map = {
-        "C(vignette_position, Treatment(reference=1))[T.2]": "Position 2 - Position 1 baseline shift",
-        "C(vignette_position, Treatment(reference=1))[T.3]": "Position 3 - Position 1 baseline shift",
-    }
-
-    for _, coefficient_row in coefficient_rows.iterrows():
-        table_rows.append(
-            {
-                "Effect": coefficient_display_map[coefficient_row["term_name"]],
-                "Estimate": round(float(coefficient_row["estimate"]), 2),
-                "95% CI": _format_ci_for_manuscript_table(coefficient_row["ci95_lower"], coefficient_row["ci95_upper"]),
-                "p-value": _format_p_value_for_manuscript_table(coefficient_row["p_value"]),
-                "p_value_raw": float(coefficient_row["p_value"]),
-                "source_file": "integrated_blame_models.csv",
-                "source_row_note": coefficient_row["analysis_meaning"],
-            }
-        )
-
-    omnibus_row_mask = (
-        (dataframe_integrated_models["analysis_scope"] == "within_subjects_repeated_measures")
-        & (dataframe_integrated_models["row_type"] == "omnibus_test")
-        & (dataframe_integrated_models["inclusion_filter"] == "included_only")
-        & (dataframe_integrated_models["contrast_label"] == "condition_by_position_interaction")
-    )
-    omnibus_rows = dataframe_integrated_models.loc[omnibus_row_mask].copy()
-
-    if omnibus_rows.shape[0] == 1:
-        omnibus_row = omnibus_rows.iloc[0]
-        table_rows.append(
-            {
-                "Effect": "Omnibus condition × position interaction",
-                "Estimate": "",
-                "95% CI": "",
-                "p-value": _format_p_value_for_manuscript_table(omnibus_row["p_value"]),
-                "p_value_raw": float(omnibus_row["p_value"]),
-                "source_file": "integrated_blame_models.csv",
-                "source_row_note": omnibus_row["analysis_meaning"],
-            }
-        )
-
-    dataframe_table_9 = pd.DataFrame(table_rows)
-
-    effect_sort_order = {
-        "Position 2 - Position 1 baseline shift": 0,
-        "Position 3 - Position 1 baseline shift": 1,
-        "Omnibus condition × position interaction": 2,
-    }
-    dataframe_table_9["effect_sort_order"] = dataframe_table_9["Effect"].map(effect_sort_order)
-    dataframe_table_9 = dataframe_table_9.sort_values(
-        by="effect_sort_order",
-        kind="stable",
-    ).drop(columns=["effect_sort_order"])
-
-    _save_table_dataframe_to_tables_folder(
         dataframe_table=dataframe_table_9,
         general_settings=general_settings,
-        table_file_name=table_names["table_9_order_effects_summary"],
+        table_file_name=table_names["table_9_secondary_dv_contrasts"],
     )
 
     return dataframe_table_9
@@ -9629,7 +9577,6 @@ def generate_manuscript_and_supplementary_tables(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
-    print_tables_to_terminal: bool = True,
 ) -> dict[str, Any]:
     """
     Generate all manuscript and supplementary tables in one call.
@@ -9641,8 +9588,6 @@ def generate_manuscript_and_supplementary_tables(
             - Optional cleaned dataframe. If None, load or build it.
         • force_rebuild: bool | None
             - Whether to force rebuilding of the table CSVs.
-        • print_tables_to_terminal: bool
-            - If True, pretty-print the final tables and a few one-line summary statistics.
 
     Returns:
         • dict[str, Any]
@@ -9650,6 +9595,8 @@ def generate_manuscript_and_supplementary_tables(
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
+
+    print_tables_to_terminal = general_settings["misc"]["print_tables_to_terminal"]
 
     "Load or rebuild preprocessed dataframe."
     if cleaned_dataframe is None:
@@ -9695,12 +9642,12 @@ def generate_manuscript_and_supplementary_tables(
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_8 = compute_supplementary_table_8_secondary_dv_contrasts(
+    dataframe_table_8 = compute_supplementary_table_8_order_effects_summary(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_9 = compute_supplementary_table_9_order_effects_summary(
+    dataframe_table_9 = compute_supplementary_table_9_secondary_dv_contrasts(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
@@ -9758,15 +9705,15 @@ def generate_manuscript_and_supplementary_tables(
         },
         {
             "table_key": "table_8",
-            "table_title": "Table 8. Secondary DV contrasts",
-            "file_name": table_names["table_8_secondary_dv_contrasts"],
-            "table_meaning": "Supplementary table spanning blame, wrongness, and punishment.",
+            "table_title": "Table 8. Order-effects summary",
+            "file_name": table_names["table_8_order_effects_summary"],
+            "table_meaning": "Supplementary compact summary of baseline position effects and the omnibus condition × position interaction.",
         },
         {
             "table_key": "table_9",
-            "table_title": "Table 9. Order-effects summary",
-            "file_name": table_names["table_9_order_effects_summary"],
-            "table_meaning": "Supplementary compact summary of baseline position effects and the omnibus condition × position interaction.",
+            "table_title": "Table 9. Secondary DV contrasts",
+            "file_name": table_names["table_9_secondary_dv_contrasts"],
+            "table_meaning": "Supplementary table spanning blame, wrongness, and punishment.",
         },
     ]
     dataframe_table_manifest = pd.DataFrame(table_manifest_rows)
@@ -9793,8 +9740,8 @@ def generate_manuscript_and_supplementary_tables(
             table_6_outputs["formatted_matrix_dataframe"].reset_index().rename(columns={"index": "Row / Column"}),
         )
         _pretty_print_table_to_terminal("TABLE 7. Cognitive-Load Blame Contrasts", dataframe_table_7)
-        _pretty_print_table_to_terminal("TABLE 8. Secondary DV Contrasts", dataframe_table_8)
-        _pretty_print_table_to_terminal("TABLE 9. Order-Effects Summary", dataframe_table_9)
+        _pretty_print_table_to_terminal("TABLE 8. Order-Effects Summary", dataframe_table_8)
+        _pretty_print_table_to_terminal("TABLE 9. Secondary DV Contrasts", dataframe_table_9)
 
         extra_statistics = _compute_extra_terminal_statistics_for_manuscript(
             general_settings=general_settings,
@@ -9867,8 +9814,8 @@ table_names: dict[str, str] = {
     "table_6_within_subject_pairwise_blame_matrix": "table_6_Within_Subject_Pairwise_Blame_Matrix.csv",
     "table_6_within_subject_pairwise_blame_long": "table_6_Within_Subject_Pairwise_Blame_Long.csv",
     "table_7_cognitive_load_blame_contrasts": "table_7_Cognitive_Load_Blame_Contrasts.csv",
-    "table_8_secondary_dv_contrasts": "table_8_Secondary_DV_Contrasts.csv",
-    "table_9_order_effects_summary": "table_9_Order_Effects_Summary.csv",
+    "table_8_order_effects_summary": "table_8_Order_Effects_Summary.csv",
+    "table_9_secondary_dv_contrasts": "table_9_Secondary_DV_Contrasts.csv",
     "table_manifest": "Table_Manifest.csv",
 }
 
@@ -9886,6 +9833,7 @@ freeze_timestamp_first = "2/19/2026 10:57:56 PM"
 freeze_timestamp_last =  "3/20/2026 10:00:09 AM"
 rebuild_cleaned_dataframe = True
 print_tables_to_terminal = True
+use_integrated_models = False
 force_rebuild = True
 
 default_marker_size = 7
@@ -9957,6 +9905,7 @@ general_settings: GeneralSettings = {
         "print_tables_to_terminal": print_tables_to_terminal,
         "freeze_timestamp_first": freeze_timestamp_first,
         "freeze_timestamp_last": freeze_timestamp_last,
+        "use_integrated_models": use_integrated_models,
         "force_rebuild": force_rebuild
     }
 }
@@ -9990,7 +9939,6 @@ def main() -> None:
     "Confirmatory and exploratory tests"
     run_confirmatory_and_exploratory_tests(
         general_settings=general_settings,
-        confirmatory_between_subjects_method="pooled_ols",
         confirmatory_pooled_ols_covariance_type=None,
         force_rebuild=None
     )
@@ -10001,33 +9949,32 @@ def main() -> None:
         force_rebuild=None,
     )
 
-    # if create_figures:
-    #     "Figure 3"
-    #     plot_ratings_by_vignette_condition(      dv="blame", base_hue=base_hue, general_settings=general_settings, figure_type="violin")
+    if create_figures:
+        "Figure 3"
+        plot_ratings_by_vignette_condition(      dv="blame", base_hue=base_hue, general_settings=general_settings, figure_type="violin")
 
-    #     "Figure 4"
-    #     plot_participant_level_shielding_heatmap(dv="blame", base_hue=base_hue, general_settings=general_settings, include_marginals=True)
+        "Figure 4"
+        plot_participant_level_shielding_heatmap(dv="blame", base_hue=base_hue, general_settings=general_settings, include_marginals=True)
 
-    #     "Table 5"
-    #     plot_within_subject_pairwise_comparisons(dv="blame", base_hue=base_hue, general_settings=general_settings, include_proximate_agent=True)
+        "Table 5"
+        plot_within_subject_pairwise_comparisons(dv="blame", base_hue=base_hue, general_settings=general_settings, include_proximate_agent=True)
 
-    #     "Figure 6"
-    #     plot_shielding_effects_by_cognitive_load(dv="blame", base_hue=base_hue, general_settings=general_settings, delta_type="CH_CC", figure_type="violin")
+        "Figure 6"
+        plot_shielding_effects_by_cognitive_load(dv="blame", base_hue=base_hue, general_settings=general_settings, delta_type="CH_CC", figure_type="violin")
 
-    #     "Figure 7"
-    #     plot_trial_order_effects_line_graph(     dv="blame", base_hue=base_hue, general_settings=general_settings, order_analysis_mode="legacy")
+        "Figure 7"
+        plot_trial_order_effects_line_graph(     dv="blame", base_hue=base_hue, general_settings=general_settings, order_analysis_mode="legacy")
 
-    #     "Figure 8"
-    #     plot_blameworthiness_wrongness_correlate(            base_hue=base_hue, general_settings=general_settings, all_ratings=True, jitter_strength=0.1)
+        "Figure 8"
+        plot_blameworthiness_wrongness_correlate(            base_hue=base_hue, general_settings=general_settings, all_ratings=True, jitter_strength=0.1)
 
-    #     "Additional Figures"
-    #     plot_triangulation_2afc_vs_rating_delta( dv="blame", base_hue=base_hue, general_settings=general_settings, comparison="CH_CC")
-    #     plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="indcol")
-    #     plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="crt")
+        "Additional Figures"
+        plot_triangulation_2afc_vs_rating_delta( dv="blame", base_hue=base_hue, general_settings=general_settings, comparison="CH_CC")
+        plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="indcol")
+        plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="crt")
 
     "Tables in the order they appear in the paper"
     generate_manuscript_and_supplementary_tables(
-        print_tables_to_terminal=print_tables_to_terminal,
         general_settings=general_settings,
         force_rebuild=None,
     )
