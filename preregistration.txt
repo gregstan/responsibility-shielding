@@ -73,8 +73,7 @@ Expected duration: ~30 minutes.
 
 Data preparation: Data are exported from Qualtrics and preprocessed into an analysis‑ready dataset via a preregistered script (dropping Qualtrics metadata fields, harmonizing variable names, and constructing derived variables described below).
 
-Data collection procedures - File upload
-No files selected
+Data collection procedures
 
 Sample size
 Target N is determined by subject pool credit availability. The planned sample is approximately N = 240 completed participants (0.5 SONA credit each), although the sample may increase if Subject Pool allocates more subject hours, which often happens later in the school semester.
@@ -102,8 +101,6 @@ Story family (2 levels; between‑subjects): fireworks/pyrotechnic scenario vs t
 
 Cognitive load (2 levels; between‑subjects): high vs low working‑memory load during vignette responses (implemented via a number‑memory task).
 
-No files selected
-
 Measured variables
 Primary outcome: Clark blame rating after each vignette (9‑point Likert; 1 = not blameworthy at all, 9 = extremely blameworthy). Confirmatory analyses use Clark blame after the first main vignette only.
 
@@ -119,8 +116,7 @@ Secondary outcomes:
 • Demographics (age, gender, etc.)
 • Qualtrics metadata (duration, etc.) retained for quality checks but not central to confirmatory inference.
 
-Measured variables - File upload
-No files selected
+Measured variables
 
 Indices
 • CRT total score: number correct (0–X, depending on CRT length).
@@ -131,9 +127,6 @@ Indices
 (b) among those who indicate “different,” the directional fraction choosing CH over CC (and DIV over CC).
 
 • Within‑subject deltas (exploratory): CH−CC and DIV−CC computed within participant using Clark blame ratings.
-
-Indices - File upload
-No files selected
 
 Analysis Plan
 Statistical models
@@ -158,8 +151,7 @@ Secondary analyses (exploratory or clearly labeled secondary):
 
 Assumption checks: Given Likert outcomes, we will treat the 9‑point scale as approximately continuous for OLS; we will also report robustness checks using nonparametric tests (e.g., Mann‑Whitney) or ordinal regression where feasible.
 
-Statistical models - File upload
-No files selected
+Statistical models
 
 Transformations
 Likert outcomes will be analyzed as numeric 1–9 without transformation.

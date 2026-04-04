@@ -53,14 +53,15 @@ class FileNames(TypedDict):
 
 class TableNames(TypedDict):
     table_1_participant_counts: Path
-    table_2_primary_clark_blame_contrasts: Path
-    table_3_story_specific_clark_blame_contrasts: Path
-    table_4_two_alternative_forced_choice_distribution: Path
-    table_5_within_subject_pairwise_blame_matrix: Path
-    table_5_within_subject_pairwise_blame_long: Path
-    table_6_cognitive_load_blame_contrasts: Path
-    table_7_secondary_dv_contrasts: Path
-    table_8_order_effects_summary: Path
+    table_2_means_by_dv_and_condition: Path
+    table_3_primary_clark_blame_contrasts: Path
+    table_4_story_specific_clark_blame_contrasts: Path
+    table_5_two_alternative_forced_choice_distribution: Path
+    table_6_within_subject_pairwise_blame_matrix: Path
+    table_6_within_subject_pairwise_blame_long: Path
+    table_7_cognitive_load_blame_contrasts: Path
+    table_8_secondary_dv_contrasts: Path
+    table_9_order_effects_summary: Path
     table_manifest: Path
 
 class FilePaths(TypedDict):
@@ -1122,7 +1123,9 @@ def load_analysis_dataframe(general_settings: GeneralSettings, file_name_key: st
             "dataframe": None
         }
     
-    dataframe = pd.read_csv(full_path, index_col=0, encoding="utf-8-sig", engine='python') 
+    dataframe = pd.read_csv(full_path, encoding="utf-8-sig", engine="python")
+    if "Unnamed: 0" in dataframe.columns:
+        dataframe = dataframe.drop(columns=["Unnamed: 0"])
     message = f"Successfully loaded dataframe {file_name}!"
     return {
         "success": True, 
@@ -1751,7 +1754,7 @@ def compute_twoafc_counts(general_settings: GeneralSettings, force_rebuild: bool
         return pivoted
 
     "Determine which file_name_key to use based on table_form"
-    file_name_key = "afc_counts_table" if table_form else "afc_counts"
+    file_name_key = "afc_counts_table" if table_form else "afc_counts_long"
 
     "Load and return dataframe if one already exists and not directed to rebuild."
     group_summaries_extraction = load_analysis_dataframe(
@@ -7736,6 +7739,43 @@ def _extract_exact_test_row_from_test_csv(
     return matching_rows.iloc[0]
 
 
+def _extract_exact_consistency_row_from_csv(
+    dataframe_consistency_effects: pd.DataFrame,
+    inclusion_filter: str,
+    comparison: str,
+) -> pd.Series:
+    """
+    Extract exactly one row from consistency_effects.csv.
+
+    Arguments:
+        • dataframe_consistency_effects: pd.DataFrame
+            - Output of compute_consistency_effects(...).
+        • inclusion_filter: str
+            - included_only or all_finishers.
+        • comparison: str
+            - Exact comparison label from compute_consistency_effects(...).
+
+    Returns:
+        • pd.Series
+            - The unique matching row.
+    """
+    row_mask = (
+        (dataframe_consistency_effects["inclusion_filter"] == inclusion_filter)
+        & (dataframe_consistency_effects["comparison"] == comparison)
+    )
+
+    matching_rows = dataframe_consistency_effects.loc[row_mask].copy()
+
+    if matching_rows.shape[0] != 1:
+        raise Exception(
+            f"Expected exactly one row in consistency_effects.csv for "
+            f"inclusion_filter={inclusion_filter!r}, comparison={comparison!r}, "
+            f"but found {matching_rows.shape[0]} rows."
+        )
+
+    return matching_rows.iloc[0]
+
+
 def _extract_exact_integrated_contrast_row(
     dataframe_integrated_models: pd.DataFrame,
     analysis_scope: str,
@@ -7981,7 +8021,512 @@ def compute_manuscript_table_1_participant_counts(
     return dataframe_table_1
 
 
-def compute_manuscript_table_2_primary_clark_blame_contrasts(
+def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
+    general_settings: GeneralSettings,
+    force_rebuild: bool | None = None,
+    inclusion_filter: str = "included_only",
+    save_pretty_multilevel_version: bool = True,
+    include_medians: bool = False,
+    include_std: bool = False,
+) -> pd.DataFrame:
+    """
+    Compute a descriptive table of mean scale values by DV and condition.
+
+    The table is designed to answer the editor's request that the paper report
+    mean answers on the core rating items, not only contrasts.
+
+    When include_medians=False and include_std=False, the table is pivoted wide
+    so that each DV appears side-by-side for each story condition and condition.
+
+    When include_medians=True or include_std=True, the table is long-format with
+    leading Story Condition, Vignette, and Condition columns, followed by DV-level
+    mean columns and optionally median/SD columns.
+
+    Columns (wide format, include_medians=False and include_std=False):
+        • Story Condition
+        • Condition
+        • Blame First Vignette
+        • Wrong First Vignette
+        • Punish First Vignette
+        • Blame All Vignettes
+        • Wrong All Vignettes
+        • Punish All Vignettes
+
+    Columns (long format, include_medians=True or include_std=True):
+        • Story Condition
+        • Vignette
+        • Condition
+        • Blame Mean
+        • Wrong Mean
+        • Punish Mean
+        • [Blame Median, Wrong Median, Punish Median]   (if include_medians=True)
+        • [Blame Std, Wrong Std, Punish Std]            (if include_std=True)
+
+    Notes:
+        • "First vignette" is only applicable to the distal-agent rows, because proximate
+          ratings were collected later rather than as a first-impression first-vignette measure.
+        • The function saves:
+            1. a flat CSV suitable for code/reloading
+            2. optionally, a pretty CSV with a two-row multilevel header for manuscript use
+
+    Arguments:
+        • general_settings: GeneralSettings
+            - Master project settings dictionary.
+        • force_rebuild: bool | None
+            - Whether to rebuild even if the table already exists.
+        • inclusion_filter: str
+            - Usually "included_only" for the manuscript main text.
+            - Also supports "all_finishers".
+        • save_pretty_multilevel_version: bool
+            - If True, also save a pretty CSV with a two-level header.
+        • include_medians: bool
+            - If True, include median columns in the long-format table.
+        • include_std: bool
+            - If True, include standard deviation columns in the long-format table.
+
+    Returns:
+        • pd.DataFrame
+            - Flat version of the descriptive table.
+    """
+    if force_rebuild is None:
+        force_rebuild = general_settings["misc"]["force_rebuild"]
+
+    valid_inclusion_filters = {"included_only", "all_finishers"}
+    if inclusion_filter not in valid_inclusion_filters:
+        raise ValueError(
+            f"inclusion_filter must be one of {sorted(valid_inclusion_filters)}, not {inclusion_filter!r}."
+        )
+
+    table_names = general_settings["filing"]["table_names"]
+    table_file_name = table_names["table_2_means_by_dv_and_condition"]
+
+    table_extraction = _load_table_dataframe_from_tables_folder(
+        general_settings=general_settings,
+        table_file_name=table_file_name,
+        force_rebuild=force_rebuild,
+    )
+    if table_extraction["success"]:
+        return table_extraction["dataframe"]
+    if table_extraction["error"]:
+        raise Exception(table_extraction["message"])
+
+    group_summaries_dataframe = compute_group_summaries(
+        general_settings=general_settings,
+        force_rebuild=force_rebuild,
+    ).copy()
+
+    group_summaries_dataframe = group_summaries_dataframe.loc[
+        (group_summaries_dataframe["inclusion_filter"] == inclusion_filter)
+        & (group_summaries_dataframe["load_condition"] == "all")
+    ].copy()
+
+    story_condition_display_map = {
+        "all": "Pooled",
+        "firework": "Firework",
+        "trolley": "Trolley",
+    }
+
+    dv_short_map = {
+        "blame": "Blame",
+        "wrongness": "Wrong",
+        "punishment": "Punish",
+    }
+
+    row_specifications: list[dict[str, str]] = [
+        {
+            "dv": "blame",
+            "condition_code": "CC",
+            "condition_display": "CC Distal",
+            "agent_role": "clark",
+        },
+        {
+            "dv": "blame",
+            "condition_code": "CH",
+            "condition_display": "CH Distal",
+            "agent_role": "clark",
+        },
+        {
+            "dv": "blame",
+            "condition_code": "DIV",
+            "condition_display": "DIV Distal",
+            "agent_role": "clark",
+        },
+        {
+            "dv": "blame",
+            "condition_code": "CC",
+            "condition_display": "CC Proximate",
+            "agent_role": "proximate",
+        },
+        {
+            "dv": "blame",
+            "condition_code": "CH",
+            "condition_display": "CH Proximate",
+            "agent_role": "proximate",
+        },
+
+        {
+            "dv": "wrongness",
+            "condition_code": "CC",
+            "condition_display": "CC Distal",
+            "agent_role": "clark",
+        },
+        {
+            "dv": "wrongness",
+            "condition_code": "CH",
+            "condition_display": "CH Distal",
+            "agent_role": "clark",
+        },
+        {
+            "dv": "wrongness",
+            "condition_code": "DIV",
+            "condition_display": "DIV Distal",
+            "agent_role": "clark",
+        },
+        {
+            "dv": "wrongness",
+            "condition_code": "CC",
+            "condition_display": "CC Proximate",
+            "agent_role": "proximate",
+        },
+        {
+            "dv": "wrongness",
+            "condition_code": "CH",
+            "condition_display": "CH Proximate",
+            "agent_role": "proximate",
+        },
+
+        {
+            "dv": "punishment",
+            "condition_code": "CC",
+            "condition_display": "CC Distal",
+            "agent_role": "clark",
+        },
+        {
+            "dv": "punishment",
+            "condition_code": "CH",
+            "condition_display": "CH Distal",
+            "agent_role": "clark",
+        },
+        {
+            "dv": "punishment",
+            "condition_code": "DIV",
+            "condition_display": "DIV Distal",
+            "agent_role": "clark",
+        },
+        {
+            "dv": "punishment",
+            "condition_code": "CC",
+            "condition_display": "CC Proximate",
+            "agent_role": "proximate",
+        },
+        {
+            "dv": "punishment",
+            "condition_code": "CH",
+            "condition_display": "CH Proximate",
+            "agent_role": "proximate",
+        },
+    ]
+
+    story_condition_sort_order = {
+        "Pooled": 0,
+        "Firework": 1,
+        "Trolley": 2,
+    }
+
+    condition_sort_order = {
+        "CC Proximate": 0,
+        "CH Distal": 1,
+        "DIV Distal": 2,
+        "CC Distal": 3,
+        "CH Proximate": 4,
+    }
+
+    def extract_summary_row(
+        analysis_scope: str,
+        story_condition: str,
+        agent_role: str,
+        dv_value: str,
+        condition_code: str,
+    ) -> pd.Series | None:
+        matching_rows = group_summaries_dataframe.loc[
+            (group_summaries_dataframe["analysis_scope"] == analysis_scope)
+            & (group_summaries_dataframe["story_condition"] == story_condition)
+            & (group_summaries_dataframe["agent_role"] == agent_role)
+            & (group_summaries_dataframe["dv"] == dv_value)
+            & (group_summaries_dataframe["condition"] == condition_code)
+        ].copy()
+
+        if matching_rows.shape[0] == 0:
+            return None
+        if matching_rows.shape[0] != 1:
+            raise Exception(
+                f"Expected exactly one group summary row for analysis_scope={analysis_scope!r}, "
+                f"story_condition={story_condition!r}, agent_role={agent_role!r}, "
+                f"dv={dv_value!r}, condition={condition_code!r}, "
+                f"but found {matching_rows.shape[0]} rows."
+            )
+
+        return matching_rows.iloc[0]
+
+    "Build a flat intermediate record per story condition, DV, and condition with all statistics."
+
+    intermediate_rows: list[dict[str, Any]] = []
+
+    for story_condition in ["all", "firework", "trolley"]:
+        story_condition_display = story_condition_display_map[story_condition]
+
+        for row_specification in row_specifications:
+            dv_value = row_specification["dv"]
+            agent_role = row_specification["agent_role"]
+            condition_code = row_specification["condition_code"]
+            dv_short = dv_short_map[dv_value]
+
+            all_vignettes_summary_row = extract_summary_row(
+                analysis_scope="within_subjects_all_vignettes",
+                story_condition=story_condition,
+                agent_role=agent_role,
+                dv_value=dv_value,
+                condition_code=condition_code,
+            )
+
+            if agent_role == "clark":
+                first_vignette_summary_row = extract_summary_row(
+                    analysis_scope="between_subjects_first_vignette",
+                    story_condition=story_condition,
+                    agent_role="clark",
+                    dv_value=dv_value,
+                    condition_code=condition_code,
+                )
+                first_vignette_mean = (
+                    float(first_vignette_summary_row["mean"])
+                    if first_vignette_summary_row is not None
+                    else np.nan
+                )
+                first_vignette_median = (
+                    float(first_vignette_summary_row["median"])
+                    if first_vignette_summary_row is not None
+                    else np.nan
+                )
+                first_vignette_std = (
+                    float(first_vignette_summary_row["std"])
+                    if first_vignette_summary_row is not None
+                    else np.nan
+                )
+            else:
+                first_vignette_mean = np.nan
+                first_vignette_median = np.nan
+                first_vignette_std = np.nan
+
+            all_vignettes_mean = (
+                float(all_vignettes_summary_row["mean"])
+                if all_vignettes_summary_row is not None
+                else np.nan
+            )
+            all_vignettes_median = (
+                float(all_vignettes_summary_row["median"])
+                if all_vignettes_summary_row is not None
+                else np.nan
+            )
+            all_vignettes_std = (
+                float(all_vignettes_summary_row["std"])
+                if all_vignettes_summary_row is not None
+                else np.nan
+            )
+
+            intermediate_rows.append(
+                {
+                    "Story Condition": story_condition_display,
+                    "story_condition_sort": story_condition_sort_order[story_condition_display],
+                    "dv": dv_value,
+                    "dv_short": dv_short,
+                    "Condition": row_specification["condition_display"],
+                    "condition_sort": condition_sort_order[row_specification["condition_display"]],
+                    "first_mean": first_vignette_mean,
+                    "first_median": first_vignette_median,
+                    "first_std": first_vignette_std,
+                    "all_mean": all_vignettes_mean,
+                    "all_median": all_vignettes_median,
+                    "all_std": all_vignettes_std,
+                }
+            )
+
+    intermediate_dataframe = pd.DataFrame(intermediate_rows)
+
+    "Shape the output table according to include_medians / include_std."
+
+    use_wide_format = not include_medians and not include_std
+
+    if use_wide_format:
+        "One row per Story Condition and Condition; DVs spread across columns."
+
+        wide_rows: list[dict[str, Any]] = []
+
+        for story_condition_display, _ in sorted(
+            story_condition_sort_order.items(),
+            key=lambda item: item[1],
+        ):
+            for condition_display, _ in sorted(
+                condition_sort_order.items(),
+                key=lambda item: item[1],
+            ):
+                condition_group = intermediate_dataframe.loc[
+                    (intermediate_dataframe["Story Condition"] == story_condition_display)
+                    & (intermediate_dataframe["Condition"] == condition_display)
+                ].copy()
+
+                wide_row: dict[str, Any] = {
+                    "Story Condition": story_condition_display,
+                    "Condition": condition_display,
+                }
+
+                for _, record in condition_group.iterrows():
+                    dv_short = record["dv_short"]
+                    wide_row[f"{dv_short} First Vignette"] = record["first_mean"]
+                    wide_row[f"{dv_short} All Vignettes"] = record["all_mean"]
+
+                wide_rows.append(wide_row)
+
+        column_order = [
+            "Story Condition",
+            "Condition",
+            "Blame First Vignette",
+            "Wrong First Vignette",
+            "Punish First Vignette",
+            "Blame All Vignettes",
+            "Wrong All Vignettes",
+            "Punish All Vignettes",
+        ]
+        dataframe_table_flat = pd.DataFrame(wide_rows)[column_order]
+
+    else:
+        "One row per Story Condition, Vignette, and Condition; DVs as column groups."
+
+        long_rows: list[dict[str, Any]] = []
+
+        for story_condition_display, _ in sorted(
+            story_condition_sort_order.items(),
+            key=lambda item: item[1],
+        ):
+            for vignette_label, mean_key, median_key, std_key in [
+                ("First", "first_mean", "first_median", "first_std"),
+                ("All", "all_mean", "all_median", "all_std"),
+            ]:
+                for condition_display, _ in sorted(
+                    condition_sort_order.items(),
+                    key=lambda item: item[1],
+                ):
+                    condition_group = intermediate_dataframe.loc[
+                        (intermediate_dataframe["Story Condition"] == story_condition_display)
+                        & (intermediate_dataframe["Condition"] == condition_display)
+                    ].copy()
+
+                    long_row: dict[str, Any] = {
+                        "Story Condition": story_condition_display,
+                        "Vignette": vignette_label,
+                        "Condition": condition_display,
+                    }
+
+                    for _, record in condition_group.iterrows():
+                        dv_short = record["dv_short"]
+                        long_row[f"{dv_short} Mean"] = record[mean_key]
+                        if include_medians:
+                            long_row[f"{dv_short} Median"] = record[median_key]
+                        if include_std:
+                            long_row[f"{dv_short} Std"] = record[std_key]
+
+                    long_rows.append(long_row)
+
+        mean_columns = ["Blame Mean", "Wrong Mean", "Punish Mean"]
+        median_columns = (
+            ["Blame Median", "Wrong Median", "Punish Median"]
+            if include_medians
+            else []
+        )
+        std_columns = (
+            ["Blame Std", "Wrong Std", "Punish Std"]
+            if include_std
+            else []
+        )
+
+        column_order = (
+            ["Story Condition", "Vignette", "Condition"]
+            + mean_columns
+            + median_columns
+            + std_columns
+        )
+        dataframe_table_flat = pd.DataFrame(long_rows)[column_order]
+
+    "Save flat CSV."
+
+    _save_table_dataframe_to_tables_folder(
+        dataframe_table=dataframe_table_flat,
+        general_settings=general_settings,
+        table_file_name=table_file_name,
+    )
+
+    "Optionally save a pretty multilevel CSV."
+
+    if save_pretty_multilevel_version:
+        pretty_dataframe = dataframe_table_flat.copy()
+
+        float_columns = [
+            col
+            for col in pretty_dataframe.columns
+            if col not in {"Story Condition", "Vignette", "Condition"}
+        ]
+        for col in float_columns:
+            pretty_dataframe[col] = pretty_dataframe[col].map(
+                lambda value: "—" if pd.isna(value) else f"{float(value):.2f}"
+            )
+
+        if use_wide_format:
+            pretty_dataframe.columns = pd.MultiIndex.from_tuples(
+                [
+                    ("", "Story Condition"),
+                    ("", "Condition"),
+                    ("First Vignette", "Blame"),
+                    ("First Vignette", "Wrong"),
+                    ("First Vignette", "Punish"),
+                    ("All Vignettes", "Blame"),
+                    ("All Vignettes", "Wrong"),
+                    ("All Vignettes", "Punish"),
+                ]
+            )
+        else:
+            mean_tuples = [("Mean", dv) for dv in ["Blame", "Wrong", "Punish"]]
+            median_tuples = (
+                [("Median", dv) for dv in ["Blame", "Wrong", "Punish"]]
+                if include_medians
+                else []
+            )
+            std_tuples = (
+                [("Std", dv) for dv in ["Blame", "Wrong", "Punish"]]
+                if include_std
+                else []
+            )
+
+            pretty_dataframe.columns = pd.MultiIndex.from_tuples(
+                [
+                    ("", "Story Condition"),
+                    ("", "Vignette"),
+                    ("", "Condition"),
+                ]
+                + mean_tuples
+                + median_tuples
+                + std_tuples
+            )
+
+        pretty_table_file_path = (
+            general_settings["filing"]["file_paths"]["tables"]
+            / table_file_name.replace(".csv", "_Pretty.csv")
+        )
+        pretty_table_file_path.parent.mkdir(parents=True, exist_ok=True)
+        pretty_dataframe.to_csv(pretty_table_file_path, index=False, encoding="utf-8-sig")
+
+    return dataframe_table_flat
+
+
+def compute_manuscript_table_3_primary_clark_blame_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -8005,7 +8550,7 @@ def compute_manuscript_table_2_primary_clark_blame_contrasts(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_2_primary_clark_blame_contrasts"],
+        table_file_name=table_names["table_3_primary_clark_blame_contrasts"],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -8134,17 +8679,17 @@ def compute_manuscript_table_2_primary_clark_blame_contrasts(
                 }
             )
 
-    dataframe_table_2 = pd.DataFrame(table_rows)
+    dataframe_table_3 = pd.DataFrame(table_rows)
 
     inclusion_sort_order = {"Included": 0, "Everyone": 1}
     design_sort_order = {"Between-subj": 0, "Within-subj": 1}
     contrast_sort_order = {"BCH - BCC": 0, "BDIV - BCC": 1}
 
-    dataframe_table_2["inclusion_sort_order"] = dataframe_table_2["Inclusion"].map(inclusion_sort_order)
-    dataframe_table_2["design_sort_order"] = dataframe_table_2["Design"].map(design_sort_order)
-    dataframe_table_2["contrast_sort_order"] = dataframe_table_2["Contrast"].map(contrast_sort_order)
+    dataframe_table_3["inclusion_sort_order"] = dataframe_table_3["Inclusion"].map(inclusion_sort_order)
+    dataframe_table_3["design_sort_order"] = dataframe_table_3["Design"].map(design_sort_order)
+    dataframe_table_3["contrast_sort_order"] = dataframe_table_3["Contrast"].map(contrast_sort_order)
 
-    dataframe_table_2 = dataframe_table_2.sort_values(
+    dataframe_table_3 = dataframe_table_3.sort_values(
         by=["inclusion_sort_order", "design_sort_order", "contrast_sort_order"],
         kind="stable",
     ).drop(
@@ -8152,15 +8697,230 @@ def compute_manuscript_table_2_primary_clark_blame_contrasts(
     )
 
     _save_table_dataframe_to_tables_folder(
-        dataframe_table=dataframe_table_2,
+        dataframe_table=dataframe_table_3,
         general_settings=general_settings,
-        table_file_name=table_names["table_2_primary_clark_blame_contrasts"],
+        table_file_name=table_names["table_3_primary_clark_blame_contrasts"],
     )
 
-    return dataframe_table_2
+    return dataframe_table_3
 
 
-def compute_manuscript_table_3_story_specific_clark_blame_contrasts(
+def compute_manuscript_table_3_primary_clark_blame_contrasts(
+    general_settings: GeneralSettings,
+    cleaned_dataframe: pd.DataFrame | None = None,
+    force_rebuild: bool | None = None,
+    use_integrated_models: bool = False,
+    confirmatory_between_subjects_method: str = "pooled_ols",
+) -> pd.DataFrame:
+    """
+    Compute manuscript Table 3 (or local Table 3): primary Clark-blame contrasts.
+
+    Arguments:
+        • general_settings: GeneralSettings
+        • cleaned_dataframe: pd.DataFrame | None
+        • force_rebuild: bool | None
+        • use_integrated_models: bool
+            - If True, use the current integrated-model rows for the within-subject entries.
+            - If False, extract all rows from tests.csv.
+        • confirmatory_between_subjects_method: str
+            - "pooled_ols" or "welch"
+            - Passed directly to run_confirmatory_and_exploratory_tests(...).
+
+    Returns:
+        • pd.DataFrame
+            - Manuscript-facing primary contrast table.
+    """
+    if force_rebuild is None:
+        force_rebuild = general_settings["misc"]["force_rebuild"]
+
+    table_names = general_settings["filing"]["table_names"]
+
+    base_table_file_name = table_names["table_2_primary_clark_blame_contrasts"]
+    table_file_name = (
+        base_table_file_name.replace(".csv", "_Integrated.csv")
+        if use_integrated_models
+        else base_table_file_name
+    )
+
+    table_extraction = _load_table_dataframe_from_tables_folder(
+        general_settings=general_settings,
+        table_file_name=table_file_name,
+        force_rebuild=force_rebuild,
+    )
+    if table_extraction["success"]:
+        return table_extraction["dataframe"]
+    if table_extraction["error"]:
+        raise Exception(table_extraction["message"])
+
+    if cleaned_dataframe is None:
+        cleaned_dataframe = load_or_build_cleaned_dataframe(
+            general_settings=general_settings,
+            force_rebuild=False,
+        )
+    else:
+        cleaned_dataframe = cleaned_dataframe.copy()
+
+    dataframe_tests = run_confirmatory_and_exploratory_tests(
+        general_settings=general_settings,
+        confirmatory_between_subjects_method=confirmatory_between_subjects_method,
+        force_rebuild=force_rebuild,
+    )
+
+    if use_integrated_models:
+        dataframe_integrated_models = compute_integrated_clark_blame_results(
+            general_settings=general_settings,
+            cleaned_dataframe=cleaned_dataframe,
+            force_rebuild=force_rebuild,
+        )
+
+    table_rows: list[dict[str, Any]] = []
+
+    contrast_metadata = [
+        ("CH", "BCH - BCC", "clark_blame_ch_minus_cc", "CH - CC"),
+        ("DIV", "BDIV - BCC", "clark_blame_div_minus_cc", "DIV - CC"),
+    ]
+
+    for inclusion_filter_value, inclusion_display_label in [
+        ("included_only", "Included"),
+        ("all_finishers", "Everyone"),
+    ]:
+        "Between-subject rows always come from tests.csv"
+        for between_group_a_value, contrast_display_label, _, _ in contrast_metadata:
+            if inclusion_filter_value == "included_only":
+                between_row = _extract_exact_test_row_from_test_csv(
+                    dataframe_tests=dataframe_tests,
+                    dv="first_vignette_clark_blame",
+                    group_a=between_group_a_value,
+                    group_b="CC",
+                    inclusion_filter="included_only",
+                    story_condition="all",
+                    load_condition="all",
+                    analysis_family="confirmatory",
+                )
+            else:
+                between_row = _extract_exact_test_row_from_test_csv(
+                    dataframe_tests=dataframe_tests,
+                    dv="first_vignette_clark_blame",
+                    group_a=between_group_a_value,
+                    group_b="CC",
+                    inclusion_filter="all_finishers",
+                    story_condition="all",
+                    load_condition="all",
+                    analysis_family=None,
+                )
+
+            reported_p_value = (
+                between_row["p_value_holm"]
+                if inclusion_filter_value == "included_only" and pd.notna(between_row["p_value_holm"])
+                else between_row["p_value"]
+            )
+
+            table_rows.append(
+                {
+                    "Inclusion": inclusion_display_label,
+                    "Design": "Between-subj",
+                    "Contrast": contrast_display_label,
+                    "Estimate": round(float(between_row["mean_difference_a_minus_b"]), 2),
+                    "95% CI": _format_ci_for_manuscript_table(between_row["ci95_lower"], between_row["ci95_upper"]),
+                    "p-value": _format_p_value_for_manuscript_table(reported_p_value),
+                    "p_value_raw": float(between_row["p_value"]),
+                    "p_value_holm": (
+                        float(between_row["p_value_holm"])
+                        if pd.notna(between_row["p_value_holm"])
+                        else np.nan
+                    ),
+                    "p_value_reported": float(reported_p_value),
+                    "p_value_correction": (
+                        "Holm corrected"
+                        if inclusion_filter_value == "included_only" and pd.notna(between_row["p_value_holm"])
+                        else "Unadjusted"
+                    ),
+                    "source_file": "tests.csv",
+                    "source_row_note": between_row["notes"],
+                }
+            )
+
+        "Within-subject rows: either integrated-model rows or direct tests from tests.csv"
+        for _, contrast_display_label, within_dv_name, integrated_contrast_label in contrast_metadata:
+            if use_integrated_models:
+                within_row = _extract_exact_integrated_contrast_row(
+                    dataframe_integrated_models=dataframe_integrated_models,
+                    analysis_scope="within_subjects_repeated_measures",
+                    inclusion_filter=inclusion_filter_value,
+                    story_condition="all",
+                    contrast_label=integrated_contrast_label,
+                )
+
+                estimate_value = float(within_row["estimate"])
+                ci95_lower = float(within_row["ci95_lower"])
+                ci95_upper = float(within_row["ci95_upper"])
+                p_value_value = float(within_row["p_value"])
+                source_file_value = "integrated_blame_models.csv"
+                source_note_value = within_row["analysis_meaning"]
+
+            else:
+                within_row = _extract_exact_test_row_from_test_csv(
+                    dataframe_tests=dataframe_tests,
+                    dv=within_dv_name,
+                    group_a="delta",
+                    group_b="0",
+                    inclusion_filter=inclusion_filter_value,
+                    story_condition="all",
+                    load_condition="all",
+                    analysis_family=None,
+                )
+
+                estimate_value = float(within_row["mean_difference_a_minus_b"])
+                ci95_lower = float(within_row["ci95_lower"])
+                ci95_upper = float(within_row["ci95_upper"])
+                p_value_value = float(within_row["p_value"])
+                source_file_value = "tests.csv"
+                source_note_value = within_row["notes"]
+
+            table_rows.append(
+                {
+                    "Inclusion": inclusion_display_label,
+                    "Design": "Within-subj",
+                    "Contrast": contrast_display_label,
+                    "Estimate": round(estimate_value, 2),
+                    "95% CI": _format_ci_for_manuscript_table(ci95_lower, ci95_upper),
+                    "p-value": _format_p_value_for_manuscript_table(p_value_value),
+                    "p_value_raw": p_value_value,
+                    "p_value_holm": np.nan,
+                    "p_value_reported": p_value_value,
+                    "p_value_correction": "Unadjusted",
+                    "source_file": source_file_value,
+                    "source_row_note": source_note_value,
+                }
+            )
+
+    dataframe_table_3 = pd.DataFrame(table_rows)
+
+    inclusion_sort_order = {"Included": 0, "Everyone": 1}
+    design_sort_order = {"Between-subj": 0, "Within-subj": 1}
+    contrast_sort_order = {"BCH - BCC": 0, "BDIV - BCC": 1}
+
+    dataframe_table_3["inclusion_sort_order"] = dataframe_table_3["Inclusion"].map(inclusion_sort_order)
+    dataframe_table_3["design_sort_order"] = dataframe_table_3["Design"].map(design_sort_order)
+    dataframe_table_3["contrast_sort_order"] = dataframe_table_3["Contrast"].map(contrast_sort_order)
+
+    dataframe_table_3 = dataframe_table_3.sort_values(
+        by=["inclusion_sort_order", "design_sort_order", "contrast_sort_order"],
+        kind="stable",
+    ).drop(
+        columns=["inclusion_sort_order", "design_sort_order", "contrast_sort_order"],
+    )
+
+    _save_table_dataframe_to_tables_folder(
+        dataframe_table=dataframe_table_3,
+        general_settings=general_settings,
+        table_file_name=table_file_name,
+    )
+
+    return dataframe_table_3
+
+
+def compute_manuscript_table_4_story_specific_clark_blame_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -8184,7 +8944,7 @@ def compute_manuscript_table_3_story_specific_clark_blame_contrasts(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_3_story_specific_clark_blame_contrasts"],
+        table_file_name=table_names["table_4_story_specific_clark_blame_contrasts"],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -8240,17 +9000,17 @@ def compute_manuscript_table_3_story_specific_clark_blame_contrasts(
                     }
                 )
 
-    dataframe_table_3 = pd.DataFrame(table_rows)
+    dataframe_table_4 = pd.DataFrame(table_rows)
 
     story_sort_order = {"Firework": 0, "Trolley": 1}
     design_sort_order = {"Between-subj": 0, "Within-subj": 1}
     contrast_sort_order = {"BCH - BCC": 0, "BDIV - BCC": 1}
 
-    dataframe_table_3["story_sort_order"] = dataframe_table_3["Story"].map(story_sort_order)
-    dataframe_table_3["design_sort_order"] = dataframe_table_3["Design"].map(design_sort_order)
-    dataframe_table_3["contrast_sort_order"] = dataframe_table_3["Contrast"].map(contrast_sort_order)
+    dataframe_table_4["story_sort_order"] = dataframe_table_4["Story"].map(story_sort_order)
+    dataframe_table_4["design_sort_order"] = dataframe_table_4["Design"].map(design_sort_order)
+    dataframe_table_4["contrast_sort_order"] = dataframe_table_4["Contrast"].map(contrast_sort_order)
 
-    dataframe_table_3 = dataframe_table_3.sort_values(
+    dataframe_table_4 = dataframe_table_4.sort_values(
         by=["story_sort_order", "design_sort_order", "contrast_sort_order"],
         kind="stable",
     ).drop(
@@ -8258,15 +9018,15 @@ def compute_manuscript_table_3_story_specific_clark_blame_contrasts(
     )
 
     _save_table_dataframe_to_tables_folder(
-        dataframe_table=dataframe_table_3,
+        dataframe_table=dataframe_table_4,
         general_settings=general_settings,
-        table_file_name=table_names["table_3_story_specific_clark_blame_contrasts"],
+        table_file_name=table_names["table_4_story_specific_clark_blame_contrasts"],
     )
 
-    return dataframe_table_3
+    return dataframe_table_4
 
 
-def compute_manuscript_table_4_two_alternative_forced_choice_distribution(
+def compute_manuscript_table_5_two_alternative_forced_choice_distribution(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -8290,7 +9050,7 @@ def compute_manuscript_table_4_two_alternative_forced_choice_distribution(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_4_two_alternative_forced_choice_distribution"],
+        table_file_name=table_names["table_5_two_alternative_forced_choice_distribution"],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -8310,7 +9070,7 @@ def compute_manuscript_table_4_two_alternative_forced_choice_distribution(
 
     if pivoted_columns.issubset(set(dataframe_twoafc_counts.columns)):
         "Already in pivoted form — filter to included_only / all and select the four columns"
-        dataframe_table_4 = (
+        dataframe_table_5 = (
             dataframe_twoafc_counts.loc[
                 (dataframe_twoafc_counts["inclusion_filter"] == "included_only")
                 & (dataframe_twoafc_counts["story_condition"] == "all")
@@ -8327,7 +9087,7 @@ def compute_manuscript_table_4_two_alternative_forced_choice_distribution(
             & (dataframe_twoafc_counts["story_condition"] == "all")
         ].copy()
 
-        dataframe_table_4 = (
+        dataframe_table_5 = (
             dataframe_twoafc_counts
             .pivot(index="operator", columns="comparison", values="count")
             .reset_index()
@@ -8335,7 +9095,7 @@ def compute_manuscript_table_4_two_alternative_forced_choice_distribution(
         )
 
         desired_column_order = ["Operator", "Bill ? Clark", "CH ? CC", "DIV ? CC"]
-        dataframe_table_4 = dataframe_table_4[desired_column_order].copy()
+        dataframe_table_5 = dataframe_table_5[desired_column_order].copy()
 
     else:
         raise Exception(
@@ -8345,22 +9105,22 @@ def compute_manuscript_table_4_two_alternative_forced_choice_distribution(
         )
 
     operator_sort_order = {">": 0, "≥": 1, "≤": 2, "<": 3}
-    dataframe_table_4["operator_sort_order"] = dataframe_table_4["Operator"].map(operator_sort_order)
-    dataframe_table_4 = dataframe_table_4.sort_values(
+    dataframe_table_5["operator_sort_order"] = dataframe_table_5["Operator"].map(operator_sort_order)
+    dataframe_table_5 = dataframe_table_5.sort_values(
         by="operator_sort_order",
         kind="stable",
     ).drop(columns=["operator_sort_order"])
 
     _save_table_dataframe_to_tables_folder(
-        dataframe_table=dataframe_table_4,
+        dataframe_table=dataframe_table_5,
         general_settings=general_settings,
-        table_file_name=table_names["table_4_two_alternative_forced_choice_distribution"],
+        table_file_name=table_names["table_5_two_alternative_forced_choice_distribution"],
     )
 
-    return dataframe_table_4
+    return dataframe_table_5
 
 
-def compute_supplementary_table_5_within_subject_pairwise_blame_matrix(
+def compute_supplementary_table_6_within_subject_pairwise_blame_matrix(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -8386,12 +9146,12 @@ def compute_supplementary_table_5_within_subject_pairwise_blame_matrix(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_5_within_subject_pairwise_blame_matrix"],
+        table_file_name=table_names["table_6_within_subject_pairwise_blame_matrix"],
         force_rebuild=force_rebuild,
     )
     long_table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_5_within_subject_pairwise_blame_long"],
+        table_file_name=table_names["table_6_within_subject_pairwise_blame_long"],
         force_rebuild=force_rebuild,
     )
 
@@ -8421,12 +9181,12 @@ def compute_supplementary_table_5_within_subject_pairwise_blame_matrix(
     _save_table_dataframe_to_tables_folder(
         dataframe_table=formatted_matrix_dataframe.reset_index().rename(columns={"index": "Row / Column"}),
         general_settings=general_settings,
-        table_file_name=table_names["table_5_within_subject_pairwise_blame_matrix"],
+        table_file_name=table_names["table_6_within_subject_pairwise_blame_matrix"],
     )
     _save_table_dataframe_to_tables_folder(
         dataframe_table=pairwise_long_dataframe,
         general_settings=general_settings,
-        table_file_name=table_names["table_5_within_subject_pairwise_blame_long"],
+        table_file_name=table_names["table_6_within_subject_pairwise_blame_long"],
     )
 
     return {
@@ -8435,7 +9195,7 @@ def compute_supplementary_table_5_within_subject_pairwise_blame_matrix(
     }
 
 
-def compute_supplementary_table_6_cognitive_load_blame_contrasts(
+def compute_supplementary_table_7_cognitive_load_blame_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -8459,7 +9219,7 @@ def compute_supplementary_table_6_cognitive_load_blame_contrasts(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_6_cognitive_load_blame_contrasts"],
+        table_file_name=table_names["table_7_cognitive_load_blame_contrasts"],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -8517,29 +9277,29 @@ def compute_supplementary_table_6_cognitive_load_blame_contrasts(
                 }
             )
 
-    dataframe_table_6 = pd.DataFrame(table_rows)
+    dataframe_table_7 = pd.DataFrame(table_rows)
 
     load_sort_order = {"Pooled": 0, "High": 1, "Low": 2}
     contrast_sort_order = {"BCH - BCC": 0, "BDIV - BCC": 1}
 
-    dataframe_table_6["load_sort_order"] = dataframe_table_6["Cognitive Load"].map(load_sort_order)
-    dataframe_table_6["contrast_sort_order"] = dataframe_table_6["Contrast"].map(contrast_sort_order)
+    dataframe_table_7["load_sort_order"] = dataframe_table_7["Cognitive Load"].map(load_sort_order)
+    dataframe_table_7["contrast_sort_order"] = dataframe_table_7["Contrast"].map(contrast_sort_order)
 
-    dataframe_table_6 = dataframe_table_6.sort_values(
+    dataframe_table_7 = dataframe_table_7.sort_values(
         by=["load_sort_order", "contrast_sort_order"],
         kind="stable",
     ).drop(columns=["load_sort_order", "contrast_sort_order"])
 
     _save_table_dataframe_to_tables_folder(
-        dataframe_table=dataframe_table_6,
+        dataframe_table=dataframe_table_7,
         general_settings=general_settings,
-        table_file_name=table_names["table_6_cognitive_load_blame_contrasts"],
+        table_file_name=table_names["table_7_cognitive_load_blame_contrasts"],
     )
 
-    return dataframe_table_6
+    return dataframe_table_7
 
 
-def compute_supplementary_table_7_secondary_dv_contrasts(
+def compute_supplementary_table_8_secondary_dv_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -8563,7 +9323,7 @@ def compute_supplementary_table_7_secondary_dv_contrasts(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_7_secondary_dv_contrasts"],
+        table_file_name=table_names["table_8_secondary_dv_contrasts"],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -8665,31 +9425,31 @@ def compute_supplementary_table_7_secondary_dv_contrasts(
                 }
             )
 
-    dataframe_table_7 = pd.DataFrame(table_rows)
+    dataframe_table_8 = pd.DataFrame(table_rows)
 
     dv_sort_order = {"Blame": 0, "Wrongness": 1, "Punishment": 2}
     design_sort_order = {"Between-subj": 0, "Within-subj": 1}
     contrast_sort_order = {"CH - CC": 0, "DIV - CC": 1}
 
-    dataframe_table_7["dv_sort_order"] = dataframe_table_7["DV"].map(dv_sort_order)
-    dataframe_table_7["design_sort_order"] = dataframe_table_7["Design"].map(design_sort_order)
-    dataframe_table_7["contrast_sort_order"] = dataframe_table_7["Contrast"].map(contrast_sort_order)
+    dataframe_table_8["dv_sort_order"] = dataframe_table_8["DV"].map(dv_sort_order)
+    dataframe_table_8["design_sort_order"] = dataframe_table_8["Design"].map(design_sort_order)
+    dataframe_table_8["contrast_sort_order"] = dataframe_table_8["Contrast"].map(contrast_sort_order)
 
-    dataframe_table_7 = dataframe_table_7.sort_values(
+    dataframe_table_8 = dataframe_table_8.sort_values(
         by=["dv_sort_order", "design_sort_order", "contrast_sort_order"],
         kind="stable",
     ).drop(columns=["dv_sort_order", "design_sort_order", "contrast_sort_order"])
 
     _save_table_dataframe_to_tables_folder(
-        dataframe_table=dataframe_table_7,
+        dataframe_table=dataframe_table_8,
         general_settings=general_settings,
-        table_file_name=table_names["table_7_secondary_dv_contrasts"],
+        table_file_name=table_names["table_8_secondary_dv_contrasts"],
     )
 
-    return dataframe_table_7
+    return dataframe_table_8
 
 
-def compute_supplementary_table_8_order_effects_summary(
+def compute_supplementary_table_9_order_effects_summary(
     general_settings: dict[str, Any],
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -8713,7 +9473,7 @@ def compute_supplementary_table_8_order_effects_summary(
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_8_order_effects_summary"],
+        table_file_name=table_names["table_9_order_effects_summary"],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -8787,26 +9547,26 @@ def compute_supplementary_table_8_order_effects_summary(
             }
         )
 
-    dataframe_table_8 = pd.DataFrame(table_rows)
+    dataframe_table_9 = pd.DataFrame(table_rows)
 
     effect_sort_order = {
         "Position 2 - Position 1 baseline shift": 0,
         "Position 3 - Position 1 baseline shift": 1,
         "Omnibus condition × position interaction": 2,
     }
-    dataframe_table_8["effect_sort_order"] = dataframe_table_8["Effect"].map(effect_sort_order)
-    dataframe_table_8 = dataframe_table_8.sort_values(
+    dataframe_table_9["effect_sort_order"] = dataframe_table_9["Effect"].map(effect_sort_order)
+    dataframe_table_9 = dataframe_table_9.sort_values(
         by="effect_sort_order",
         kind="stable",
     ).drop(columns=["effect_sort_order"])
 
     _save_table_dataframe_to_tables_folder(
-        dataframe_table=dataframe_table_8,
+        dataframe_table=dataframe_table_9,
         general_settings=general_settings,
-        table_file_name=table_names["table_8_order_effects_summary"],
+        table_file_name=table_names["table_9_order_effects_summary"],
     )
 
-    return dataframe_table_8
+    return dataframe_table_9
 
 
 def _compute_extra_terminal_statistics_for_manuscript(
@@ -8906,37 +9666,41 @@ def generate_manuscript_and_supplementary_tables(
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_2 = compute_manuscript_table_2_primary_clark_blame_contrasts(
+    dataframe_table_2 = compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
+        general_settings=general_settings,
+        force_rebuild=force_rebuild,
+    )
+    dataframe_table_3 = compute_manuscript_table_3_primary_clark_blame_contrasts(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_3 = compute_manuscript_table_3_story_specific_clark_blame_contrasts(
+    dataframe_table_4 = compute_manuscript_table_4_story_specific_clark_blame_contrasts(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_4 = compute_manuscript_table_4_two_alternative_forced_choice_distribution(
+    dataframe_table_5 = compute_manuscript_table_5_two_alternative_forced_choice_distribution(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    table_5_outputs = compute_supplementary_table_5_within_subject_pairwise_blame_matrix(
+    table_6_outputs = compute_supplementary_table_6_within_subject_pairwise_blame_matrix(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_6 = compute_supplementary_table_6_cognitive_load_blame_contrasts(
+    dataframe_table_7 = compute_supplementary_table_7_cognitive_load_blame_contrasts(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_7 = compute_supplementary_table_7_secondary_dv_contrasts(
+    dataframe_table_8 = compute_supplementary_table_8_secondary_dv_contrasts(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_8 = compute_supplementary_table_8_order_effects_summary(
+    dataframe_table_9 = compute_supplementary_table_9_order_effects_summary(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
@@ -8952,50 +9716,56 @@ def generate_manuscript_and_supplementary_tables(
         },
         {
             "table_key": "table_2",
-            "table_title": "Table 2. Primary Clark-blame contrasts",
-            "file_name": table_names["table_2_primary_clark_blame_contrasts"],
+            "table_title": "Table 2. Participant counts by randomization condition",
+            "file_name": table_names["table_2_means_by_dv_and_condition"],
+            "table_meaning": "Main-text mean scale values b DV and condition.",
+        },        
+        {
+            "table_key": "table_3",
+            "table_title": "Table 3. Primary Clark-blame contrasts",
+            "file_name": table_names["table_3_primary_clark_blame_contrasts"],
             "table_meaning": "Main-text primary contrast table mixing confirmatory direct tests and complementary integrated within-subject model rows.",
         },
         {
-            "table_key": "table_3",
-            "table_title": "Table 3. Story-specific Clark-blame contrasts",
-            "file_name": table_names["table_3_story_specific_clark_blame_contrasts"],
+            "table_key": "table_4",
+            "table_title": "Table 4. Story-specific Clark-blame contrasts",
+            "file_name": table_names["table_4_story_specific_clark_blame_contrasts"],
             "table_meaning": "Main-text story-specific decomposition of the integrated blame models.",
         },
         {
-            "table_key": "table_4",
-            "table_title": "Table 4. 2AFC response distribution",
-            "file_name": table_names["table_4_two_alternative_forced_choice_distribution"],
+            "table_key": "table_5",
+            "table_title": "Table 5. 2AFC response distribution",
+            "file_name": table_names["table_5_two_alternative_forced_choice_distribution"],
             "table_meaning": "Main-text forced-choice response table.",
         },
         {
-            "table_key": "table_5",
-            "table_title": "Table 5. Within-subject pairwise blame matrix",
-            "file_name": table_names["table_5_within_subject_pairwise_blame_matrix"],
+            "table_key": "table_6",
+            "table_title": "Table 6. Within-subject pairwise blame matrix",
+            "file_name": table_names["table_6_within_subject_pairwise_blame_matrix"],
             "table_meaning": "Supplementary formatted upper-triangular pairwise matrix for blame.",
         },
         {
-            "table_key": "table_5_long",
-            "table_title": "Table 5 long-form backing table",
-            "file_name": table_names["table_5_within_subject_pairwise_blame_long"],
+            "table_key": "table_6_long",
+            "table_title": "Table 6 long-form backing table",
+            "file_name": table_names["table_6_within_subject_pairwise_blame_long"],
             "table_meaning": "Supplementary long-form exact statistics for the pairwise blame matrix.",
         },
         {
-            "table_key": "table_6",
-            "table_title": "Table 6. Cognitive-load blame contrasts",
-            "file_name": table_names["table_6_cognitive_load_blame_contrasts"],
+            "table_key": "table_7",
+            "table_title": "Table 7. Cognitive-load blame contrasts",
+            "file_name": table_names["table_7_cognitive_load_blame_contrasts"],
             "table_meaning": "Supplementary cognitive-load table for the core blame deltas.",
         },
         {
-            "table_key": "table_7",
-            "table_title": "Table 7. Secondary DV contrasts",
-            "file_name": table_names["table_7_secondary_dv_contrasts"],
+            "table_key": "table_8",
+            "table_title": "Table 8. Secondary DV contrasts",
+            "file_name": table_names["table_8_secondary_dv_contrasts"],
             "table_meaning": "Supplementary table spanning blame, wrongness, and punishment.",
         },
         {
-            "table_key": "table_8",
-            "table_title": "Table 8. Order-effects summary",
-            "file_name": table_names["table_8_order_effects_summary"],
+            "table_key": "table_9",
+            "table_title": "Table 9. Order-effects summary",
+            "file_name": table_names["table_9_order_effects_summary"],
             "table_meaning": "Supplementary compact summary of baseline position effects and the omnibus condition × position interaction.",
         },
     ]
@@ -9014,16 +9784,17 @@ def generate_manuscript_and_supplementary_tables(
         print("=" * 110)
 
         _pretty_print_table_to_terminal("TABLE 1. Participant Counts by Randomization Condition", dataframe_table_1)
-        _pretty_print_table_to_terminal("TABLE 2. Primary Clark-Blame Contrasts", dataframe_table_2)
-        _pretty_print_table_to_terminal("TABLE 3. Story-Specific Clark-Blame Contrasts", dataframe_table_3)
-        _pretty_print_table_to_terminal("TABLE 4. 2AFC Distribution", dataframe_table_4)
+        _pretty_print_table_to_terminal("TABLE 2. Mean Scale Values by DV and Condition", dataframe_table_2)
+        _pretty_print_table_to_terminal("TABLE 3. Primary Clark-Blame Contrasts", dataframe_table_3)
+        _pretty_print_table_to_terminal("TABLE 4. Story-Specific Clark-Blame Contrasts", dataframe_table_4)
+        _pretty_print_table_to_terminal("TABLE 5. 2AFC Distribution", dataframe_table_5)
         _pretty_print_table_to_terminal(
-            "TABLE 5. Within-Subject Pairwise Blame Matrix",
-            table_5_outputs["formatted_matrix_dataframe"].reset_index().rename(columns={"index": "Row / Column"}),
+            "TABLE 6. Within-Subject Pairwise Blame Matrix",
+            table_6_outputs["formatted_matrix_dataframe"].reset_index().rename(columns={"index": "Row / Column"}),
         )
-        _pretty_print_table_to_terminal("TABLE 6. Cognitive-Load Blame Contrasts", dataframe_table_6)
-        _pretty_print_table_to_terminal("TABLE 7. Secondary DV Contrasts", dataframe_table_7)
-        _pretty_print_table_to_terminal("TABLE 8. Order-Effects Summary", dataframe_table_8)
+        _pretty_print_table_to_terminal("TABLE 7. Cognitive-Load Blame Contrasts", dataframe_table_7)
+        _pretty_print_table_to_terminal("TABLE 8. Secondary DV Contrasts", dataframe_table_8)
+        _pretty_print_table_to_terminal("TABLE 9. Order-Effects Summary", dataframe_table_9)
 
         extra_statistics = _compute_extra_terminal_statistics_for_manuscript(
             general_settings=general_settings,
@@ -9055,11 +9826,12 @@ def generate_manuscript_and_supplementary_tables(
         "table_2": dataframe_table_2,
         "table_3": dataframe_table_3,
         "table_4": dataframe_table_4,
-        "table_5": table_5_outputs["formatted_matrix_dataframe"],
-        "table_5_long": table_5_outputs["pairwise_long_dataframe"],
-        "table_6": dataframe_table_6,
+        "table_5": dataframe_table_5,
+        "table_6": table_6_outputs["formatted_matrix_dataframe"],
+        "table_6_long": table_6_outputs["pairwise_long_dataframe"],
         "table_7": dataframe_table_7,
         "table_8": dataframe_table_8,
+        "table_9": dataframe_table_9,
         "table_manifest": dataframe_table_manifest,
     }
 
@@ -9088,14 +9860,15 @@ file_names: FileNames = {
 
 table_names: dict[str, str] = {
     "table_1_participant_counts": "Table_1_Participant_Counts.csv",
-    "table_2_primary_clark_blame_contrasts": "Table_2_Primary_Clark_Blame_Contrasts.csv",
-    "table_3_story_specific_clark_blame_contrasts": "Table_3_Story_Specific_Clark_Blame_Contrasts.csv",
-    "table_4_two_alternative_forced_choice_distribution": "Table_4_Two_Alternative_Forced_Choice_Distribution.csv",
-    "table_5_within_subject_pairwise_blame_matrix": "Table_5_Within_Subject_Pairwise_Blame_Matrix.csv",
-    "table_5_within_subject_pairwise_blame_long": "Table_5_Within_Subject_Pairwise_Blame_Long.csv",
-    "table_6_cognitive_load_blame_contrasts": "Table_6_Cognitive_Load_Blame_Contrasts.csv",
-    "table_7_secondary_dv_contrasts": "Table_7_Secondary_DV_Contrasts.csv",
-    "table_8_order_effects_summary": "Table_8_Order_Effects_Summary.csv",
+    "table_2_means_by_dv_and_condition": "Table_2_Means_by_DV_and_Condition.csv",
+    "table_3_primary_clark_blame_contrasts": "table_3_Primary_Clark_Blame_Contrasts.csv",
+    "table_4_story_specific_clark_blame_contrasts": "table_4_Story_Specific_Clark_Blame_Contrasts.csv",
+    "table_5_two_alternative_forced_choice_distribution": "table_5_Two_Alternative_Forced_Choice_Distribution.csv",
+    "table_6_within_subject_pairwise_blame_matrix": "table_6_Within_Subject_Pairwise_Blame_Matrix.csv",
+    "table_6_within_subject_pairwise_blame_long": "table_6_Within_Subject_Pairwise_Blame_Long.csv",
+    "table_7_cognitive_load_blame_contrasts": "table_7_Cognitive_Load_Blame_Contrasts.csv",
+    "table_8_secondary_dv_contrasts": "table_8_Secondary_DV_Contrasts.csv",
+    "table_9_order_effects_summary": "table_9_Order_Effects_Summary.csv",
     "table_manifest": "Table_Manifest.csv",
 }
 
@@ -9228,29 +10001,29 @@ def main() -> None:
         force_rebuild=None,
     )
 
-    if create_figures:
-        "Figure 3"
-        plot_ratings_by_vignette_condition(      dv="blame", base_hue=base_hue, general_settings=general_settings, figure_type="violin")
+    # if create_figures:
+    #     "Figure 3"
+    #     plot_ratings_by_vignette_condition(      dv="blame", base_hue=base_hue, general_settings=general_settings, figure_type="violin")
 
-        "Figure 4"
-        plot_participant_level_shielding_heatmap(dv="blame", base_hue=base_hue, general_settings=general_settings, include_marginals=True)
+    #     "Figure 4"
+    #     plot_participant_level_shielding_heatmap(dv="blame", base_hue=base_hue, general_settings=general_settings, include_marginals=True)
 
-        "Table 5"
-        plot_within_subject_pairwise_comparisons(dv="blame", base_hue=base_hue, general_settings=general_settings, include_proximate_agent=True)
+    #     "Table 5"
+    #     plot_within_subject_pairwise_comparisons(dv="blame", base_hue=base_hue, general_settings=general_settings, include_proximate_agent=True)
 
-        "Figure 6"
-        plot_shielding_effects_by_cognitive_load(dv="blame", base_hue=base_hue, general_settings=general_settings, delta_type="CH_CC", figure_type="violin")
+    #     "Figure 6"
+    #     plot_shielding_effects_by_cognitive_load(dv="blame", base_hue=base_hue, general_settings=general_settings, delta_type="CH_CC", figure_type="violin")
 
-        "Figure 7"
-        plot_trial_order_effects_line_graph(     dv="blame", base_hue=base_hue, general_settings=general_settings, order_analysis_mode="legacy")
+    #     "Figure 7"
+    #     plot_trial_order_effects_line_graph(     dv="blame", base_hue=base_hue, general_settings=general_settings, order_analysis_mode="legacy")
 
-        "Figure 8"
-        plot_blameworthiness_wrongness_correlate(            base_hue=base_hue, general_settings=general_settings, all_ratings=True, jitter_strength=0.1)
+    #     "Figure 8"
+    #     plot_blameworthiness_wrongness_correlate(            base_hue=base_hue, general_settings=general_settings, all_ratings=True, jitter_strength=0.1)
 
-        "Additional Figures"
-        plot_triangulation_2afc_vs_rating_delta( dv="blame", base_hue=base_hue, general_settings=general_settings, comparison="CH_CC")
-        plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="indcol")
-        plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="crt")
+    #     "Additional Figures"
+    #     plot_triangulation_2afc_vs_rating_delta( dv="blame", base_hue=base_hue, general_settings=general_settings, comparison="CH_CC")
+    #     plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="indcol")
+    #     plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="crt")
 
     "Tables in the order they appear in the paper"
     generate_manuscript_and_supplementary_tables(
