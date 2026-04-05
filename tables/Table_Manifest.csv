@@ -1,11 +1,11 @@
 ﻿table_key,table_title,file_name,table_meaning
 table_1,Table 1. Participant counts by randomization condition,Table_1_Participant_Counts.csv,Main-text participant counts for included participants and everyone.
-table_2,Table 2. Participant counts by randomization condition,Table_2_Means_by_DV_and_Condition.csv,Main-text mean scale values b DV and condition.
-table_3,Table 3. Primary Clark-blame contrasts,table_3_Primary_Clark_Blame_Contrasts.csv,Main-text primary contrast table mixing confirmatory direct tests and complementary integrated within-subject model rows.
-table_4,Table 4. Story-specific Clark-blame contrasts,table_4_Story_Specific_Clark_Blame_Contrasts.csv,Main-text story-specific decomposition of the integrated blame models.
+table_2,Table 2. Participant counts by randomization condition,Table_2_Means_by_DV_and_Condition.csv,Main-text mean scale values by DV and condition.
+table_3,Table 3. Primary Clark-blame contrasts,table_3_Primary_Clark_Blame_Contrasts.csv,Main-text primary contrast table showing blame contrasts between- and within-subjects.
+table_4,Table 4. Story-specific Clark-blame contrasts,table_4_Story_Specific_Clark_Blame_Contrasts.csv,Main-text story-specific decomposition of Clark blame contrasts.
 table_5,Table 5. 2AFC response distribution,table_5_Two_Alternative_Forced_Choice_Distribution.csv,Main-text forced-choice response table.
 table_6,Table 6. Within-subject pairwise blame matrix,table_6_Within_Subject_Pairwise_Blame_Matrix.csv,Supplementary formatted upper-triangular pairwise matrix for blame.
 table_6_long,Table 6 long-form backing table,table_6_Within_Subject_Pairwise_Blame_Long.csv,Supplementary long-form exact statistics for the pairwise blame matrix.
 table_7,Table 7. Cognitive-load blame contrasts,table_7_Cognitive_Load_Blame_Contrasts.csv,Supplementary cognitive-load table for the core blame deltas.
-table_8,Table 8. Order-effects summary,table_8_Order_Effects_Summary.csv,Supplementary compact summary of baseline position effects and the omnibus condition × position interaction.
+table_8,Table 8. Order-effects summary,table_8_Order_Effects_Summary.csv,Supplementary compact summary of baseline position effects.
 table_9,Table 9. Secondary DV contrasts,table_9_Secondary_DV_Contrasts.csv,"Supplementary table spanning blame, wrongness, and punishment."

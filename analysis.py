@@ -9120,11 +9120,8 @@ def compute_supplementary_table_7_cognitive_load_blame_contrasts(
     else:
         cleaned_dataframe = cleaned_dataframe.copy()
 
-    table_generation_settings = copy.deepcopy(general_settings)
-    table_generation_settings["misc"]["confirmatory_between_subjects_method"] = "pooled_ols"
-
     dataframe_tests = run_confirmatory_and_exploratory_tests(
-        general_settings=table_generation_settings,
+        general_settings=general_settings,
         force_rebuild=force_rebuild,
     )
 
@@ -9665,19 +9662,19 @@ def generate_manuscript_and_supplementary_tables(
             "table_key": "table_2",
             "table_title": "Table 2. Participant counts by randomization condition",
             "file_name": table_names["table_2_means_by_dv_and_condition"],
-            "table_meaning": "Main-text mean scale values b DV and condition.",
+            "table_meaning": "Main-text mean scale values by DV and condition.",
         },        
         {
             "table_key": "table_3",
             "table_title": "Table 3. Primary Clark-blame contrasts",
             "file_name": table_names["table_3_primary_clark_blame_contrasts"],
-            "table_meaning": "Main-text primary contrast table mixing confirmatory direct tests and complementary integrated within-subject model rows.",
+            "table_meaning": "Main-text primary contrast table showing blame contrasts between- and within-subjects.",
         },
         {
             "table_key": "table_4",
             "table_title": "Table 4. Story-specific Clark-blame contrasts",
             "file_name": table_names["table_4_story_specific_clark_blame_contrasts"],
-            "table_meaning": "Main-text story-specific decomposition of the integrated blame models.",
+            "table_meaning": "Main-text story-specific decomposition of Clark blame contrasts.",
         },
         {
             "table_key": "table_5",
@@ -9707,7 +9704,7 @@ def generate_manuscript_and_supplementary_tables(
             "table_key": "table_8",
             "table_title": "Table 8. Order-effects summary",
             "file_name": table_names["table_8_order_effects_summary"],
-            "table_meaning": "Supplementary compact summary of baseline position effects and the omnibus condition × position interaction.",
+            "table_meaning": "Supplementary compact summary of baseline position effects.",
         },
         {
             "table_key": "table_9",
@@ -9942,7 +9939,7 @@ def main() -> None:
         confirmatory_pooled_ols_covariance_type=None,
         force_rebuild=None
     )
-
+    
     "Integrated models"
     compute_integrated_clark_blame_results(
         general_settings=general_settings,
