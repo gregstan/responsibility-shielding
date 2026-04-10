@@ -93,7 +93,8 @@ class MiscSettings(TypedDict):
     freeze_timestamp_last: str
     use_integrated_models: bool
     force_rebuild: bool
-    
+    one_tailed: bool
+
 class GeneralSettings(TypedDict):
     filing: Filing
     visuals: Visuals
@@ -7523,6 +7524,446 @@ def plot_shielding_by_individual_difference(
     return fig
 
 
+def plot_response_distribution_histogram_by_condition(
+    general_settings: GeneralSettings,
+    dv: str | Any = "punishment",
+    include_proximate_agent: bool = True,
+    story_condition: str | Any = None,
+    cognitive_load: str | Any = None,
+    only_included_participants: bool = True,
+    export_html: bool = True,
+    base_hue: int = 200,
+) -> "object":
+    """
+    Plot a condition-selectable histogram with a count-scaled smooth KDE overlay.
+
+    This function is designed to visualize the raw response distributions for one dependent variable
+    across the main vignette-condition series:
+        • CC Distal
+        • CH Distal
+        • DIV Distal
+        • CC Proximate
+        • CH Proximate
+
+    A dropdown menu toggles between:
+        • All conditions
+        • each condition separately
+
+    The x-axis and y-axis are fixed across dropdown selections so the plot remains visually comparable.
+
+    Arguments:
+        • general_settings: GeneralSettings
+            - Master settings dictionary.
+        • dv: str | Any
+            - Which dependent variable to plot. Supported:
+                "blame"
+                "wrong"
+                "punishment"
+        • include_proximate_agent: bool
+            - If True, include CC Proximate and CH Proximate in the dropdown and plot.
+            - If False, only the three distal series are shown.
+        • story_condition: str | Any
+            - If None, pool stories.
+            - If "firework" or "trolley", filter to that story condition.
+        • cognitive_load: str | Any
+            - If None, pool load conditions.
+            - If "high" or "low", filter to that load condition.
+        • only_included_participants: bool
+            - If True, restrict to participants who passed all comprehension checks.
+        • export_html: bool
+            - If True, export the Plotly figure to an .html file.
+        • base_hue: int
+            - Starting hue for hsla colors.
+
+    Notes:
+        • The KDE curve is rescaled into count units:
+              density(x) × n × bin_width
+          so that it sits naturally on the same y-axis as the histogram counts.
+        • I fixed the y-axis by computing the tallest bin / scaled-KDE height across all condition
+          selections ahead of time, so the axes do not jump when the dropdown changes.
+        • For punishment, the histogram uses integer-year bins from 0 to 50.
+        • For blame and wrongness, the histogram uses integer bins from 1 to 9.
+
+    Returns:
+        • plotly.graph_objects.Figure
+    """
+    "========================================="
+    "Normalize inputs and filter the dataset."
+    "========================================="
+    dv_suffix, dv_label, _ = _normalize_dependent_variable_input(dv)
+    story_condition_normalized = _normalize_story_condition_input(story_condition)
+    cognitive_load_normalized = _normalize_load_condition_input(cognitive_load)
+
+    analysis_dataframe = _get_filtered_plotting_dataframe(
+        general_settings=general_settings,
+        story_condition=story_condition,
+        cognitive_load=cognitive_load,
+        only_included_participants=only_included_participants,
+    )
+
+    "=========================================="
+    "Resolve which rating columns to visualize."
+    "=========================================="
+    ordered_condition_metadata: list[tuple[str, str]] = [
+        ("CC Distal", f"clark_{dv_suffix}_cc"),
+        ("CH Distal", f"clark_{dv_suffix}_ch"),
+        ("DIV Distal", f"clark_{dv_suffix}_div"),
+    ]
+    if include_proximate_agent:
+        ordered_condition_metadata += [
+            ("CC Proximate", f"proximate_{dv_suffix}_cc"),
+            ("CH Proximate", f"proximate_{dv_suffix}_ch"),
+        ]
+
+    missing_required_columns = [
+        column_name
+        for _, column_name in ordered_condition_metadata
+        if column_name not in analysis_dataframe.columns
+    ]
+    if missing_required_columns:
+        raise KeyError(
+            "Missing one or more expected rating columns required for the response-distribution histogram: "
+            + ", ".join(repr(column_name) for column_name in missing_required_columns)
+        )
+
+    "==========================================="
+    "Build a clean long dataframe for plotting."
+    "==========================================="
+    long_rows: list[pd.DataFrame] = []
+
+    for condition_label, column_name in ordered_condition_metadata:
+        temp_dataframe = pd.DataFrame(
+            {
+                "condition_label": condition_label,
+                "rating_value": pd.to_numeric(analysis_dataframe[column_name], errors="coerce"),
+            }
+        ).dropna(subset=["rating_value"]).copy()
+
+        long_rows.append(temp_dataframe)
+
+    plotting_dataframe = pd.concat(long_rows, ignore_index=True)
+
+    if plotting_dataframe.shape[0] == 0:
+        raise ValueError("No valid ratings remain after filtering for the histogram plot.")
+
+    "=========================================================="
+    "Choose discrete histogram bins and fixed x-axis settings."
+    "=========================================================="
+    if dv_suffix in {"blame", "wrong"}:
+        histogram_bin_edges = np.arange(0.5, 9.5 + 1.0, 1.0)
+        histogram_bin_width = 1.0
+        x_axis_range = [0.5, 9.5]
+        x_axis_tick_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        x_axis_tick_text = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    else:
+        histogram_bin_edges = np.arange(-0.5, 50.5 + 1.0, 1.0)
+        histogram_bin_width = 1.0
+        x_axis_range = [-0.5, 50.5]
+        x_axis_tick_values = list(range(0, 51, 5))
+        x_axis_tick_text = [str(tick_value) for tick_value in x_axis_tick_values]
+
+    x_grid_for_kde = np.linspace(x_axis_range[0], x_axis_range[1], 800)
+
+    "=================================="
+    "Helper to compute a scaled KDE."
+    "=================================="
+    def compute_count_scaled_kde_curve(
+        numeric_values: np.ndarray,
+        x_grid: np.ndarray,
+        histogram_bin_width_value: float,
+    ) -> np.ndarray:
+        """
+        Compute a KDE curve rescaled into count units.
+
+        Arguments:
+            • numeric_values: np.ndarray
+                - Clean numeric values for one condition.
+            • x_grid: np.ndarray
+                - Grid of x values where the KDE is evaluated.
+            • histogram_bin_width_value: float
+                - Width of one histogram bin.
+
+        Returns:
+            • np.ndarray
+                - KDE values placed on the same count-like scale as the histogram.
+        """
+        numeric_values = numeric_values[~np.isnan(numeric_values)]
+
+        if numeric_values.shape[0] < 2:
+            return np.zeros_like(x_grid, dtype=float)
+
+        if np.unique(numeric_values).shape[0] < 2:
+            return np.zeros_like(x_grid, dtype=float)
+
+        try:
+            gaussian_kde_object = stats.gaussian_kde(numeric_values)
+            density_values = gaussian_kde_object(x_grid)
+            count_scaled_kde_values = density_values * numeric_values.shape[0] * histogram_bin_width_value
+            return np.asarray(count_scaled_kde_values, dtype=float)
+        except Exception:
+            return np.zeros_like(x_grid, dtype=float)
+
+    "=============================================================="
+    "Precompute per-condition counts, KDEs, and fixed y-axis max."
+    "=============================================================="
+    condition_plotting_data: dict[str, dict[str, Any]] = {}
+    global_max_y_value: float = 0.0
+
+    for condition_index, (condition_label, _) in enumerate(ordered_condition_metadata):
+        condition_values = pd.to_numeric(
+            plotting_dataframe.loc[
+                plotting_dataframe["condition_label"] == condition_label,
+                "rating_value"
+            ],
+            errors="coerce",
+        ).dropna().to_numpy(dtype=float)
+
+        histogram_counts, _ = np.histogram(condition_values, bins=histogram_bin_edges)
+        kde_curve_values = compute_count_scaled_kde_curve(
+            numeric_values=condition_values,
+            x_grid=x_grid_for_kde,
+            histogram_bin_width_value=histogram_bin_width,
+        )
+
+        fill_color = _hsla_color(hue=base_hue + 30 * condition_index, alpha=0.40)
+        line_color = _hsla_color(hue=base_hue + 30 * condition_index, alpha=1.00)
+
+        condition_plotting_data[condition_label] = {
+            "values": condition_values,
+            "histogram_counts": histogram_counts,
+            "kde_curve_values": kde_curve_values,
+            "fill_color": fill_color,
+            "line_color": line_color,
+        }
+
+        if histogram_counts.shape[0] > 0:
+            global_max_y_value = max(global_max_y_value, float(np.max(histogram_counts)))
+        if kde_curve_values.shape[0] > 0:
+            global_max_y_value = max(global_max_y_value, float(np.max(kde_curve_values)))
+
+    if global_max_y_value <= 0:
+        global_max_y_value = 1.0
+
+    y_axis_range = [0.0, global_max_y_value * 1.10]
+
+    "=============================="
+    "Construct the Plotly figure."
+    "=============================="
+    fig = go.Figure()
+    trace_indices_by_condition_label: dict[str, list[int]] = {}
+
+    for condition_label in [condition_label for condition_label, _ in ordered_condition_metadata]:
+        condition_values = condition_plotting_data[condition_label]["values"]
+        fill_color = condition_plotting_data[condition_label]["fill_color"]
+        line_color = condition_plotting_data[condition_label]["line_color"]
+        kde_curve_values = condition_plotting_data[condition_label]["kde_curve_values"]
+
+        condition_trace_indices: list[int] = []
+
+        fig.add_trace(
+            go.Histogram(
+                x=condition_values,
+                name=condition_label,
+                xbins=dict(
+                    start=float(histogram_bin_edges[0]),
+                    end=float(histogram_bin_edges[-1]),
+                    size=float(histogram_bin_width),
+                ),
+                histfunc="count",
+                opacity=0.55,
+                marker=dict(
+                    color=fill_color,
+                    line=dict(color=line_color, width=1.8),
+                ),
+                hovertemplate=(
+                    f"{condition_label}<br>"
+                    "Response bin center: %{x}<br>"
+                    "Count: %{y}<extra></extra>"
+                ),
+                showlegend=True,
+                visible=True,
+            )
+        )
+        condition_trace_indices.append(len(fig.data) - 1)
+
+        fig.add_trace(
+            go.Scatter(
+                x=x_grid_for_kde,
+                y=kde_curve_values,
+                mode="lines",
+                name=f"{condition_label} KDE",
+                line=dict(color=line_color, width=5),
+                hovertemplate=(
+                    f"{condition_label} KDE<br>"
+                    "Response value: %{x:.2f}<br>"
+                    "Scaled density: %{y:.2f}<extra></extra>"
+                ),
+                showlegend=False,
+                visible=True,
+            )
+        )
+        condition_trace_indices.append(len(fig.data) - 1)
+
+        trace_indices_by_condition_label[condition_label] = condition_trace_indices
+
+    "============================================"
+    "Build dropdown visibility masks and titles."
+    "============================================"
+    all_trace_count = len(fig.data)
+
+    def build_visibility_mask_for_selection(
+        selected_condition_label: str | None,
+    ) -> list[bool]:
+        """
+        Build the visible-mask for one dropdown selection.
+
+        Arguments:
+            • selected_condition_label: str | None
+                - If None, show all conditions.
+                - Otherwise, show only that condition's histogram + KDE.
+
+        Returns:
+            • list[bool]
+                - Visibility mask aligned to fig.data.
+        """
+        visible_mask = [False] * all_trace_count
+
+        if selected_condition_label is None:
+            for condition_trace_indices in trace_indices_by_condition_label.values():
+                for trace_index in condition_trace_indices:
+                    visible_mask[trace_index] = True
+            return visible_mask
+
+        for trace_index in trace_indices_by_condition_label[selected_condition_label]:
+            visible_mask[trace_index] = True
+
+        return visible_mask
+
+    figure_title_base = f"{dv_label} Response Distribution by Condition"
+    dropdown_buttons = [
+        dict(
+            label="All conditions",
+            method="update",
+            args=[
+                {"visible": build_visibility_mask_for_selection(None)},
+                {"title": f"{figure_title_base} - All conditions"},
+            ],
+        )
+    ]
+
+    for condition_label, _ in ordered_condition_metadata:
+        dropdown_buttons.append(
+            dict(
+                label=condition_label,
+                method="update",
+                args=[
+                    {"visible": build_visibility_mask_for_selection(condition_label)},
+                    {"title": f"{figure_title_base} - {condition_label}"},
+                ],
+            )
+        )
+
+    "=========================="
+    "Apply layout and styling."
+    "=========================="
+    fig.update_layout(**figure_layout, title=f"{figure_title_base} - All conditions")
+    fig.update_layout(
+        title_x=0.5,
+        title_xanchor="center",
+        title_font_size=36,
+        barmode="overlay",
+        margin=dict(l=110, r=110, t=95, b=95),
+        bargap=0.02,
+        updatemenus=[
+            dict(
+                buttons=dropdown_buttons,
+                direction="down",
+                x=1.02,
+                xanchor="left",
+                y=1.00,
+                yanchor="top",
+                bgcolor="hsla(0, 0%, 100%, 0.95)",
+                bordercolor="hsla(0, 0%, 0%, 0.35)",
+                borderwidth=1,
+                font=dict(size=16, family="Calibri", color="black"),
+            )
+        ],
+    )
+
+    fig.update_layout(
+        legend=dict(
+            bgcolor="hsla(0, 0%, 100%, 0.2)",
+            bordercolor="hsla(0, 0%, 80%, 0.6)",
+            borderwidth=1, orientation="h", 
+            font=dict(size=15, family="Calibri", color="black"),
+            xanchor="center", x=0.5,
+            yanchor="top", y=-0.14,              
+        ),
+        margin=dict(l=110, r=110, t=95, b=140),   # extra bottom room for the legend
+    )
+
+    if dv_suffix == "punish":
+        x_axis_title = "Punishment Recommendation (years in prison)"
+    elif dv_suffix == "blame":
+        x_axis_title = "Blameworthiness Rating"
+    else:
+        x_axis_title = "Wrongness Rating"
+
+    fig.update_xaxes(
+        title_text=x_axis_title,
+        range=x_axis_range,
+        tickmode="array",
+        tickvals=x_axis_tick_values,
+        ticktext=x_axis_tick_text,
+        zeroline=False,
+        showline=True,
+        mirror=True,
+        tickwidth=0,
+        ticklen=0,
+        ticks="",
+    )
+
+    fig.update_yaxes(
+        title_text="Count",
+        range=y_axis_range,
+        zeroline=False,
+        showline=True,
+        mirror=True,
+        tickwidth=0,
+        ticklen=0,
+        ticks="",
+    )
+
+    fig.add_annotation(
+        x=0.5,
+        y=8.08,
+        xref="paper",
+        yref="paper",
+        text="Solid bars = counts; smooth line = count-scaled KDE",
+        showarrow=False,
+        xanchor="center",
+        yanchor="bottom",
+        font=dict(size=18, family="Calibri", color="black"),
+        bgcolor="hsla(0, 0%, 100%, 0.00)",
+    )
+
+    "============================"
+    "Export the figure, if asked."
+    "============================"
+    if export_html:
+        story_tag = "pooled" if story_condition_normalized is None else story_condition_normalized
+        load_tag = "pooled" if cognitive_load_normalized is None else cognitive_load_normalized
+        proximate_tag = "with_proximate" if include_proximate_agent else "distal_only"
+
+        file_name_figure = f"figure_x_response_distribution_histogram_{dv_suffix}_{story_tag}_{load_tag}_{proximate_tag}"
+        _export_plotly_figure_html(
+            fig=fig,
+            general_settings=general_settings,
+            file_name=file_name_figure,
+        )
+
+    return fig
+
 "=========================================================================================="
 "==================================== Table Generation ===================================="
 "=========================================================================================="
@@ -9969,6 +10410,11 @@ def main() -> None:
         plot_triangulation_2afc_vs_rating_delta( dv="blame", base_hue=base_hue, general_settings=general_settings, comparison="CH_CC")
         plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="indcol")
         plot_shielding_by_individual_difference( dv="blame", base_hue=base_hue, general_settings=general_settings, predictor="crt")
+
+        plot_response_distribution_histogram_by_condition(general_settings=general_settings, dv="blame")
+        plot_response_distribution_histogram_by_condition(general_settings=general_settings, dv="wrong")
+        plot_response_distribution_histogram_by_condition(general_settings=general_settings, dv="punishment")
+
 
     "Tables in the order they appear in the paper"
     generate_manuscript_and_supplementary_tables(
