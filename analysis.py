@@ -50,12 +50,14 @@ class FileNames(TypedDict):
     first_vignette: Path
     within_subject: Path
     blame_models: Path
+    punishment_consistency_effects: Path
+    punishment_tests: Path
 
 class TableNames(TypedDict):
     table_1_participant_counts: Path
     table_2_means_by_dv_and_condition: Path
-    table_3_primary_clark_blame_contrasts: Path
-    table_4_story_specific_clark_blame_contrasts: Path
+    table_3_primary_distal_blame_contrasts: Path
+    table_4_story_specific_distal_blame_contrasts: Path
     table_5_two_alternative_forced_choice_distribution: Path
     table_6_within_subject_pairwise_blame_matrix: Path
     table_6_within_subject_pairwise_blame_long: Path
@@ -95,10 +97,16 @@ class MiscSettings(TypedDict):
     force_rebuild: bool
     one_tailed: bool
 
+class PunishSettings(TypedDict, total=False):
+    analysis_mode: str
+    bootstrap_iterations: int
+    random_seed: int
+
 class GeneralSettings(TypedDict):
     filing: Filing
     visuals: Visuals
     misc: MiscSettings
+    punish: PunishSettings
 
 
 "=========================================================================================="
@@ -547,7 +555,7 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
         raw_dataframe["comp_t_prob_harm"].apply(parse_boolean_value),
     )
 
-    raw_dataframe["comprehension_clark_necessary_bool"] = coalesce_series(
+    raw_dataframe["comprehension_distal_necessary_bool"] = coalesce_series(
         raw_dataframe["comp_p_agency_across"].apply(parse_boolean_value),
         raw_dataframe["comp_t_agency_across"].apply(parse_boolean_value),
     )
@@ -559,52 +567,52 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
 
     raw_dataframe["comprehension_all_correct_bool"] = (
         raw_dataframe["comprehension_probability_same_bool"]
-        & raw_dataframe["comprehension_clark_necessary_bool"]
+        & raw_dataframe["comprehension_distal_necessary_bool"]
         & raw_dataframe["comprehension_bill_necessary_bool"]
     )
 
     "Merge core outcome measures across story condition (Clark = upstream actor; Bill/proximate = downstream node)"
-    raw_dataframe["clark_blame_cc"] = coalesce_series(
+    raw_dataframe["distal_blame_cc"] = coalesce_series(
         raw_dataframe["pucc_blame_1"].apply(parse_likert_numeric_value),
         raw_dataframe["tucc_blame_1"].apply(parse_likert_numeric_value),
     )
 
-    raw_dataframe["clark_blame_ch"] = coalesce_series(
+    raw_dataframe["distal_blame_ch"] = coalesce_series(
         raw_dataframe["puch_blame_1"].apply(parse_likert_numeric_value),
         raw_dataframe["tuch_blame_1"].apply(parse_likert_numeric_value),
     )
 
-    raw_dataframe["clark_blame_div"] = coalesce_series(
+    raw_dataframe["distal_blame_div"] = coalesce_series(
         raw_dataframe["pudiv_blame_1"].apply(parse_likert_numeric_value),
         raw_dataframe["tudiv_blame_1"].apply(parse_likert_numeric_value),
     )
 
-    raw_dataframe["clark_wrong_cc"] = coalesce_series(
+    raw_dataframe["distal_wrong_cc"] = coalesce_series(
         raw_dataframe["pucc_wrong_1"].apply(parse_likert_numeric_value),
         raw_dataframe["tucc_wrong_1"].apply(parse_likert_numeric_value),
     )
 
-    raw_dataframe["clark_wrong_ch"] = coalesce_series(
+    raw_dataframe["distal_wrong_ch"] = coalesce_series(
         raw_dataframe["puch_wrong_1"].apply(parse_likert_numeric_value),
         raw_dataframe["tuch_wrong_1"].apply(parse_likert_numeric_value),
     )
 
-    raw_dataframe["clark_wrong_div"] = coalesce_series(
+    raw_dataframe["distal_wrong_div"] = coalesce_series(
         raw_dataframe["pudiv_wrong_1"].apply(parse_likert_numeric_value),
         raw_dataframe["tudiv_wrong_1"].apply(parse_likert_numeric_value),
     )
 
-    raw_dataframe["clark_punish_cc"] = coalesce_series(
+    raw_dataframe["distal_punish_cc"] = coalesce_series(
         pd.to_numeric(raw_dataframe["pucc_punish"], errors="coerce"),
         pd.to_numeric(raw_dataframe["tucc_punish"], errors="coerce"),
     )
 
-    raw_dataframe["clark_punish_ch"] = coalesce_series(
+    raw_dataframe["distal_punish_ch"] = coalesce_series(
         pd.to_numeric(raw_dataframe["puch_punish"], errors="coerce"),
         pd.to_numeric(raw_dataframe["tuch_punish"], errors="coerce"),
     )
 
-    raw_dataframe["clark_punish_div"] = coalesce_series(
+    raw_dataframe["distal_punish_div"] = coalesce_series(
         pd.to_numeric(raw_dataframe["pudiv_punish"], errors="coerce"),
         pd.to_numeric(raw_dataframe["tudiv_punish"], errors="coerce"),
     )
@@ -650,48 +658,48 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
             return row[column_div]
         return np.nan
 
-    raw_dataframe["first_vignette_clark_blame"] = raw_dataframe.apply(
-        lambda row: choose_first_case_value(row, "clark_blame_cc", "clark_blame_ch", "clark_blame_div"),
+    raw_dataframe["first_vignette_distal_blame"] = raw_dataframe.apply(
+        lambda row: choose_first_case_value(row, "distal_blame_cc", "distal_blame_ch", "distal_blame_div"),
         axis=1,
     )
 
-    raw_dataframe["first_vignette_clark_wrong"] = raw_dataframe.apply(
-        lambda row: choose_first_case_value(row, "clark_wrong_cc", "clark_wrong_ch", "clark_wrong_div"),
+    raw_dataframe["first_vignette_distal_wrong"] = raw_dataframe.apply(
+        lambda row: choose_first_case_value(row, "distal_wrong_cc", "distal_wrong_ch", "distal_wrong_div"),
         axis=1,
     )
 
-    raw_dataframe["first_vignette_clark_punish"] = raw_dataframe.apply(
-        lambda row: choose_first_case_value(row, "clark_punish_cc", "clark_punish_ch", "clark_punish_div"),
+    raw_dataframe["first_vignette_distal_punish"] = raw_dataframe.apply(
+        lambda row: choose_first_case_value(row, "distal_punish_cc", "distal_punish_ch", "distal_punish_div"),
         axis=1,
     )
 
     "Within-subject deltas (Clark: CH-CC and DIV-CC; Proximate: CC-CH) for blame, wrongness, punishment"
-    raw_dataframe["clark_blame_ch_minus_cc"] = raw_dataframe["clark_blame_ch"] - raw_dataframe["clark_blame_cc"]
-    raw_dataframe["clark_blame_div_minus_cc"] = raw_dataframe["clark_blame_div"] - raw_dataframe["clark_blame_cc"]
+    raw_dataframe["distal_blame_ch_minus_cc"] = raw_dataframe["distal_blame_ch"] - raw_dataframe["distal_blame_cc"]
+    raw_dataframe["distal_blame_div_minus_cc"] = raw_dataframe["distal_blame_div"] - raw_dataframe["distal_blame_cc"]
     raw_dataframe["proximate_blame_cc_minus_ch"] = raw_dataframe["proximate_blame_cc"] - raw_dataframe["proximate_blame_ch"]
 
-    raw_dataframe["clark_wrong_ch_minus_cc"] = raw_dataframe["clark_wrong_ch"] - raw_dataframe["clark_wrong_cc"]
-    raw_dataframe["clark_wrong_div_minus_cc"] = raw_dataframe["clark_wrong_div"] - raw_dataframe["clark_wrong_cc"]
+    raw_dataframe["distal_wrong_ch_minus_cc"] = raw_dataframe["distal_wrong_ch"] - raw_dataframe["distal_wrong_cc"]
+    raw_dataframe["distal_wrong_div_minus_cc"] = raw_dataframe["distal_wrong_div"] - raw_dataframe["distal_wrong_cc"]
     raw_dataframe["proximate_wrong_cc_minus_ch"] = raw_dataframe["proximate_wrong_cc"] - raw_dataframe["proximate_wrong_ch"]
 
-    raw_dataframe["clark_punish_ch_minus_cc"] = raw_dataframe["clark_punish_ch"] - raw_dataframe["clark_punish_cc"]
-    raw_dataframe["clark_punish_div_minus_cc"] = raw_dataframe["clark_punish_div"] - raw_dataframe["clark_punish_cc"]
+    raw_dataframe["distal_punish_ch_minus_cc"] = raw_dataframe["distal_punish_ch"] - raw_dataframe["distal_punish_cc"]
+    raw_dataframe["distal_punish_div_minus_cc"] = raw_dataframe["distal_punish_div"] - raw_dataframe["distal_punish_cc"]
     raw_dataframe["proximate_punish_cc_minus_ch"] = raw_dataframe["proximate_punish_cc"] - raw_dataframe["proximate_punish_ch"]
 
     "Responsibility Shielding Effect (per preregistration): min(CH, DIV) - CC (computed within-subjects per participant)"
-    raw_dataframe["clark_blame_min_ch_div_minus_cc"] = np.minimum(raw_dataframe["clark_blame_ch"], raw_dataframe["clark_blame_div"]) - raw_dataframe["clark_blame_cc"]
-    raw_dataframe["clark_wrong_min_ch_div_minus_cc"] = np.minimum(raw_dataframe["clark_wrong_ch"], raw_dataframe["clark_wrong_div"]) - raw_dataframe["clark_wrong_cc"]
-    raw_dataframe["clark_punish_min_ch_div_minus_cc"] = np.minimum(raw_dataframe["clark_punish_ch"], raw_dataframe["clark_punish_div"]) - raw_dataframe["clark_punish_cc"]
+    raw_dataframe["distal_blame_min_ch_div_minus_cc"] = np.minimum(raw_dataframe["distal_blame_ch"], raw_dataframe["distal_blame_div"]) - raw_dataframe["distal_blame_cc"]
+    raw_dataframe["distal_wrong_min_ch_div_minus_cc"] = np.minimum(raw_dataframe["distal_wrong_ch"], raw_dataframe["distal_wrong_div"]) - raw_dataframe["distal_wrong_cc"]
+    raw_dataframe["distal_punish_min_ch_div_minus_cc"] = np.minimum(raw_dataframe["distal_punish_ch"], raw_dataframe["distal_punish_div"]) - raw_dataframe["distal_punish_cc"]
 
     "Interpersonal blame disparity within a given vignette (diagnostic, not the definition of shielding)"
-    raw_dataframe["bill_minus_clark_cc_blame"] = raw_dataframe["proximate_blame_cc"] - raw_dataframe["clark_blame_cc"]
-    raw_dataframe["bill_minus_clark_ch_blame"] = raw_dataframe["proximate_blame_ch"] - raw_dataframe["clark_blame_ch"]
+    raw_dataframe["bill_minus_distal_cc_blame"] = raw_dataframe["proximate_blame_cc"] - raw_dataframe["distal_blame_cc"]
+    raw_dataframe["bill_minus_distal_ch_blame"] = raw_dataframe["proximate_blame_ch"] - raw_dataframe["distal_blame_ch"]
 
-    raw_dataframe["bill_minus_clark_cc_wrong"] = raw_dataframe["proximate_wrong_cc"] - raw_dataframe["clark_wrong_cc"]
-    raw_dataframe["bill_minus_clark_ch_wrong"] = raw_dataframe["proximate_wrong_ch"] - raw_dataframe["clark_wrong_ch"]
+    raw_dataframe["bill_minus_distal_cc_wrong"] = raw_dataframe["proximate_wrong_cc"] - raw_dataframe["distal_wrong_cc"]
+    raw_dataframe["bill_minus_distal_ch_wrong"] = raw_dataframe["proximate_wrong_ch"] - raw_dataframe["distal_wrong_ch"]
 
-    raw_dataframe["bill_minus_clark_cc_punish"] = raw_dataframe["proximate_punish_cc"] - raw_dataframe["clark_punish_cc"]
-    raw_dataframe["bill_minus_clark_ch_punish"] = raw_dataframe["proximate_punish_ch"] - raw_dataframe["clark_punish_ch"]
+    raw_dataframe["bill_minus_distal_cc_punish"] = raw_dataframe["proximate_punish_cc"] - raw_dataframe["distal_punish_cc"]
+    raw_dataframe["bill_minus_distal_ch_punish"] = raw_dataframe["proximate_punish_ch"] - raw_dataframe["distal_punish_ch"]
 
     "2AFC: encode compact responses (Bill vs Clark; CH vs CC; DIV vs CC)"
     firework_interpersonal_bill = "Bill (the buyer who detonated the dangerous fireworks) is more blameworthy."
@@ -820,9 +828,9 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
 
     "Timing columns: keep First/Last Click, merge across story types, drop Page Submit and Click Count"
     timing_blocks = [
-        ("clark_cc", "pucc", "tucc"),
-        ("clark_ch", "puch", "tuch"),
-        ("clark_div", "pudiv", "tudiv"),
+        ("distal_cc", "pucc", "tucc"),
+        ("distal_ch", "puch", "tuch"),
+        ("distal_div", "pudiv", "tudiv"),
         ("proximate_cc", "ppcc", "tpcc"),
         ("proximate_ch", "ppch", "tpch"),
         ("comprehension", "comp_p", "comp_t"),
@@ -962,33 +970,33 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
         "case_code_position_1",
         "case_code_position_2",
         "case_code_position_3",
-        "first_vignette_clark_blame",
-        "first_vignette_clark_wrong",
-        "first_vignette_clark_punish",
-        "clark_blame_ch_minus_cc",
-        "clark_blame_div_minus_cc",
+        "first_vignette_distal_blame",
+        "first_vignette_distal_wrong",
+        "first_vignette_distal_punish",
+        "distal_blame_ch_minus_cc",
+        "distal_blame_div_minus_cc",
         "proximate_blame_cc_minus_ch",
-        "clark_wrong_ch_minus_cc",
-        "clark_wrong_div_minus_cc",
+        "distal_wrong_ch_minus_cc",
+        "distal_wrong_div_minus_cc",
         "proximate_wrong_cc_minus_ch",
-        "clark_punish_ch_minus_cc",
-        "clark_punish_div_minus_cc",
+        "distal_punish_ch_minus_cc",
+        "distal_punish_div_minus_cc",
         "proximate_punish_cc_minus_ch",
-        "clark_blame_min_ch_div_minus_cc",
-        "clark_wrong_min_ch_div_minus_cc",
-        "clark_punish_min_ch_div_minus_cc",
+        "distal_blame_min_ch_div_minus_cc",
+        "distal_wrong_min_ch_div_minus_cc",
+        "distal_punish_min_ch_div_minus_cc",
         "twoafc_bill_vs_clark",
         "twoafc_ch_vs_cc",
         "twoafc_div_vs_cc",
-        "clark_blame_cc",
-        "clark_blame_ch",
-        "clark_blame_div",
-        "clark_wrong_cc",
-        "clark_wrong_ch",
-        "clark_wrong_div",
-        "clark_punish_cc",
-        "clark_punish_ch",
-        "clark_punish_div",
+        "distal_blame_cc",
+        "distal_blame_ch",
+        "distal_blame_div",
+        "distal_wrong_cc",
+        "distal_wrong_ch",
+        "distal_wrong_div",
+        "distal_punish_cc",
+        "distal_punish_ch",
+        "distal_punish_div",
         "proximate_blame_cc",
         "proximate_blame_ch",
         "proximate_wrong_cc",
@@ -996,7 +1004,7 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
         "proximate_punish_cc",
         "proximate_punish_ch",
         "comprehension_probability_same_bool",
-        "comprehension_clark_necessary_bool",
+        "comprehension_distal_necessary_bool",
         "comprehension_bill_necessary_bool",
         "comprehension_all_correct_bool",
         "crt_score",
@@ -1589,9 +1597,9 @@ def compute_group_summaries(general_settings: GeneralSettings, force_rebuild: bo
 
         "Within-subject condition means (each participant contributes to each condition once)"
         dv_map = {
-            "blame": ("clark_blame_cc", "clark_blame_ch", "clark_blame_div"),
-            "wrongness": ("clark_wrong_cc", "clark_wrong_ch", "clark_wrong_div"),
-            "punishment": ("clark_punish_cc", "clark_punish_ch", "clark_punish_div"),
+            "blame": ("distal_blame_cc", "distal_blame_ch", "distal_blame_div"),
+            "wrongness": ("distal_wrong_cc", "distal_wrong_ch", "distal_wrong_div"),
+            "punishment": ("distal_punish_cc", "distal_punish_ch", "distal_punish_div"),
         }
 
         for story_condition_value in ["all", "firework", "trolley"]:
@@ -1651,9 +1659,9 @@ def compute_group_summaries(general_settings: GeneralSettings, force_rebuild: bo
 
                 "Between-subject first-vignette summaries"
                 for dv_name, first_column_name in [
-                    ("blame", "first_vignette_clark_blame"),
-                    ("wrongness", "first_vignette_clark_wrong"),
-                    ("punishment", "first_vignette_clark_punish"),
+                    ("blame", "first_vignette_distal_blame"),
+                    ("wrongness", "first_vignette_distal_wrong"),
+                    ("punishment", "first_vignette_distal_punish"),
                 ]:
                     for condition_code in ["CC", "CH", "DIV"]:
                         subset_first = subset[subset["case_code_position_1"] == condition_code]
@@ -1676,9 +1684,9 @@ def compute_group_summaries(general_settings: GeneralSettings, force_rebuild: bo
 
                 "Delta summaries (within-subject)"
                 delta_map = {
-                    "blame": ("clark_blame_ch_minus_cc", "clark_blame_div_minus_cc", "proximate_blame_cc_minus_ch", "clark_blame_min_ch_div_minus_cc"),
-                    "wrongness": ("clark_wrong_ch_minus_cc", "clark_wrong_div_minus_cc", "proximate_wrong_cc_minus_ch", "clark_wrong_min_ch_div_minus_cc"),
-                    "punishment": ("clark_punish_ch_minus_cc", "clark_punish_div_minus_cc", "proximate_punish_cc_minus_ch", "clark_punish_min_ch_div_minus_cc"),
+                    "blame": ("distal_blame_ch_minus_cc", "distal_blame_div_minus_cc", "proximate_blame_cc_minus_ch", "distal_blame_min_ch_div_minus_cc"),
+                    "wrongness": ("distal_wrong_ch_minus_cc", "distal_wrong_div_minus_cc", "proximate_wrong_cc_minus_ch", "distal_wrong_min_ch_div_minus_cc"),
+                    "punishment": ("distal_punish_ch_minus_cc", "distal_punish_div_minus_cc", "proximate_punish_cc_minus_ch", "distal_punish_min_ch_div_minus_cc"),
                 }
 
                 for dv_name, (delta_ch, delta_div, delta_prox, delta_min) in delta_map.items():
@@ -1861,9 +1869,9 @@ def compute_correlations(general_settings: GeneralSettings, force_rebuild: bool 
         rows = []
 
         "Between-subject first vignette correlations"
-        first_blame = pd.to_numeric(analysis_dataframe["first_vignette_clark_blame"], errors="coerce")
-        first_wrong = pd.to_numeric(analysis_dataframe["first_vignette_clark_wrong"], errors="coerce")
-        first_punish = pd.to_numeric(analysis_dataframe["first_vignette_clark_punish"], errors="coerce")
+        first_blame = pd.to_numeric(analysis_dataframe["first_vignette_distal_blame"], errors="coerce")
+        first_wrong = pd.to_numeric(analysis_dataframe["first_vignette_distal_wrong"], errors="coerce")
+        first_punish = pd.to_numeric(analysis_dataframe["first_vignette_distal_punish"], errors="coerce")
 
         for label_a, series_a in [("blame", first_blame), ("wrongness", first_wrong), ("punishment", first_punish)]:
             for label_b, series_b in [("blame", first_blame), ("wrongness", first_wrong), ("punishment", first_punish)]:
@@ -1887,13 +1895,13 @@ def compute_correlations(general_settings: GeneralSettings, force_rebuild: bool 
                 )
 
         "Within-subject participant means across all three vignettes"
-        analysis_dataframe["clark_blame_mean"] = analysis_dataframe[["clark_blame_cc", "clark_blame_ch", "clark_blame_div"]].mean(axis=1, skipna=True)
-        analysis_dataframe["clark_wrong_mean"] = analysis_dataframe[["clark_wrong_cc", "clark_wrong_ch", "clark_wrong_div"]].mean(axis=1, skipna=True)
-        analysis_dataframe["clark_punish_mean"] = analysis_dataframe[["clark_punish_cc", "clark_punish_ch", "clark_punish_div"]].mean(axis=1, skipna=True)
+        analysis_dataframe["distal_blame_mean"] = analysis_dataframe[["distal_blame_cc", "distal_blame_ch", "distal_blame_div"]].mean(axis=1, skipna=True)
+        analysis_dataframe["distal_wrong_mean"] = analysis_dataframe[["distal_wrong_cc", "distal_wrong_ch", "distal_wrong_div"]].mean(axis=1, skipna=True)
+        analysis_dataframe["distal_punish_mean"] = analysis_dataframe[["distal_punish_cc", "distal_punish_ch", "distal_punish_div"]].mean(axis=1, skipna=True)
 
-        mean_blame = pd.to_numeric(analysis_dataframe["clark_blame_mean"], errors="coerce")
-        mean_wrong = pd.to_numeric(analysis_dataframe["clark_wrong_mean"], errors="coerce")
-        mean_punish = pd.to_numeric(analysis_dataframe["clark_punish_mean"], errors="coerce")
+        mean_blame = pd.to_numeric(analysis_dataframe["distal_blame_mean"], errors="coerce")
+        mean_wrong = pd.to_numeric(analysis_dataframe["distal_wrong_mean"], errors="coerce")
+        mean_punish = pd.to_numeric(analysis_dataframe["distal_punish_mean"], errors="coerce")
 
         for label_a, series_a in [("blame_mean", mean_blame), ("wrongness_mean", mean_wrong), ("punishment_mean", mean_punish)]:
             for label_b, series_b in [("blame_mean", mean_blame), ("wrongness_mean", mean_wrong), ("punishment_mean", mean_punish)]:
@@ -1964,7 +1972,7 @@ def compute_individual_difference_regressions(general_settings: GeneralSettings,
 
         rows = []
 
-        for outcome_column in ["clark_blame_ch_minus_cc", "clark_blame_div_minus_cc", "clark_blame_min_ch_div_minus_cc"]:
+        for outcome_column in ["distal_blame_ch_minus_cc", "distal_blame_div_minus_cc", "distal_blame_min_ch_div_minus_cc"]:
             "Model A: overall individualism_score"
             formula_a = f"{outcome_column} ~ C(load_condition) + C(story_condition) + crt_score + individualism_score"
             model_a = smf.ols(formula=formula_a, data=analysis_dataframe).fit()
@@ -2053,7 +2061,7 @@ def compute_consistency_effects(general_settings: GeneralSettings, force_rebuild
 
         rows = []
 
-        for dv_prefix in ["clark_blame", "clark_wrong", "clark_punish"]:
+        for dv_prefix in ["distal_blame", "distal_wrong", "distal_punish"]:
             column_cc = f"{dv_prefix}_cc"
             column_ch = f"{dv_prefix}_ch"
 
@@ -2150,8 +2158,8 @@ def compute_triangulation_results(general_settings: GeneralSettings, force_rebui
             return np.nan
 
         for comparison_name, twoafc_column, delta_column, left_prefix, right_prefix in [
-            ("CH_vs_CC", "twoafc_ch_vs_cc", "clark_blame_ch_minus_cc", "CH", "CC"),
-            ("DIV_vs_CC", "twoafc_div_vs_cc", "clark_blame_div_minus_cc", "DIV", "CC"),
+            ("CH_vs_CC", "twoafc_ch_vs_cc", "distal_blame_ch_minus_cc", "CH", "CC"),
+            ("DIV_vs_CC", "twoafc_div_vs_cc", "distal_blame_div_minus_cc", "DIV", "CC"),
         ]:
             numeric_code = analysis_dataframe[twoafc_column].apply(twoafc_to_numeric)
             delta_values = pd.to_numeric(analysis_dataframe[delta_column], errors="coerce")
@@ -2248,14 +2256,15 @@ def compute_triangulation_results(general_settings: GeneralSettings, force_rebui
     return dataframe_triangulation
 
 
-def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, confirmatory_pooled_ols_covariance_type: str | None = None, force_rebuild: bool | None = None) -> pd.DataFrame:
+def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, confirmatory_pooled_ols_covariance_type: str | None = None, 
+                                           cleaned_dataframe: pd.DataFrame | None = None, force_rebuild: bool | None = None) -> pd.DataFrame:
     """
     Runs the primary confirmatory tests plus a structured set of exploratory tests.
 
     Confirmatory (preregistered):
         • Between-subjects, included only:
-            H1: first_vignette_clark_blame CH vs CC (two-sided)
-            H2: first_vignette_clark_blame DIV vs CC (two-sided)
+            H1: first_vignette_distal_blame CH vs CC (two-sided)
+            H2: first_vignette_distal_blame DIV vs CC (two-sided)
         • Holm correction across these two p-values.
 
     Returns:
@@ -2265,227 +2274,1317 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         force_rebuild = general_settings["misc"]["force_rebuild"]
 
     "Load and return dataframe if one already exists and not directed to rebuild."
-    group_summaries_extraction = load_analysis_dataframe(
-        general_settings=general_settings, file_name_key="tests", force_rebuild=force_rebuild)
-    if group_summaries_extraction["success"]:
-        group_summaries_dataframe: pd.DataFrame = group_summaries_extraction["dataframe"]
-        return group_summaries_dataframe
-    if group_summaries_extraction["error"]:
-        raise Exception(group_summaries_extraction["message"])
+    tests_extraction = load_analysis_dataframe(
+        general_settings=general_settings,
+        file_name_key="tests",
+        force_rebuild=force_rebuild,
+    )
+    if tests_extraction["success"]:
+        tests_dataframe: pd.DataFrame = tests_extraction["dataframe"]
+        return tests_dataframe
+    if tests_extraction["error"]:
+        raise Exception(tests_extraction["message"])
 
-    "Load of rebuild preprocessed dataframe"
-    cleaned_dataframe = load_or_build_cleaned_dataframe(general_settings=general_settings, force_rebuild=False)
+    "Load or rebuild preprocessed dataframe."
+    if cleaned_dataframe is None:
+        cleaned_dataframe = load_or_build_cleaned_dataframe(
+            general_settings=general_settings,
+            force_rebuild=False,
+        )
+    else:
+        cleaned_dataframe = cleaned_dataframe.copy()
 
-    dataframes = {}
-    for inclusion_filter_and_analysis_dataframe in [
-            ("included_only", cleaned_dataframe[cleaned_dataframe["included"]].copy()), 
-            ("all_finishers", cleaned_dataframe.copy())
-        ]:
-        inclusion_filter, analysis_dataframe = inclusion_filter_and_analysis_dataframe
+    "=============================="
+    "Global settings and defaults."
+    "=============================="
+    confirmatory_between_subjects_method_normalized = str(
+        general_settings["misc"]["confirmatory_between_subjects_method"]
+    ).strip().lower()
 
-        tests_rows = []
+    one_tailed_results_are_primary = bool(general_settings["misc"]["one_tailed"])
 
-        "Convenience helper"
-        def append_test_row(row_dict: Dict, analysis_family: str, inclusion_filter: str, story_condition_value: str, load_condition_value: str, notes: str):
-            row_dict = dict(row_dict)
-            row_dict["analysis_family"] = analysis_family
-            row_dict["inclusion_filter"] = inclusion_filter
-            row_dict["story_condition"] = story_condition_value
-            row_dict["load_condition"] = load_condition_value
-            row_dict["notes"] = notes
-            tests_rows.append(row_dict)
+    punishment_settings: dict[str, Any] = dict(general_settings.get("punish", {}))
+    punishment_analysis_mode = str(
+        punishment_settings.get("analysis_mode", "raw_nonparametric")
+    ).strip().lower()
+    punishment_bootstrap_iterations = int(
+        punishment_settings.get("bootstrap_iterations", 5000)
+    )
+    punishment_random_seed = int(
+        punishment_settings.get("random_seed", 2026)
+    )
 
-        "Confirmatory: between-subject first vignette, Clark blame"
-        confirmatory_subset = analysis_dataframe.copy()
+    valid_punishment_analysis_modes = {
+        "raw_nonparametric",
+        "raw_parametric",
+        "log1p_parametric",
+    }
+    if punishment_analysis_mode not in valid_punishment_analysis_modes:
+        raise ValueError(
+            "general_settings['punish']['analysis_mode'] must be one of "
+            f"{sorted(valid_punishment_analysis_modes)}, not {punishment_analysis_mode!r}."
+        )
 
-        confirmatory_between_subjects_method_normalized = str(
-            general_settings["misc"]["confirmatory_between_subjects_method"],
-        ).strip().lower()
+    random_number_generator = np.random.default_rng(punishment_random_seed)
 
-        if confirmatory_between_subjects_method_normalized == "welch":
-            confirmatory_contrast_rows_dataframe = pd.DataFrame(
-                [
-                    run_welch_t_test_between_groups(
-                        confirmatory_subset,
-                        dv_column_name="first_vignette_clark_blame",
-                        group_column_name="case_code_position_1",
-                        group_a_value="CH",
-                        group_b_value="CC",
-                    ),
-                    run_welch_t_test_between_groups(
-                        confirmatory_subset,
-                        dv_column_name="first_vignette_clark_blame",
-                        group_column_name="case_code_position_1",
-                        group_a_value="DIV",
-                        group_b_value="CC",
-                    ),
+    "=================================="
+    "Human-readable constants and maps."
+    "=================================="
+    participants_sort_map = {
+        "included": 0,
+        "all_finishers": 1,
+    }
+    story_family_sort_map = {
+        "pooled": 0,
+        "firework": 1,
+        "trolley": 2,
+    }
+    load_condition_sort_map = {
+        "pooled": 0,
+        "high": 1,
+        "low": 2,
+    }
+    design_sort_map = {
+        "between_subjects": 0,
+        "within_subjects": 1,
+    }
+    dv_sort_map = {
+        "blame": 0,
+        "wrong": 1,
+        "punish": 2,
+    }
+    agent_role_sort_map = {
+        "distal": 0,
+        "proximate": 1,
+    }
+    contrast_type_sort_map = {
+        "CH - CC": 0,
+        "DIV - CC": 1,
+        "CH - DIV": 2,
+        "MIN(CH, DIV) - CC": 3,
+        "CC - CH": 4,
+    }
+    dv_plain_language_map = {
+        "blame": "blameworthiness",
+        "wrong": "wrongness",
+        "punish": "punishment",
+    }
+
+    "===================================="
+    "Nested helpers kept local on purpose."
+    "===================================="
+    def coerce_numeric_array(series_or_array) -> np.ndarray:
+        numeric_values = pd.to_numeric(series_or_array, errors="coerce")
+        numeric_values = np.asarray(numeric_values, dtype=float)
+        numeric_values = numeric_values[~np.isnan(numeric_values)]
+        return numeric_values
+
+    def compute_one_tailed_p_value_from_two_tailed_p_value(
+        p_value_two_tailed: float,
+        test_statistic: float,
+    ) -> float:
+        """
+        Computes a one-tailed p-value in the positive direction.
+
+        If the observed effect is in the predicted positive direction:
+            p_one_tailed = p_two_tailed / 2
+
+        If the observed effect is in the opposite direction:
+            p_one_tailed = 1 - p_two_tailed / 2
+        """
+        if pd.isna(p_value_two_tailed) or pd.isna(test_statistic):
+            return np.nan
+
+        p_value_two_tailed = float(p_value_two_tailed)
+        test_statistic = float(test_statistic)
+
+        if test_statistic >= 0:
+            return float(p_value_two_tailed / 2)
+
+        return float(1 - p_value_two_tailed / 2)
+
+    def filter_dataframe_by_story_family_and_load_condition(
+        analysis_dataframe: pd.DataFrame,
+        story_family_value: str,
+        load_condition_value: str,
+    ) -> pd.DataFrame:
+        filtered_dataframe = analysis_dataframe.copy()
+
+        if story_family_value != "pooled":
+            filtered_dataframe = filtered_dataframe.loc[
+                filtered_dataframe["story_condition"] == story_family_value
+            ].copy()
+
+        if load_condition_value != "pooled":
+            filtered_dataframe = filtered_dataframe.loc[
+                filtered_dataframe["load_condition"] == load_condition_value
+            ].copy()
+
+        return filtered_dataframe
+
+    def resolve_analysis_mode_for_dependent_variable(dv_key: str) -> str:
+        if dv_key == "punish":
+            return punishment_analysis_mode
+        return "raw_parametric"
+
+    def resolve_location_statistic_reported(analysis_mode_value: str) -> str:
+        if analysis_mode_value == "raw_nonparametric":
+            return "median_difference"
+        return "mean_difference"
+
+    def bootstrap_percentile_ci_for_independent_statistic(
+        sample_a: np.ndarray,
+        sample_b: np.ndarray,
+        statistic_function,
+    ) -> tuple[float, float]:
+        bootstrap_statistics = []
+
+        for _ in range(punishment_bootstrap_iterations):
+            resampled_sample_a = random_number_generator.choice(
+                sample_a, size=sample_a.shape[0], replace=True
+            )
+            resampled_sample_b = random_number_generator.choice(
+                sample_b, size=sample_b.shape[0], replace=True
+            )
+            bootstrap_statistics.append(
+                float(statistic_function(resampled_sample_a, resampled_sample_b))
+            )
+
+        ci95_lower, ci95_upper = np.percentile(bootstrap_statistics, [2.5, 97.5])
+        return float(ci95_lower), float(ci95_upper)
+
+    def bootstrap_percentile_ci_for_one_sample_statistic(
+        sample_values: np.ndarray,
+        statistic_function,
+    ) -> tuple[float, float]:
+        bootstrap_statistics = []
+
+        for _ in range(punishment_bootstrap_iterations):
+            resampled_sample_values = random_number_generator.choice(
+                sample_values, size=sample_values.shape[0], replace=True
+            )
+            bootstrap_statistics.append(
+                float(statistic_function(resampled_sample_values))
+            )
+
+        ci95_lower, ci95_upper = np.percentile(bootstrap_statistics, [2.5, 97.5])
+        return float(ci95_lower), float(ci95_upper)
+
+    def median_difference_statistic(sample_a: np.ndarray, sample_b: np.ndarray) -> float:
+        return float(np.median(sample_a) - np.median(sample_b))
+
+    def median_statistic(sample_values: np.ndarray) -> float:
+        return float(np.median(sample_values))
+
+    def mann_whitney_rank_biserial(u_statistic: float, n_a: int, n_b: int) -> float:
+        if n_a <= 0 or n_b <= 0:
+            return np.nan
+        return float((2 * u_statistic) / (n_a * n_b) - 1)
+
+    def matched_rank_biserial_from_delta_values(delta_values: np.ndarray) -> float:
+        nonzero_delta_values = np.asarray(delta_values, dtype=float)
+        nonzero_delta_values = nonzero_delta_values[~np.isnan(nonzero_delta_values)]
+        nonzero_delta_values = nonzero_delta_values[nonzero_delta_values != 0]
+
+        if nonzero_delta_values.shape[0] == 0:
+            return np.nan
+
+        absolute_ranks = stats.rankdata(np.abs(nonzero_delta_values), method="average")
+        positive_rank_sum = float(np.sum(absolute_ranks[nonzero_delta_values > 0]))
+        negative_rank_sum = float(np.sum(absolute_ranks[nonzero_delta_values < 0]))
+
+        denominator = positive_rank_sum + negative_rank_sum
+        if denominator == 0:
+            return np.nan
+
+        return float((positive_rank_sum - negative_rank_sum) / denominator)
+
+    def transform_numeric_values_if_requested(
+        numeric_values: np.ndarray,
+        analysis_mode_value: str,
+    ) -> tuple[np.ndarray, str]:
+        numeric_values = np.asarray(numeric_values, dtype=float)
+        numeric_values = numeric_values[~np.isnan(numeric_values)]
+
+        if analysis_mode_value == "log1p_parametric":
+            if np.any(numeric_values < 0):
+                minimum_value = float(np.min(numeric_values))
+                raise ValueError(
+                    "log1p_parametric was asked to transform negative raw punishment values. "
+                    f"Minimum offending value: {minimum_value:.4f}"
+                )
+            return np.log1p(numeric_values), "log1p"
+
+        return numeric_values.copy(), "none"
+
+    def build_plain_language_note(
+        analysis_family: str,
+        design: str,
+        dv_key: str,
+        agent_role: str,
+        contrast_type: str,
+        participants: str,
+        story_family: str,
+        load_condition: str,
+        analysis_mode: str,
+        transformation: str,
+        location_statistic_reported: str,
+        extra_detail: str = "",
+    ) -> str:
+        dv_plain_language = dv_plain_language_map[dv_key]
+        design_plain_language = design.replace("_", " ")
+        participants_plain_language = participants.replace("_", " ")
+        story_plain_language = story_family
+        load_plain_language = load_condition
+
+        if agent_role == "distal":
+            agent_plain_language = "distal agent Clark"
+        else:
+            agent_plain_language = "proximate agent Bill or the proximate node"
+
+        if transformation == "none":
+            transformation_plain_language = "raw untransformed values"
+        else:
+            transformation_plain_language = "log(1 + x)-transformed values"
+
+        if location_statistic_reported == "median_difference":
+            location_plain_language = "median difference"
+        else:
+            location_plain_language = "mean difference"
+
+        note_string = (
+            f"{analysis_family.capitalize()} {design_plain_language} comparison on {dv_plain_language} "
+            f"for the {agent_plain_language}. Contrast type: {contrast_type}. Participants: {participants_plain_language}. "
+            f"Story family: {story_plain_language}. Load condition: {load_plain_language}. "
+            f"Analysis mode: {analysis_mode}. Transformation: {transformation_plain_language}. "
+            f"The location statistic represented by the contrast columns is the {location_plain_language}. "
+            f"p_value_one_tailed assumes that the predicted direction is positive for the contrast named in contrast_type."
+        )
+
+        if extra_detail != "":
+            note_string += " " + extra_detail
+
+        return note_string
+
+    def make_standard_test_row(
+        analysis_family: str,
+        analysis_mode: str,
+        test_type: str,
+        transformation: str,
+        location_statistic_reported: str,
+        participants: str,
+        story_family: str,
+        load_condition: str,
+        design: str,
+        dv: str,
+        agent_role: str,
+        contrast_type: str,
+        group_a: str,
+        group_b: str,
+        n_a: int,
+        n_b: int,
+        mean_a: float,
+        mean_b: float,
+        median_a: float,
+        median_b: float,
+        mean_difference_a_minus_b: float,
+        median_difference_a_minus_b: float,
+        ci95_lower: float,
+        ci95_upper: float,
+        t_statistic: float,
+        df: float,
+        p_value_two_tailed: float,
+        p_value_one_tailed: float,
+        effect_size_name: str,
+        effect_size: float,
+        p_value_holm: float,
+        notes: str,
+    ) -> dict[str, Any]:
+        return {
+            "analysis_family": analysis_family,
+            "analysis_mode": analysis_mode,
+            "test_type": test_type,
+            "transformation": transformation,
+            "location_statistic_reported": location_statistic_reported,
+            "participants": participants,
+            "story_family": story_family,
+            "load_condition": load_condition,
+            "design": design,
+            "dv": dv,
+            "agent_role": agent_role,
+            "contrast_type": contrast_type,
+            "group_a": group_a,
+            "group_b": group_b,
+            "n_a": int(n_a),
+            "n_b": int(n_b),
+            "mean_a": float(mean_a) if not pd.isna(mean_a) else np.nan,
+            "mean_b": float(mean_b) if not pd.isna(mean_b) else np.nan,
+            "median_a": float(median_a) if not pd.isna(median_a) else np.nan,
+            "median_b": float(median_b) if not pd.isna(median_b) else np.nan,
+            "mean_difference_a_minus_b": float(mean_difference_a_minus_b) if not pd.isna(mean_difference_a_minus_b) else np.nan,
+            "median_difference_a_minus_b": float(median_difference_a_minus_b) if not pd.isna(median_difference_a_minus_b) else np.nan,
+            "ci95_lower": float(ci95_lower) if not pd.isna(ci95_lower) else np.nan,
+            "ci95_upper": float(ci95_upper) if not pd.isna(ci95_upper) else np.nan,
+            "t_statistic": float(t_statistic) if not pd.isna(t_statistic) else np.nan,
+            "df": float(df) if not pd.isna(df) else np.nan,
+            "p_value_two_tailed": float(p_value_two_tailed) if not pd.isna(p_value_two_tailed) else np.nan,
+            "p_value_one_tailed": float(p_value_one_tailed) if not pd.isna(p_value_one_tailed) else np.nan,
+            "effect_size_name": effect_size_name,
+            "effect_size": float(effect_size) if not pd.isna(effect_size) else np.nan,
+            "p_value_holm": float(p_value_holm) if not pd.isna(p_value_holm) else np.nan,
+            "notes": notes,
+        }
+
+    def run_independent_samples_test(
+        sample_a_raw: np.ndarray,
+        sample_b_raw: np.ndarray,
+        analysis_mode: str,
+    ) -> dict[str, Any]:
+        sample_a_raw = coerce_numeric_array(sample_a_raw)
+        sample_b_raw = coerce_numeric_array(sample_b_raw)
+
+        if sample_a_raw.shape[0] == 0 or sample_b_raw.shape[0] == 0:
+            return {
+                "analysis_mode": analysis_mode,
+                "test_type": "insufficient_data",
+                "transformation": "none",
+                "location_statistic_reported": resolve_location_statistic_reported(analysis_mode),
+                "n_a": 0,
+                "n_b": 0,
+                "mean_a": np.nan,
+                "mean_b": np.nan,
+                "median_a": np.nan,
+                "median_b": np.nan,
+                "mean_difference_a_minus_b": np.nan,
+                "median_difference_a_minus_b": np.nan,
+                "ci95_lower": np.nan,
+                "ci95_upper": np.nan,
+                "t_statistic": np.nan,
+                "df": np.nan,
+                "p_value_two_tailed": np.nan,
+                "p_value_one_tailed": np.nan,
+                "effect_size_name": "NA",
+                "effect_size": np.nan,
+            }
+
+        if analysis_mode == "raw_nonparametric":
+            mann_whitney_result_two_tailed = stats.mannwhitneyu(
+                sample_a_raw,
+                sample_b_raw,
+                alternative="two-sided",
+                method="auto",
+            )
+            mann_whitney_result_one_tailed = stats.mannwhitneyu(
+                sample_a_raw,
+                sample_b_raw,
+                alternative="greater",
+                method="auto",
+            )
+
+            ci95_lower, ci95_upper = bootstrap_percentile_ci_for_independent_statistic(
+                sample_a=sample_a_raw,
+                sample_b=sample_b_raw,
+                statistic_function=median_difference_statistic,
+            )
+
+            return {
+                "analysis_mode": analysis_mode,
+                "test_type": "mann_whitney_u",
+                "transformation": "none",
+                "location_statistic_reported": "median_difference",
+                "n_a": int(sample_a_raw.shape[0]),
+                "n_b": int(sample_b_raw.shape[0]),
+                "mean_a": float(np.mean(sample_a_raw)),
+                "mean_b": float(np.mean(sample_b_raw)),
+                "median_a": float(np.median(sample_a_raw)),
+                "median_b": float(np.median(sample_b_raw)),
+                "mean_difference_a_minus_b": float(np.mean(sample_a_raw) - np.mean(sample_b_raw)),
+                "median_difference_a_minus_b": float(np.median(sample_a_raw) - np.median(sample_b_raw)),
+                "ci95_lower": ci95_lower,
+                "ci95_upper": ci95_upper,
+                "t_statistic": float(mann_whitney_result_two_tailed.statistic),
+                "df": np.nan,
+                "p_value_two_tailed": float(mann_whitney_result_two_tailed.pvalue),
+                "p_value_one_tailed": float(mann_whitney_result_one_tailed.pvalue),
+                "effect_size_name": "rank_biserial",
+                "effect_size": mann_whitney_rank_biserial(
+                    u_statistic=float(mann_whitney_result_two_tailed.statistic),
+                    n_a=int(sample_a_raw.shape[0]),
+                    n_b=int(sample_b_raw.shape[0]),
+                ),
+            }
+
+        sample_a_analysis_scale, transformation_label = transform_numeric_values_if_requested(
+            sample_a_raw,
+            analysis_mode,
+        )
+        sample_b_analysis_scale, _ = transform_numeric_values_if_requested(
+            sample_b_raw,
+            analysis_mode,
+        )
+
+        welch_result_two_tailed = stats.ttest_ind(
+            sample_a_analysis_scale,
+            sample_b_analysis_scale,
+            equal_var=False,
+            alternative="two-sided",
+        )
+        welch_result_one_tailed = stats.ttest_ind(
+            sample_a_analysis_scale,
+            sample_b_analysis_scale,
+            equal_var=False,
+            alternative="greater",
+        )
+
+        mean_difference_value, ci95_lower, ci95_upper, welch_df = compute_welch_mean_difference_ci(
+            sample_a_analysis_scale,
+            sample_b_analysis_scale,
+        )
+
+        return {
+            "analysis_mode": analysis_mode,
+            "test_type": "welch_t_test_independent",
+            "transformation": transformation_label,
+            "location_statistic_reported": "mean_difference",
+            "n_a": int(sample_a_analysis_scale.shape[0]),
+            "n_b": int(sample_b_analysis_scale.shape[0]),
+            "mean_a": float(np.mean(sample_a_analysis_scale)),
+            "mean_b": float(np.mean(sample_b_analysis_scale)),
+            "median_a": float(np.median(sample_a_analysis_scale)),
+            "median_b": float(np.median(sample_b_analysis_scale)),
+            "mean_difference_a_minus_b": mean_difference_value,
+            "median_difference_a_minus_b": float(np.median(sample_a_analysis_scale) - np.median(sample_b_analysis_scale)),
+            "ci95_lower": ci95_lower,
+            "ci95_upper": ci95_upper,
+            "t_statistic": float(welch_result_two_tailed.statistic),
+            "df": float(welch_df),
+            "p_value_two_tailed": float(welch_result_two_tailed.pvalue),
+            "p_value_one_tailed": float(welch_result_one_tailed.pvalue),
+            "effect_size_name": "hedges_g",
+            "effect_size": float(
+                hedges_g_for_two_independent_samples(sample_a_analysis_scale, sample_b_analysis_scale)
+            ),
+        }
+
+    def run_paired_samples_test(
+        sample_a_raw: np.ndarray,
+        sample_b_raw: np.ndarray,
+        analysis_mode: str,
+    ) -> dict[str, Any]:
+        sample_a_raw = coerce_numeric_array(sample_a_raw)
+        sample_b_raw = coerce_numeric_array(sample_b_raw)
+
+        if sample_a_raw.shape[0] != sample_b_raw.shape[0]:
+            minimum_n = min(sample_a_raw.shape[0], sample_b_raw.shape[0])
+            sample_a_raw = sample_a_raw[:minimum_n]
+            sample_b_raw = sample_b_raw[:minimum_n]
+
+        if sample_a_raw.shape[0] == 0:
+            return {
+                "analysis_mode": analysis_mode,
+                "test_type": "insufficient_data",
+                "transformation": "none",
+                "location_statistic_reported": resolve_location_statistic_reported(analysis_mode),
+                "n_a": 0,
+                "n_b": 0,
+                "mean_a": np.nan,
+                "mean_b": np.nan,
+                "median_a": np.nan,
+                "median_b": np.nan,
+                "mean_difference_a_minus_b": np.nan,
+                "median_difference_a_minus_b": np.nan,
+                "ci95_lower": np.nan,
+                "ci95_upper": np.nan,
+                "t_statistic": np.nan,
+                "df": np.nan,
+                "p_value_two_tailed": np.nan,
+                "p_value_one_tailed": np.nan,
+                "effect_size_name": "NA",
+                "effect_size": np.nan,
+            }
+
+        if analysis_mode == "raw_nonparametric":
+            delta_values_raw = sample_a_raw - sample_b_raw
+            nonzero_delta_values = delta_values_raw[delta_values_raw != 0]
+
+            if nonzero_delta_values.shape[0] == 0:
+                wilcoxon_statistic = 0.0
+                p_value_two_tailed = 1.0
+                p_value_one_tailed = 1.0
+            else:
+                wilcoxon_result_two_tailed = stats.wilcoxon(
+                    nonzero_delta_values,
+                    alternative="two-sided",
+                    zero_method="wilcox",
+                    correction=False,
+                    mode="auto",
+                )
+                wilcoxon_result_one_tailed = stats.wilcoxon(
+                    nonzero_delta_values,
+                    alternative="greater",
+                    zero_method="wilcox",
+                    correction=False,
+                    mode="auto",
+                )
+                wilcoxon_statistic = float(wilcoxon_result_two_tailed.statistic)
+                p_value_two_tailed = float(wilcoxon_result_two_tailed.pvalue)
+                p_value_one_tailed = float(wilcoxon_result_one_tailed.pvalue)
+
+            ci95_lower, ci95_upper = bootstrap_percentile_ci_for_one_sample_statistic(
+                sample_values=delta_values_raw,
+                statistic_function=median_statistic,
+            )
+
+            return {
+                "analysis_mode": analysis_mode,
+                "test_type": "wilcoxon_signed_rank",
+                "transformation": "none",
+                "location_statistic_reported": "median_difference",
+                "n_a": int(sample_a_raw.shape[0]),
+                "n_b": int(sample_b_raw.shape[0]),
+                "mean_a": float(np.mean(sample_a_raw)),
+                "mean_b": float(np.mean(sample_b_raw)),
+                "median_a": float(np.median(sample_a_raw)),
+                "median_b": float(np.median(sample_b_raw)),
+                "mean_difference_a_minus_b": float(np.mean(delta_values_raw)),
+                "median_difference_a_minus_b": float(np.median(delta_values_raw)),
+                "ci95_lower": ci95_lower,
+                "ci95_upper": ci95_upper,
+                "t_statistic": wilcoxon_statistic,
+                "df": np.nan,
+                "p_value_two_tailed": p_value_two_tailed,
+                "p_value_one_tailed": p_value_one_tailed,
+                "effect_size_name": "matched_rank_biserial",
+                "effect_size": matched_rank_biserial_from_delta_values(delta_values_raw),
+            }
+
+        sample_a_analysis_scale, transformation_label = transform_numeric_values_if_requested(
+            sample_a_raw,
+            analysis_mode,
+        )
+        sample_b_analysis_scale, _ = transform_numeric_values_if_requested(
+            sample_b_raw,
+            analysis_mode,
+        )
+
+        delta_values_analysis_scale = sample_a_analysis_scale - sample_b_analysis_scale
+
+        paired_result_two_tailed = stats.ttest_1samp(
+            delta_values_analysis_scale,
+            popmean=0.0,
+            alternative="two-sided",
+        )
+        paired_result_one_tailed = stats.ttest_1samp(
+            delta_values_analysis_scale,
+            popmean=0.0,
+            alternative="greater",
+        )
+
+        mean_delta_value = float(np.mean(delta_values_analysis_scale))
+        standard_deviation_delta = float(np.std(delta_values_analysis_scale, ddof=1))
+        standard_error_delta = standard_deviation_delta / np.sqrt(delta_values_analysis_scale.shape[0])
+        df_value = float(delta_values_analysis_scale.shape[0] - 1)
+
+        t_critical = stats.t.ppf(0.975, df=df_value) if delta_values_analysis_scale.shape[0] > 1 else np.nan
+        ci95_lower = float(mean_delta_value - t_critical * standard_error_delta) if delta_values_analysis_scale.shape[0] > 1 else np.nan
+        ci95_upper = float(mean_delta_value + t_critical * standard_error_delta) if delta_values_analysis_scale.shape[0] > 1 else np.nan
+
+        effect_size_value = np.nan
+        if standard_deviation_delta > 0:
+            effect_size_value = float(mean_delta_value / standard_deviation_delta)
+
+        return {
+            "analysis_mode": analysis_mode,
+            "test_type": "paired_t_test",
+            "transformation": transformation_label,
+            "location_statistic_reported": "mean_difference",
+            "n_a": int(sample_a_analysis_scale.shape[0]),
+            "n_b": int(sample_b_analysis_scale.shape[0]),
+            "mean_a": float(np.mean(sample_a_analysis_scale)),
+            "mean_b": float(np.mean(sample_b_analysis_scale)),
+            "median_a": float(np.median(sample_a_analysis_scale)),
+            "median_b": float(np.median(sample_b_analysis_scale)),
+            "mean_difference_a_minus_b": mean_delta_value,
+            "median_difference_a_minus_b": float(np.median(delta_values_analysis_scale)),
+            "ci95_lower": ci95_lower,
+            "ci95_upper": ci95_upper,
+            "t_statistic": float(paired_result_two_tailed.statistic),
+            "df": df_value,
+            "p_value_two_tailed": float(paired_result_two_tailed.pvalue),
+            "p_value_one_tailed": float(paired_result_one_tailed.pvalue),
+            "effect_size_name": "cohens_dz",
+            "effect_size": effect_size_value,
+        }
+
+    def extract_independent_samples_for_between_subjects_contrast(
+        subset_dataframe: pd.DataFrame,
+        dv_key: str,
+        story_family: str,
+        load_condition: str,
+        contrast_type: str,
+    ) -> tuple[np.ndarray, np.ndarray, str, str, str]:
+        first_vignette_column_name = dv_specifications[dv_key]["first_vignette_column"]
+
+        if contrast_type == "CH - CC":
+            return (
+                coerce_numeric_array(
+                    subset_dataframe.loc[
+                        subset_dataframe["case_code_position_1"] == "CH",
+                        first_vignette_column_name,
+                    ]
+                ),
+                coerce_numeric_array(
+                    subset_dataframe.loc[
+                        subset_dataframe["case_code_position_1"] == "CC",
+                        first_vignette_column_name,
+                    ]
+                ),
+                "CH",
+                "CC",
+                "",
+            )
+
+        if contrast_type == "DIV - CC":
+            return (
+                coerce_numeric_array(
+                    subset_dataframe.loc[
+                        subset_dataframe["case_code_position_1"] == "DIV",
+                        first_vignette_column_name,
+                    ]
+                ),
+                coerce_numeric_array(
+                    subset_dataframe.loc[
+                        subset_dataframe["case_code_position_1"] == "CC",
+                        first_vignette_column_name,
+                    ]
+                ),
+                "DIV",
+                "CC",
+                "",
+            )
+
+        if contrast_type == "CH - DIV":
+            return (
+                coerce_numeric_array(
+                    subset_dataframe.loc[
+                        subset_dataframe["case_code_position_1"] == "CH",
+                        first_vignette_column_name,
+                    ]
+                ),
+                coerce_numeric_array(
+                    subset_dataframe.loc[
+                        subset_dataframe["case_code_position_1"] == "DIV",
+                        first_vignette_column_name,
+                    ]
+                ),
+                "CH",
+                "DIV",
+                "",
+            )
+
+        if contrast_type == "MIN(CH, DIV) - CC":
+            analysis_mode_for_dv = resolve_analysis_mode_for_dependent_variable(dv_key)
+
+            sample_ch_raw = coerce_numeric_array(
+                subset_dataframe.loc[
+                    subset_dataframe["case_code_position_1"] == "CH",
+                    first_vignette_column_name,
+                ]
+            )
+            sample_div_raw = coerce_numeric_array(
+                subset_dataframe.loc[
+                    subset_dataframe["case_code_position_1"] == "DIV",
+                        first_vignette_column_name,
+                    ]
+            )
+            sample_cc_raw = coerce_numeric_array(
+                subset_dataframe.loc[
+                    subset_dataframe["case_code_position_1"] == "CC",
+                    first_vignette_column_name,
                 ]
             )
 
-        elif confirmatory_between_subjects_method_normalized in {"pooled_ols", "ols", "anova"}:
-            confirmatory_contrast_rows_dataframe = run_pooled_ols_planned_contrasts(
-                dataframe=confirmatory_subset,
-                dv_column_name="first_vignette_clark_blame",
-                group_column_name="case_code_position_1",
-                covariance_type=confirmatory_pooled_ols_covariance_type,
+            sample_ch_analysis_scale, transformation_label = transform_numeric_values_if_requested(
+                sample_ch_raw,
+                analysis_mode_for_dv,
+            )
+            sample_div_analysis_scale, _ = transform_numeric_values_if_requested(
+                sample_div_raw,
+                analysis_mode_for_dv,
             )
 
-        else:
-            raise ValueError(
-                "confirmatory_between_subjects_method must be 'welch' or 'pooled_ols'. "
-                f"Got: {confirmatory_between_subjects_method!r}"
+            if np.mean(sample_ch_analysis_scale) <= np.mean(sample_div_analysis_scale):
+                extra_detail = (
+                    f"For this subset, MIN(CH, DIV) is realized by CH because the "
+                    f"{'transformed ' if transformation_label != 'none' else ''}mean of CH is lower than or equal to the mean of DIV."
+                )
+                return sample_ch_raw, sample_cc_raw, "CH", "CC", extra_detail
+
+            extra_detail = (
+                f"For this subset, MIN(CH, DIV) is realized by DIV because the "
+                f"{'transformed ' if transformation_label != 'none' else ''}mean of DIV is lower than the mean of CH."
+            )
+            return sample_div_raw, sample_cc_raw, "DIV", "CC", extra_detail
+
+        raise ValueError(f"Unknown between-subjects contrast_type: {contrast_type!r}")
+
+    def extract_paired_samples_for_within_subjects_contrast(
+        subset_dataframe: pd.DataFrame,
+        dv_key: str,
+        contrast_type: str,
+    ) -> tuple[np.ndarray, np.ndarray, str, str]:
+        dv_columns = dv_specifications[dv_key]
+
+        if contrast_type == "CH - CC":
+            group_a_values = pd.to_numeric(subset_dataframe[dv_columns["distal_columns"]["CH"]], errors="coerce")
+            group_b_values = pd.to_numeric(subset_dataframe[dv_columns["distal_columns"]["CC"]], errors="coerce")
+            valid_mask = (~group_a_values.isna()) & (~group_b_values.isna())
+            return (
+                np.asarray(group_a_values[valid_mask], dtype=float),
+                np.asarray(group_b_values[valid_mask], dtype=float),
+                "CH",
+                "CC",
             )
 
-        "Holm correction across the two preregistered contrasts"
-        adjusted_p_values = holm_bonferroni_correct_p_values(
-            confirmatory_contrast_rows_dataframe["p_value"].tolist()
-        )
-        confirmatory_contrast_rows_dataframe["p_value_holm"] = adjusted_p_values
-
-        confirmatory_test_ch_vs_cc = confirmatory_contrast_rows_dataframe.loc[
-            confirmatory_contrast_rows_dataframe["group_a"] == "CH"
-        ].iloc[0].to_dict()
-
-        confirmatory_test_div_vs_cc = confirmatory_contrast_rows_dataframe.loc[
-            confirmatory_contrast_rows_dataframe["group_a"] == "DIV"
-        ].iloc[0].to_dict()
-
-        append_test_row(
-            confirmatory_test_ch_vs_cc,
-            "confirmatory",
-            inclusion_filter,
-            "all",
-            "all",
-            "H1: CH vs CC on first vignette (Clark blame)",
-        )
-        append_test_row(
-            confirmatory_test_div_vs_cc,
-            "confirmatory",
-            inclusion_filter,
-            "all",
-            "all",
-            "H2: DIV vs CC on first vignette (Clark blame)",
-        )
-
-        "Exploratory: parallel between-subject tests for wrongness and punishment"
-        for dv_column_name, label in [
-            ("first_vignette_clark_wrong", "Clark wrongness"),
-            ("first_vignette_clark_punish", "Clark punishment"),
-        ]:
-            test_ch_vs_cc = run_welch_t_test_between_groups(analysis_dataframe, dv_column_name, "case_code_position_1", "CH", "CC")
-            test_div_vs_cc = run_welch_t_test_between_groups(analysis_dataframe, dv_column_name, "case_code_position_1", "DIV", "CC")
-            append_test_row(test_ch_vs_cc, "exploratory", inclusion_filter, "all", "all", f"Between-subject first vignette (included): CH vs CC on {label}")
-            append_test_row(test_div_vs_cc, "exploratory", inclusion_filter, "all", "all", f"Between-subject first vignette (included): DIV vs CC on {label}")
-
-        "Exploratory: within-subject deltas (included only)"
-        delta_columns = [
-            ("clark_blame_ch_minus_cc", "Clark blame CH-CC"),
-            ("clark_blame_div_minus_cc", "Clark blame DIV-CC"),
-            ("clark_blame_min_ch_div_minus_cc", "Clark blame MIN(CH,DIV)-CC"),
-            ("proximate_blame_cc_minus_ch", "Proximate blame CC-CH (responsibility manipulation check)"),
-            ("clark_wrong_ch_minus_cc", "Clark wrongness CH-CC"),
-            ("clark_wrong_div_minus_cc", "Clark wrongness DIV-CC"),
-            ("clark_wrong_min_ch_div_minus_cc", "Clark wrongness MIN(CH,DIV)-CC"),
-            ("proximate_wrong_cc_minus_ch", "Proximate wrongness CC-CH"),
-            ("clark_punish_ch_minus_cc", "Clark punishment CH-CC"),
-            ("clark_punish_div_minus_cc", "Clark punishment DIV-CC"),
-            ("clark_punish_min_ch_div_minus_cc", "Clark punishment MIN(CH,DIV)-CC"),
-            ("proximate_punish_cc_minus_ch", "Proximate punishment CC-CH"),
-        ]
-
-        for delta_column_name, label in delta_columns:
-            delta_test = run_one_sample_t_test_on_delta(analysis_dataframe, delta_column_name)
-            append_test_row(delta_test, "exploratory", inclusion_filter, "all", "all", f"Within-subject delta vs 0 ({inclusion_filter}): {label}")
-
-        "Exploratory: subgroup tests by story_condition and load_condition (included only)"
-        for story_condition_value in ["firework", "trolley"]:
-            subset_story = analysis_dataframe[analysis_dataframe["story_condition"] == story_condition_value]
-
-            for dv_column_name, label in [("first_vignette_clark_blame", "Clark blame"), ("first_vignette_clark_wrong", "Clark wrongness"), ("first_vignette_clark_punish", "Clark punishment")]:
-                test_ch_vs_cc = run_welch_t_test_between_groups(subset_story, dv_column_name, "case_code_position_1", "CH", "CC")
-                test_div_vs_cc = run_welch_t_test_between_groups(subset_story, dv_column_name, "case_code_position_1", "DIV", "CC")
-                append_test_row(test_ch_vs_cc, "exploratory", inclusion_filter, story_condition_value, "all", f"Between-subject first vignette (included): CH vs CC on {label}")
-                append_test_row(test_div_vs_cc, "exploratory", inclusion_filter, story_condition_value, "all", f"Between-subject first vignette (included): DIV vs CC on {label}")
-
-            "Within-subject deltas by story"
-            for delta_column_name, label in [
-                ("clark_blame_ch_minus_cc", "Clark blame CH-CC"),
-                ("clark_blame_div_minus_cc", "Clark blame DIV-CC"),
-                ("clark_blame_min_ch_div_minus_cc", "Clark blame MIN(CH,DIV)-CC"),
-                ("proximate_blame_cc_minus_ch", "Proximate blame CC-CH"),
-                ("clark_wrong_ch_minus_cc", "Clark wrongness CH-CC"),
-                ("clark_wrong_div_minus_cc", "Clark wrongness DIV-CC"),
-                ("clark_wrong_min_ch_div_minus_cc", "Clark wrongness MIN(CH,DIV)-CC"),
-                ("proximate_wrong_cc_minus_ch", "Proximate wrongness CC-CH"),
-                ("clark_punish_ch_minus_cc", "Clark punishment CH-CC"),
-                ("clark_punish_div_minus_cc", "Clark punishment DIV-CC"),
-                ("clark_punish_min_ch_div_minus_cc", "Clark punishment MIN(CH,DIV)-CC"),
-                ("proximate_punish_cc_minus_ch", "Proximate punishment CC-CH"),
-            ]:
-                delta_test = run_one_sample_t_test_on_delta(subset_story, delta_column_name)
-                append_test_row(delta_test, "exploratory", inclusion_filter, story_condition_value, "all", f"Within-subject delta vs 0 ({inclusion_filter}): {label}")
-
-        for load_condition_value in ["high", "low"]:
-            subset_load = analysis_dataframe[analysis_dataframe["load_condition"] == load_condition_value]
-
-            for dv_column_name, label in [("first_vignette_clark_blame", "Clark blame"), ("first_vignette_clark_wrong", "Clark wrongness"), ("first_vignette_clark_punish", "Clark punishment")]:
-                test_ch_vs_cc = run_welch_t_test_between_groups(subset_load, dv_column_name, "case_code_position_1", "CH", "CC")
-                test_div_vs_cc = run_welch_t_test_between_groups(subset_load, dv_column_name, "case_code_position_1", "DIV", "CC")
-                append_test_row(test_ch_vs_cc, "exploratory", inclusion_filter, "all", load_condition_value, f"Between-subject first vignette (included): CH vs CC on {label}")
-                append_test_row(test_div_vs_cc, "exploratory", inclusion_filter, "all", load_condition_value, f"Between-subject first vignette (included): DIV vs CC on {label}")
-
-            for delta_column_name, label in [
-                ("clark_blame_ch_minus_cc", "Clark blame CH-CC"),
-                ("clark_blame_div_minus_cc", "Clark blame DIV-CC"),
-                ("clark_blame_min_ch_div_minus_cc", "Clark blame MIN(CH,DIV)-CC"),
-                ("clark_wrong_ch_minus_cc", "Clark wrongness CH-CC"),
-                ("clark_wrong_div_minus_cc", "Clark wrongness DIV-CC"),
-                ("clark_wrong_min_ch_div_minus_cc", "Clark wrongness MIN(CH,DIV)-CC"),
-                ("clark_punish_ch_minus_cc", "Clark punishment CH-CC"),
-                ("clark_punish_div_minus_cc", "Clark punishment DIV-CC"),
-                ("clark_punish_min_ch_div_minus_cc", "Clark punishment MIN(CH,DIV)-CC"),
-            ]:
-                delta_test = run_one_sample_t_test_on_delta(subset_load, delta_column_name)
-                append_test_row(delta_test, "exploratory", inclusion_filter, "all", load_condition_value, f"Within-subject delta vs 0 ({inclusion_filter}): {label}")
-
-        "Exploratory moderation: does load predict delta magnitude?"
-        for delta_column_name, label in [
-            ("clark_blame_ch_minus_cc", "Clark blame CH-CC"),
-            ("clark_blame_div_minus_cc", "Clark blame DIV-CC"),
-            ("clark_blame_min_ch_div_minus_cc", "Clark blame MIN(CH,DIV)-CC"),
-            ("clark_wrong_ch_minus_cc", "Clark wrongness CH-CC"),
-            ("clark_wrong_div_minus_cc", "Clark wrongness DIV-CC"),
-            ("clark_wrong_min_ch_div_minus_cc", "Clark wrongness MIN(CH,DIV)-CC"),
-            ("clark_punish_ch_minus_cc", "Clark punishment CH-CC"),
-            ("clark_punish_div_minus_cc", "Clark punishment DIV-CC"),
-            ("clark_punish_min_ch_div_minus_cc", "Clark punishment MIN(CH,DIV)-CC"),
-            ("proximate_blame_cc_minus_ch", "Proximate blame CC-CH"),
-        ]:
-            test_high_vs_low = run_welch_t_test_between_groups(
-                analysis_dataframe,
-                dv_column_name=delta_column_name,
-                group_column_name="load_condition",
-                group_a_value="high",
-                group_b_value="low",
+        if contrast_type == "DIV - CC":
+            group_a_values = pd.to_numeric(subset_dataframe[dv_columns["distal_columns"]["DIV"]], errors="coerce")
+            group_b_values = pd.to_numeric(subset_dataframe[dv_columns["distal_columns"]["CC"]], errors="coerce")
+            valid_mask = (~group_a_values.isna()) & (~group_b_values.isna())
+            return (
+                np.asarray(group_a_values[valid_mask], dtype=float),
+                np.asarray(group_b_values[valid_mask], dtype=float),
+                "DIV",
+                "CC",
             )
-            append_test_row(test_high_vs_low, "exploratory", inclusion_filter, "all", "all", f"Moderation: High vs Low load on delta ({label})")
 
-        "Exploratory: compare CH vs DIV on first vignette (not preregistered direction)"
-        ch_vs_div_test = run_welch_t_test_between_groups(
-            analysis_dataframe,
-            dv_column_name="first_vignette_clark_blame",
-            group_column_name="case_code_position_1",
-            group_a_value="CH",
-            group_b_value="DIV",
+        if contrast_type == "CH - DIV":
+            group_a_values = pd.to_numeric(subset_dataframe[dv_columns["distal_columns"]["CH"]], errors="coerce")
+            group_b_values = pd.to_numeric(subset_dataframe[dv_columns["distal_columns"]["DIV"]], errors="coerce")
+            valid_mask = (~group_a_values.isna()) & (~group_b_values.isna())
+            return (
+                np.asarray(group_a_values[valid_mask], dtype=float),
+                np.asarray(group_b_values[valid_mask], dtype=float),
+                "CH",
+                "DIV",
+            )
+
+        if contrast_type == "MIN(CH, DIV) - CC":
+            group_ch_values = pd.to_numeric(subset_dataframe[dv_columns["distal_columns"]["CH"]], errors="coerce")
+            group_div_values = pd.to_numeric(subset_dataframe[dv_columns["distal_columns"]["DIV"]], errors="coerce")
+            group_cc_values = pd.to_numeric(subset_dataframe[dv_columns["distal_columns"]["CC"]], errors="coerce")
+
+            valid_mask = (~group_ch_values.isna()) & (~group_div_values.isna()) & (~group_cc_values.isna())
+
+            group_a_values = np.minimum(
+                np.asarray(group_ch_values[valid_mask], dtype=float),
+                np.asarray(group_div_values[valid_mask], dtype=float),
+            )
+            group_b_values = np.asarray(group_cc_values[valid_mask], dtype=float)
+
+            return group_a_values, group_b_values, "MIN(CH,DIV)", "CC"
+
+        if contrast_type == "CC - CH":
+            group_a_values = pd.to_numeric(subset_dataframe[dv_columns["proximate_columns"]["CC"]], errors="coerce")
+            group_b_values = pd.to_numeric(subset_dataframe[dv_columns["proximate_columns"]["CH"]], errors="coerce")
+            valid_mask = (~group_a_values.isna()) & (~group_b_values.isna())
+            return (
+                np.asarray(group_a_values[valid_mask], dtype=float),
+                np.asarray(group_b_values[valid_mask], dtype=float),
+                "CC",
+                "CH",
+            )
+
+        raise ValueError(f"Unknown within-subjects contrast_type: {contrast_type!r}")
+
+    "========================================"
+    "Core column specifications by DV family."
+    "========================================"
+    dv_specifications = {
+        "blame": {
+            "first_vignette_column": "first_vignette_distal_blame",
+            "distal_columns": {
+                "CC": "distal_blame_cc",
+                "CH": "distal_blame_ch",
+                "DIV": "distal_blame_div",
+            },
+            "proximate_columns": {
+                "CC": "proximate_blame_cc",
+                "CH": "proximate_blame_ch",
+            },
+        },
+        "wrong": {
+            "first_vignette_column": "first_vignette_distal_wrong",
+            "distal_columns": {
+                "CC": "distal_wrong_cc",
+                "CH": "distal_wrong_ch",
+                "DIV": "distal_wrong_div",
+            },
+            "proximate_columns": {
+                "CC": "proximate_wrong_cc",
+                "CH": "proximate_wrong_ch",
+            },
+        },
+        "punish": {
+            "first_vignette_column": "first_vignette_distal_punish",
+            "distal_columns": {
+                "CC": "distal_punish_cc",
+                "CH": "distal_punish_ch",
+                "DIV": "distal_punish_div",
+            },
+            "proximate_columns": {
+                "CC": "proximate_punish_cc",
+                "CH": "proximate_punish_ch",
+            },
+        },
+    }
+
+    between_subjects_contrast_types = [
+        "CH - CC",
+        "DIV - CC",
+        "CH - DIV",
+        "MIN(CH, DIV) - CC",
+    ]
+    within_subjects_distal_contrast_types = [
+        "CH - CC",
+        "DIV - CC",
+        "CH - DIV",
+        "MIN(CH, DIV) - CC",
+    ]
+    within_subjects_proximate_contrast_types = [
+        "CC - CH",
+    ]
+
+    "============================================="
+    "Build all rows using one standardized schema."
+    "============================================="
+    all_test_rows = []
+
+    for participants_label, analysis_dataframe in [
+        ("included", cleaned_dataframe.loc[cleaned_dataframe["included"] == True].copy()),  # noqa: E712
+        ("all_finishers", cleaned_dataframe.copy()),
+    ]:
+        for story_family_value in ["pooled", "firework", "trolley"]:
+            for load_condition_value in ["pooled", "high", "low"]:
+                subset_dataframe = filter_dataframe_by_story_family_and_load_condition(
+                    analysis_dataframe=analysis_dataframe,
+                    story_family_value=story_family_value,
+                    load_condition_value=load_condition_value,
+                )
+
+                if subset_dataframe.shape[0] == 0:
+                    continue
+
+                "============================================"
+                "Between-subject first-vignette distal rows."
+                "============================================"
+                for dv_key in ["blame", "wrong", "punish"]:
+                    analysis_mode_for_dv = resolve_analysis_mode_for_dependent_variable(dv_key)
+
+                    for contrast_type in between_subjects_contrast_types:
+                        sample_a_raw, sample_b_raw, group_a_label, group_b_label, extra_detail = extract_independent_samples_for_between_subjects_contrast(
+                            subset_dataframe=subset_dataframe,
+                            dv_key=dv_key,
+                            story_family=story_family_value,
+                            load_condition=load_condition_value,
+                            contrast_type=contrast_type,
+                        )
+
+                        is_confirmatory_row = (
+                            dv_key == "blame"
+                            and participants_label == "included"
+                            and story_family_value == "pooled"
+                            and load_condition_value == "pooled"
+                            and contrast_type in {"CH - CC", "DIV - CC"}
+                        )
+
+                        if is_confirmatory_row and confirmatory_between_subjects_method_normalized in {"pooled_ols", "ols", "anova"}:
+                            pooled_ols_rows_dataframe = run_pooled_ols_planned_contrasts(
+                                dataframe=subset_dataframe,
+                                dv_column_name=dv_specifications[dv_key]["first_vignette_column"],
+                                group_column_name="case_code_position_1",
+                                covariance_type=confirmatory_pooled_ols_covariance_type,
+                            ).copy()
+
+                            pooled_ols_rows_dataframe["p_value_two_tailed"] = pooled_ols_rows_dataframe["p_value"].astype(float)
+                            pooled_ols_rows_dataframe["p_value_one_tailed"] = pooled_ols_rows_dataframe.apply(
+                                lambda row: compute_one_tailed_p_value_from_two_tailed_p_value(
+                                    p_value_two_tailed=float(row["p_value"]),
+                                    test_statistic=float(row["t_statistic"]),
+                                ),
+                                axis=1,
+                            )
+
+                            matching_ols_row = pooled_ols_rows_dataframe.loc[
+                                (pooled_ols_rows_dataframe["group_a"] == group_a_label)
+                                & (pooled_ols_rows_dataframe["group_b"] == group_b_label)
+                            ].iloc[0]
+
+                            standard_test_row = make_standard_test_row(
+                                analysis_family="confirmatory",
+                                analysis_mode="raw_parametric",
+                                test_type="pooled_ols_planned_contrast",
+                                transformation="none",
+                                location_statistic_reported="mean_difference",
+                                participants=participants_label,
+                                story_family=story_family_value,
+                                load_condition=load_condition_value,
+                                design="between_subjects",
+                                dv=dv_key,
+                                agent_role="distal",
+                                contrast_type=contrast_type,
+                                group_a=group_a_label,
+                                group_b=group_b_label,
+                                n_a=int(matching_ols_row["n_a"]),
+                                n_b=int(matching_ols_row["n_b"]),
+                                mean_a=float(matching_ols_row["mean_a"]),
+                                mean_b=float(matching_ols_row["mean_b"]),
+                                median_a=float(np.median(sample_a_raw)) if sample_a_raw.shape[0] > 0 else np.nan,
+                                median_b=float(np.median(sample_b_raw)) if sample_b_raw.shape[0] > 0 else np.nan,
+                                mean_difference_a_minus_b=float(matching_ols_row["mean_difference_a_minus_b"]),
+                                median_difference_a_minus_b=float(np.median(sample_a_raw) - np.median(sample_b_raw)) if sample_a_raw.shape[0] > 0 and sample_b_raw.shape[0] > 0 else np.nan,
+                                ci95_lower=float(matching_ols_row["ci95_lower"]),
+                                ci95_upper=float(matching_ols_row["ci95_upper"]),
+                                t_statistic=float(matching_ols_row["t_statistic"]),
+                                df=float(matching_ols_row["df"]),
+                                p_value_two_tailed=float(matching_ols_row["p_value_two_tailed"]),
+                                p_value_one_tailed=float(matching_ols_row["p_value_one_tailed"]),
+                                effect_size_name=str(matching_ols_row["effect_size_name"]),
+                                effect_size=float(matching_ols_row["effect_size"]),
+                                p_value_holm=np.nan,
+                                notes=build_plain_language_note(
+                                    analysis_family="confirmatory",
+                                    design="between_subjects",
+                                    dv_key=dv_key,
+                                    agent_role="distal",
+                                    contrast_type=contrast_type,
+                                    participants=participants_label,
+                                    story_family=story_family_value,
+                                    load_condition=load_condition_value,
+                                    analysis_mode="raw_parametric",
+                                    transformation="none",
+                                    location_statistic_reported="mean_difference",
+                                    extra_detail=(
+                                        f"Model formula: {matching_ols_row['model_formula']}. "
+                                        f"Covariance type: {matching_ols_row['model_covariance_type']}."
+                                    ),
+                                ),
+                            )
+                        else:
+                            independent_samples_test_row = run_independent_samples_test(
+                                sample_a_raw=sample_a_raw,
+                                sample_b_raw=sample_b_raw,
+                                analysis_mode=analysis_mode_for_dv,
+                            )
+
+                            analysis_family_value = (
+                                "exploratory"
+                                if not is_confirmatory_row
+                                else "confirmatory"
+                            )
+
+                            standard_test_row = make_standard_test_row(
+                                analysis_family=analysis_family_value,
+                                analysis_mode=independent_samples_test_row["analysis_mode"],
+                                test_type=independent_samples_test_row["test_type"],
+                                transformation=independent_samples_test_row["transformation"],
+                                location_statistic_reported=independent_samples_test_row["location_statistic_reported"],
+                                participants=participants_label,
+                                story_family=story_family_value,
+                                load_condition=load_condition_value,
+                                design="between_subjects",
+                                dv=dv_key,
+                                agent_role="distal",
+                                contrast_type=contrast_type,
+                                group_a=group_a_label,
+                                group_b=group_b_label,
+                                n_a=int(independent_samples_test_row["n_a"]),
+                                n_b=int(independent_samples_test_row["n_b"]),
+                                mean_a=float(independent_samples_test_row["mean_a"]),
+                                mean_b=float(independent_samples_test_row["mean_b"]),
+                                median_a=float(independent_samples_test_row["median_a"]),
+                                median_b=float(independent_samples_test_row["median_b"]),
+                                mean_difference_a_minus_b=float(independent_samples_test_row["mean_difference_a_minus_b"]),
+                                median_difference_a_minus_b=float(independent_samples_test_row["median_difference_a_minus_b"]),
+                                ci95_lower=float(independent_samples_test_row["ci95_lower"]) if not pd.isna(independent_samples_test_row["ci95_lower"]) else np.nan,
+                                ci95_upper=float(independent_samples_test_row["ci95_upper"]) if not pd.isna(independent_samples_test_row["ci95_upper"]) else np.nan,
+                                t_statistic=float(independent_samples_test_row["t_statistic"]) if not pd.isna(independent_samples_test_row["t_statistic"]) else np.nan,
+                                df=float(independent_samples_test_row["df"]) if not pd.isna(independent_samples_test_row["df"]) else np.nan,
+                                p_value_two_tailed=float(independent_samples_test_row["p_value_two_tailed"]),
+                                p_value_one_tailed=float(independent_samples_test_row["p_value_one_tailed"]),
+                                effect_size_name=str(independent_samples_test_row["effect_size_name"]),
+                                effect_size=float(independent_samples_test_row["effect_size"]) if not pd.isna(independent_samples_test_row["effect_size"]) else np.nan,
+                                p_value_holm=np.nan,
+                                notes=build_plain_language_note(
+                                    analysis_family=analysis_family_value,
+                                    design="between_subjects",
+                                    dv_key=dv_key,
+                                    agent_role="distal",
+                                    contrast_type=contrast_type,
+                                    participants=participants_label,
+                                    story_family=story_family_value,
+                                    load_condition=load_condition_value,
+                                    analysis_mode=independent_samples_test_row["analysis_mode"],
+                                    transformation=independent_samples_test_row["transformation"],
+                                    location_statistic_reported=independent_samples_test_row["location_statistic_reported"],
+                                    extra_detail=extra_detail,
+                                ),
+                            )
+
+                        all_test_rows.append(standard_test_row)
+
+                "=========================================="
+                "Within-subject distal and proximate rows."
+                "=========================================="
+                for dv_key in ["blame", "wrong", "punish"]:
+                    analysis_mode_for_dv = resolve_analysis_mode_for_dependent_variable(dv_key)
+
+                    for contrast_type in within_subjects_distal_contrast_types:
+                        sample_a_raw, sample_b_raw, group_a_label, group_b_label = extract_paired_samples_for_within_subjects_contrast(
+                            subset_dataframe=subset_dataframe,
+                            dv_key=dv_key,
+                            contrast_type=contrast_type,
+                        )
+
+                        paired_samples_test_row = run_paired_samples_test(
+                            sample_a_raw=sample_a_raw,
+                            sample_b_raw=sample_b_raw,
+                            analysis_mode=analysis_mode_for_dv,
+                        )
+
+                        standard_test_row = make_standard_test_row(
+                            analysis_family="exploratory",
+                            analysis_mode=paired_samples_test_row["analysis_mode"],
+                            test_type=paired_samples_test_row["test_type"],
+                            transformation=paired_samples_test_row["transformation"],
+                            location_statistic_reported=paired_samples_test_row["location_statistic_reported"],
+                            participants=participants_label,
+                            story_family=story_family_value,
+                            load_condition=load_condition_value,
+                            design="within_subjects",
+                            dv=dv_key,
+                            agent_role="distal",
+                            contrast_type=contrast_type,
+                            group_a=group_a_label,
+                            group_b=group_b_label,
+                            n_a=int(paired_samples_test_row["n_a"]),
+                            n_b=int(paired_samples_test_row["n_b"]),
+                            mean_a=float(paired_samples_test_row["mean_a"]),
+                            mean_b=float(paired_samples_test_row["mean_b"]),
+                            median_a=float(paired_samples_test_row["median_a"]),
+                            median_b=float(paired_samples_test_row["median_b"]),
+                            mean_difference_a_minus_b=float(paired_samples_test_row["mean_difference_a_minus_b"]),
+                            median_difference_a_minus_b=float(paired_samples_test_row["median_difference_a_minus_b"]),
+                            ci95_lower=float(paired_samples_test_row["ci95_lower"]) if not pd.isna(paired_samples_test_row["ci95_lower"]) else np.nan,
+                            ci95_upper=float(paired_samples_test_row["ci95_upper"]) if not pd.isna(paired_samples_test_row["ci95_upper"]) else np.nan,
+                            t_statistic=float(paired_samples_test_row["t_statistic"]) if not pd.isna(paired_samples_test_row["t_statistic"]) else np.nan,
+                            df=float(paired_samples_test_row["df"]) if not pd.isna(paired_samples_test_row["df"]) else np.nan,
+                            p_value_two_tailed=float(paired_samples_test_row["p_value_two_tailed"]),
+                            p_value_one_tailed=float(paired_samples_test_row["p_value_one_tailed"]),
+                            effect_size_name=str(paired_samples_test_row["effect_size_name"]),
+                            effect_size=float(paired_samples_test_row["effect_size"]) if not pd.isna(paired_samples_test_row["effect_size"]) else np.nan,
+                            p_value_holm=np.nan,
+                            notes=build_plain_language_note(
+                                analysis_family="exploratory",
+                                design="within_subjects",
+                                dv_key=dv_key,
+                                agent_role="distal",
+                                contrast_type=contrast_type,
+                                participants=participants_label,
+                                story_family=story_family_value,
+                                load_condition=load_condition_value,
+                                analysis_mode=paired_samples_test_row["analysis_mode"],
+                                transformation=paired_samples_test_row["transformation"],
+                                location_statistic_reported=paired_samples_test_row["location_statistic_reported"],
+                            ),
+                        )
+                        all_test_rows.append(standard_test_row)
+
+                    for contrast_type in within_subjects_proximate_contrast_types:
+                        sample_a_raw, sample_b_raw, group_a_label, group_b_label = extract_paired_samples_for_within_subjects_contrast(
+                            subset_dataframe=subset_dataframe,
+                            dv_key=dv_key,
+                            contrast_type=contrast_type,
+                        )
+
+                        paired_samples_test_row = run_paired_samples_test(
+                            sample_a_raw=sample_a_raw,
+                            sample_b_raw=sample_b_raw,
+                            analysis_mode=analysis_mode_for_dv,
+                        )
+
+                        standard_test_row = make_standard_test_row(
+                            analysis_family="exploratory",
+                            analysis_mode=paired_samples_test_row["analysis_mode"],
+                            test_type=paired_samples_test_row["test_type"],
+                            transformation=paired_samples_test_row["transformation"],
+                            location_statistic_reported=paired_samples_test_row["location_statistic_reported"],
+                            participants=participants_label,
+                            story_family=story_family_value,
+                            load_condition=load_condition_value,
+                            design="within_subjects",
+                            dv=dv_key,
+                            agent_role="proximate",
+                            contrast_type=contrast_type,
+                            group_a=group_a_label,
+                            group_b=group_b_label,
+                            n_a=int(paired_samples_test_row["n_a"]),
+                            n_b=int(paired_samples_test_row["n_b"]),
+                            mean_a=float(paired_samples_test_row["mean_a"]),
+                            mean_b=float(paired_samples_test_row["mean_b"]),
+                            median_a=float(paired_samples_test_row["median_a"]),
+                            median_b=float(paired_samples_test_row["median_b"]),
+                            mean_difference_a_minus_b=float(paired_samples_test_row["mean_difference_a_minus_b"]),
+                            median_difference_a_minus_b=float(paired_samples_test_row["median_difference_a_minus_b"]),
+                            ci95_lower=float(paired_samples_test_row["ci95_lower"]) if not pd.isna(paired_samples_test_row["ci95_lower"]) else np.nan,
+                            ci95_upper=float(paired_samples_test_row["ci95_upper"]) if not pd.isna(paired_samples_test_row["ci95_upper"]) else np.nan,
+                            t_statistic=float(paired_samples_test_row["t_statistic"]) if not pd.isna(paired_samples_test_row["t_statistic"]) else np.nan,
+                            df=float(paired_samples_test_row["df"]) if not pd.isna(paired_samples_test_row["df"]) else np.nan,
+                            p_value_two_tailed=float(paired_samples_test_row["p_value_two_tailed"]),
+                            p_value_one_tailed=float(paired_samples_test_row["p_value_one_tailed"]),
+                            effect_size_name=str(paired_samples_test_row["effect_size_name"]),
+                            effect_size=float(paired_samples_test_row["effect_size"]) if not pd.isna(paired_samples_test_row["effect_size"]) else np.nan,
+                            p_value_holm=np.nan,
+                            notes=build_plain_language_note(
+                                analysis_family="exploratory",
+                                design="within_subjects",
+                                dv_key=dv_key,
+                                agent_role="proximate",
+                                contrast_type=contrast_type,
+                                participants=participants_label,
+                                story_family=story_family_value,
+                                load_condition=load_condition_value,
+                                analysis_mode=paired_samples_test_row["analysis_mode"],
+                                transformation=paired_samples_test_row["transformation"],
+                                location_statistic_reported=paired_samples_test_row["location_statistic_reported"],
+                            ),
+                        )
+                        all_test_rows.append(standard_test_row)
+
+    "=============================================="
+    "Convert rows to dataframe and apply correction."
+    "=============================================="
+    dataframe_tests = pd.DataFrame(all_test_rows)
+
+    confirmatory_row_mask = (
+        (dataframe_tests["analysis_family"] == "confirmatory")
+        & (dataframe_tests["participants"] == "included")
+        & (dataframe_tests["story_family"] == "pooled")
+        & (dataframe_tests["load_condition"] == "pooled")
+        & (dataframe_tests["design"] == "between_subjects")
+        & (dataframe_tests["dv"] == "blame")
+        & (dataframe_tests["agent_role"] == "distal")
+        & (dataframe_tests["contrast_type"].isin(["CH - CC", "DIV - CC"]))
+    )
+
+    confirmatory_p_values_to_correct = dataframe_tests.loc[
+        confirmatory_row_mask,
+        "p_value_one_tailed" if one_tailed_results_are_primary else "p_value_two_tailed",
+    ].tolist()
+
+    if len(confirmatory_p_values_to_correct) == 2:
+        holm_adjusted_p_values = holm_bonferroni_correct_p_values(confirmatory_p_values_to_correct)
+        dataframe_tests.loc[confirmatory_row_mask, "p_value_holm"] = holm_adjusted_p_values
+
+        holm_note_suffix = (
+            "Holm correction in p_value_holm is based on one-tailed confirmatory p-values."
+            if one_tailed_results_are_primary
+            else "Holm correction in p_value_holm is based on two-tailed confirmatory p-values."
         )
-        append_test_row(ch_vs_div_test, "exploratory", inclusion_filter, "all", "all", "Between-subject first vignette (included): CH vs DIV on Clark blame")
+        dataframe_tests.loc[confirmatory_row_mask, "notes"] = (
+            dataframe_tests.loc[confirmatory_row_mask, "notes"].astype(str)
+            + " "
+            + holm_note_suffix
+        )
 
-        dataframes[inclusion_filter] = pd.DataFrame(tests_rows)
+    "======================="
+    "Sort and reorder rows."
+    "======================="
+    dataframe_tests["participants_sort_order"] = dataframe_tests["participants"].map(participants_sort_map)
+    dataframe_tests["story_family_sort_order"] = dataframe_tests["story_family"].map(story_family_sort_map)
+    dataframe_tests["load_condition_sort_order"] = dataframe_tests["load_condition"].map(load_condition_sort_map)
+    dataframe_tests["design_sort_order"] = dataframe_tests["design"].map(design_sort_map)
+    dataframe_tests["dv_sort_order"] = dataframe_tests["dv"].map(dv_sort_map)
+    dataframe_tests["agent_role_sort_order"] = dataframe_tests["agent_role"].map(agent_role_sort_map)
+    dataframe_tests["contrast_type_sort_order"] = dataframe_tests["contrast_type"].map(
+        lambda value: contrast_type_sort_map.get(value, 999)
+    )
+    dataframe_tests["analysis_family_sort_order"] = dataframe_tests["analysis_family"].map(
+        {"confirmatory": 0, "exploratory": 1}
+    )
 
-    "Concatenate included_only and all_finishers dataframes, save, and return"
-    dataframe_tests = pd.concat(list(dataframe for dataframe in dataframes.values()), axis=0, ignore_index=True) 
-    _save_analysis_dataframe_to_processed_folder(dataframe_to_save=dataframe_tests, 
-                                                 general_settings=general_settings, file_name_key="tests")
+    dataframe_tests = dataframe_tests.sort_values(
+        by=[
+            "participants_sort_order",
+            "story_family_sort_order",
+            "load_condition_sort_order",
+            "design_sort_order",
+            "dv_sort_order",
+            "agent_role_sort_order",
+            "contrast_type_sort_order",
+            "analysis_family_sort_order",
+        ],
+        kind="stable",
+    ).drop(
+        columns=[
+            "participants_sort_order",
+            "story_family_sort_order",
+            "load_condition_sort_order",
+            "design_sort_order",
+            "dv_sort_order",
+            "agent_role_sort_order",
+            "contrast_type_sort_order",
+            "analysis_family_sort_order",
+        ],
+        errors="ignore",
+    ).reset_index(drop=True)
+
+    desired_column_order = [
+        "analysis_family",
+        "analysis_mode",
+        "test_type",
+        "transformation",
+        "location_statistic_reported",
+        "participants",
+        "story_family",
+        "load_condition",
+        "design",
+        "dv",
+        "agent_role",
+        "contrast_type",
+        "group_a",
+        "group_b",
+        "n_a",
+        "n_b",
+        "mean_a",
+        "mean_b",
+        "median_a",
+        "median_b",
+        "mean_difference_a_minus_b",
+        "median_difference_a_minus_b",
+        "ci95_lower",
+        "ci95_upper",
+        "t_statistic",
+        "df",
+        "p_value_two_tailed",
+        "p_value_one_tailed",
+        "effect_size_name",
+        "effect_size",
+        "p_value_holm",
+        "notes",
+    ]
+
+    for column_name in desired_column_order:
+        if column_name not in dataframe_tests.columns:
+            dataframe_tests[column_name] = np.nan
+
+    dataframe_tests = dataframe_tests[desired_column_order].copy()
+
+    "Save and return"
+    _save_analysis_dataframe_to_processed_folder(
+        dataframe_to_save=dataframe_tests,
+        general_settings=general_settings,
+        file_name_key="tests",
+    )
 
     return dataframe_tests
 
@@ -2687,7 +3786,7 @@ def _extract_model_coefficient_rows_from_fitted_results(
     return coefficient_rows
 
 
-def compute_first_vignette_clark_blame_integrated_models(
+def compute_first_vignette_distal_blame_integrated_models(
     general_settings: dict[str, Any],
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -2744,7 +3843,7 @@ def compute_first_vignette_clark_blame_integrated_models(
                 "included",
                 "story_condition",
                 "case_code_position_1",
-                "first_vignette_clark_blame",
+                "first_vignette_distal_blame",
             ]
         ].copy()
 
@@ -2761,17 +3860,17 @@ def compute_first_vignette_clark_blame_integrated_models(
             categories=["CC", "CH", "DIV"],
             ordered=True,
         )
-        analysis_dataframe["first_vignette_clark_blame"] = pd.to_numeric(
-            analysis_dataframe["first_vignette_clark_blame"],
+        analysis_dataframe["first_vignette_distal_blame"] = pd.to_numeric(
+            analysis_dataframe["first_vignette_distal_blame"],
             errors="coerce",
         )
 
         analysis_dataframe = analysis_dataframe.dropna(
-            subset=["first_vignette_clark_blame", "story_condition", "case_code_position_1"]
+            subset=["first_vignette_distal_blame", "story_condition", "case_code_position_1"]
         ).copy()
 
         model_formula_string = (
-            "first_vignette_clark_blame ~ "
+            "first_vignette_distal_blame ~ "
             "C(case_code_position_1, Treatment(reference='CC')) * "
             "C(story_condition, Treatment(reference='firework'))"
         )
@@ -2789,7 +3888,7 @@ def compute_first_vignette_clark_blame_integrated_models(
         "Observed cell descriptives"
         observed_descriptives = (
             analysis_dataframe
-            .groupby(["story_condition", "case_code_position_1"], observed=True)["first_vignette_clark_blame"]
+            .groupby(["story_condition", "case_code_position_1"], observed=True)["first_vignette_distal_blame"]
             .agg(["count", "mean", "std", "median"])
             .reset_index()
         )
@@ -3005,7 +4104,7 @@ def compute_first_vignette_clark_blame_integrated_models(
     return dataframe_integrated_first_vignette_models
 
 
-def compute_within_subject_clark_blame_integrated_models(
+def compute_within_subject_distal_blame_integrated_models(
     general_settings: dict[str, Any],
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -3072,9 +4171,9 @@ def compute_within_subject_clark_blame_integrated_models(
                 "case_code_position_1",
                 "case_code_position_2",
                 "case_code_position_3",
-                "clark_blame_cc",
-                "clark_blame_ch",
-                "clark_blame_div",
+                "distal_blame_cc",
+                "distal_blame_ch",
+                "distal_blame_div",
             ]
         ].copy()
 
@@ -3099,18 +4198,18 @@ def compute_within_subject_clark_blame_integrated_models(
                         "story_condition": participant_row["story_condition"],
                         "vignette_condition": vignette_condition_value,
                         "vignette_position": vignette_position_by_condition[vignette_condition_value],
-                        "clark_rating_value": participant_row[f"clark_blame_{vignette_condition_value.lower()}"],
+                        "distal_rating_value": participant_row[f"distal_blame_{vignette_condition_value.lower()}"],
                     }
                 )
 
         analysis_dataframe_long = pd.DataFrame(long_rows)
 
-        analysis_dataframe_long["clark_rating_value"] = pd.to_numeric(
-            analysis_dataframe_long["clark_rating_value"],
+        analysis_dataframe_long["distal_rating_value"] = pd.to_numeric(
+            analysis_dataframe_long["distal_rating_value"],
             errors="coerce",
         )
         analysis_dataframe_long = analysis_dataframe_long.dropna(
-            subset=["clark_rating_value"]
+            subset=["distal_rating_value"]
         ).copy()
 
         analysis_dataframe_long["story_condition"] = pd.Categorical(
@@ -3130,7 +4229,7 @@ def compute_within_subject_clark_blame_integrated_models(
         )
 
         primary_formula_string = (
-            "clark_rating_value ~ "
+            "distal_rating_value ~ "
             "C(vignette_condition, Treatment(reference='CC')) * "
             "C(story_condition, Treatment(reference='firework')) + "
             "C(vignette_position, Treatment(reference=1))"
@@ -3145,7 +4244,7 @@ def compute_within_subject_clark_blame_integrated_models(
         ).fit()
 
         position_sensitivity_formula_string = (
-            "clark_rating_value ~ "
+            "distal_rating_value ~ "
             "C(vignette_condition, Treatment(reference='CC')) * "
             "C(vignette_position, Treatment(reference=1)) + "
             "C(story_condition, Treatment(reference='firework'))"
@@ -3167,7 +4266,7 @@ def compute_within_subject_clark_blame_integrated_models(
         "Observed descriptives pooled across story family and position"
         observed_condition_descriptives = (
             analysis_dataframe_long
-            .groupby(["vignette_condition"], observed=True)["clark_rating_value"]
+            .groupby(["vignette_condition"], observed=True)["distal_rating_value"]
             .agg(["count", "mean", "std", "median"])
             .reset_index()
         )
@@ -3443,7 +4542,7 @@ def compute_within_subject_clark_blame_integrated_models(
     return dataframe_integrated_within_subject_models
 
 
-def compute_integrated_clark_blame_results(
+def compute_integrated_distal_blame_results(
     general_settings: dict[str, Any],
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -3494,12 +4593,12 @@ def compute_integrated_clark_blame_results(
     else:
         cleaned_dataframe = cleaned_dataframe.copy()
 
-    dataframe_first_vignette_models = compute_first_vignette_clark_blame_integrated_models(
+    dataframe_first_vignette_models = compute_first_vignette_distal_blame_integrated_models(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_within_subject_models = compute_within_subject_clark_blame_integrated_models(
+    dataframe_within_subject_models = compute_within_subject_distal_blame_integrated_models(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
@@ -3535,9 +4634,9 @@ def fit_first_vignette_condition_story_model(
 
     Returns:
         • pd.DataFrame
-            - Same dataframe returned by compute_first_vignette_clark_blame_integrated_models.
+            - Same dataframe returned by compute_first_vignette_distal_blame_integrated_models.
     """
-    return compute_first_vignette_clark_blame_integrated_models(
+    return compute_first_vignette_distal_blame_integrated_models(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
@@ -3559,9 +4658,9 @@ def fit_within_subject_condition_position_model(
 
     Returns:
         • pd.DataFrame
-            - Same dataframe returned by compute_within_subject_clark_blame_integrated_models.
+            - Same dataframe returned by compute_within_subject_distal_blame_integrated_models.
     """
-    return compute_within_subject_clark_blame_integrated_models(
+    return compute_within_subject_distal_blame_integrated_models(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
@@ -3819,12 +4918,12 @@ def _get_delta_metadata(dv_suffix: str) -> dict[str, dict[str, str]]:
     """
     return {
         "CH_CC": {
-            "column": f"clark_{dv_suffix}_ch_minus_cc",
+            "column": f"distal_{dv_suffix}_ch_minus_cc",
             "label": "CH - CC",
             "long_label": "Shielding (CH - CC)",
         },
         "DIV_CC": {
-            "column": f"clark_{dv_suffix}_div_minus_cc",
+            "column": f"distal_{dv_suffix}_div_minus_cc",
             "label": "DIV - CC",
             "long_label": "Shielding beyond division (DIV - CC)",
         },
@@ -4193,7 +5292,7 @@ def plot_ratings_by_vignette_condition(
         for category_index, category_label in enumerate(within_category_labels_in_order)
     }
 
-    first_vignette_value_column = f"first_vignette_clark_{dv_suffix}"
+    first_vignette_value_column = f"first_vignette_distal_{dv_suffix}"
     if first_vignette_value_column not in analysis_dataframe.columns:
         raise KeyError(
             f"Expected column {first_vignette_value_column!r} in the cleaned dataframe, but it was not found."
@@ -4209,9 +5308,9 @@ def plot_ratings_by_vignette_condition(
     between_long = between_long.dropna(subset=["condition_label", "rating_value"]).copy()
 
     within_value_columns = {
-        distal_category_labels_in_order[0]: f"clark_{dv_suffix}_cc",
-        distal_category_labels_in_order[1]: f"clark_{dv_suffix}_ch",
-        distal_category_labels_in_order[2]: f"clark_{dv_suffix}_div",
+        distal_category_labels_in_order[0]: f"distal_{dv_suffix}_cc",
+        distal_category_labels_in_order[1]: f"distal_{dv_suffix}_ch",
+        distal_category_labels_in_order[2]: f"distal_{dv_suffix}_div",
     }
     if include_proximate_agent:
         within_value_columns.update(
@@ -4805,8 +5904,8 @@ def plot_participant_level_shielding_heatmap(
         only_included_participants=only_included_participants,
     )
 
-    x_column_name = f"clark_{dv_suffix}_ch_minus_cc"
-    y_column_name = f"clark_{dv_suffix}_div_minus_cc"
+    x_column_name = f"distal_{dv_suffix}_ch_minus_cc"
+    y_column_name = f"distal_{dv_suffix}_div_minus_cc"
 
     missing_required_columns = [
         column_name
@@ -5344,9 +6443,9 @@ def plot_within_subject_pairwise_comparisons(
 
         if dv_suffix == "blame":
             ordered_category_metadata = [
-                ("CC Distal", "clark_blame_cc"),
-                ("CH Distal", "clark_blame_ch"),
-                ("DIV Distal", "clark_blame_div"),
+                ("CC Distal", "distal_blame_cc"),
+                ("CH Distal", "distal_blame_ch"),
+                ("DIV Distal", "distal_blame_div"),
             ]
             if include_proximate_agent:
                 ordered_category_metadata += [
@@ -5355,9 +6454,9 @@ def plot_within_subject_pairwise_comparisons(
                 ]
         elif dv_suffix == "wrong":
             ordered_category_metadata = [
-                ("CC Distal", "clark_wrong_cc"),
-                ("CH Distal", "clark_wrong_ch"),
-                ("DIV Distal", "clark_wrong_div"),
+                ("CC Distal", "distal_wrong_cc"),
+                ("CH Distal", "distal_wrong_ch"),
+                ("DIV Distal", "distal_wrong_div"),
             ]
             if include_proximate_agent:
                 ordered_category_metadata += [
@@ -5366,9 +6465,9 @@ def plot_within_subject_pairwise_comparisons(
                 ]
         else:
             ordered_category_metadata = [
-                ("CC Distal", "clark_punish_cc"),
-                ("CH Distal", "clark_punish_ch"),
-                ("DIV Distal", "clark_punish_div"),
+                ("CC Distal", "distal_punish_cc"),
+                ("CH Distal", "distal_punish_ch"),
+                ("DIV Distal", "distal_punish_div"),
             ]
             if include_proximate_agent:
                 ordered_category_metadata += [
@@ -6140,8 +7239,8 @@ def plot_trial_order_effects_line_graph(
             only_included_participants=only_included_participants,
         )
 
-        cc_value_column_name = f"clark_{dv_suffix}_cc"
-        ch_value_column_name = f"clark_{dv_suffix}_ch"
+        cc_value_column_name = f"distal_{dv_suffix}_cc"
+        ch_value_column_name = f"distal_{dv_suffix}_ch"
 
         required_columns = [
             "response_id",
@@ -6437,9 +7536,9 @@ def plot_trial_order_effects_line_graph(
     )
 
     condition_code_to_value_column = {
-        "CC": f"clark_{dv_suffix}_cc",
-        "CH": f"clark_{dv_suffix}_ch",
-        "DIV": f"clark_{dv_suffix}_div",
+        "CC": f"distal_{dv_suffix}_cc",
+        "CH": f"distal_{dv_suffix}_ch",
+        "DIV": f"distal_{dv_suffix}_div",
     }
 
     condition_code_to_display_label = {
@@ -6749,9 +7848,9 @@ def plot_blameworthiness_wrongness_correlate(
 
     if all_ratings:
         ordered_rating_pairs = [
-            ("CC Distal", "clark_blame_cc", "clark_wrong_cc"),
-            ("CH Distal", "clark_blame_ch", "clark_wrong_ch"),
-            ("DIV Distal", "clark_blame_div", "clark_wrong_div"),
+            ("CC Distal", "distal_blame_cc", "distal_wrong_cc"),
+            ("CH Distal", "distal_blame_ch", "distal_wrong_ch"),
+            ("DIV Distal", "distal_blame_div", "distal_wrong_div"),
         ]
         if include_proximate_agent:
             ordered_rating_pairs += [
@@ -6797,10 +7896,10 @@ def plot_blameworthiness_wrongness_correlate(
             plotting_dataframe = pd.DataFrame(
                 {
                     "blame_value": analysis_dataframe[
-                        ["clark_blame_cc", "clark_blame_ch", "clark_blame_div"]
+                        ["distal_blame_cc", "distal_blame_ch", "distal_blame_div"]
                     ].mean(axis=1, skipna=True),
                     "wrong_value": analysis_dataframe[
-                        ["clark_wrong_cc", "clark_wrong_ch", "clark_wrong_div"]
+                        ["distal_wrong_cc", "distal_wrong_ch", "distal_wrong_div"]
                     ].mean(axis=1, skipna=True),
                 }
             ).dropna()
@@ -6811,8 +7910,8 @@ def plot_blameworthiness_wrongness_correlate(
 
             condition_rows = []
             for selected_condition_code in selected_condition_codes:
-                blame_column_name = f"clark_blame_{selected_condition_code.lower()}"
-                wrong_column_name = f"clark_wrong_{selected_condition_code.lower()}"
+                blame_column_name = f"distal_blame_{selected_condition_code.lower()}"
+                wrong_column_name = f"distal_wrong_{selected_condition_code.lower()}"
                 condition_label = {
                     "CC": "Choice-Choice",
                     "CH": "Choice-Chance",
@@ -7028,13 +8127,13 @@ def plot_triangulation_2afc_vs_rating_delta(
 
     if comparison_normalized == "CH_CC":
         twoafc_column_name = "twoafc_ch_vs_cc"
-        delta_column_name = f"clark_{dv_suffix}_ch_minus_cc"
+        delta_column_name = f"distal_{dv_suffix}_ch_minus_cc"
         left_prefix = "CH"
         right_prefix = "CC"
         comparison_label = "CH vs. CC"
     else:
         twoafc_column_name = "twoafc_div_vs_cc"
-        delta_column_name = f"clark_{dv_suffix}_div_minus_cc"
+        delta_column_name = f"distal_{dv_suffix}_div_minus_cc"
         left_prefix = "DIV"
         right_prefix = "CC"
         comparison_label = "DIV vs. CC"
@@ -7605,9 +8704,9 @@ def plot_response_distribution_histogram_by_condition(
     "Resolve which rating columns to visualize."
     "=========================================="
     ordered_condition_metadata: list[tuple[str, str]] = [
-        ("CC Distal", f"clark_{dv_suffix}_cc"),
-        ("CH Distal", f"clark_{dv_suffix}_ch"),
-        ("DIV Distal", f"clark_{dv_suffix}_div"),
+        ("CC Distal", f"distal_{dv_suffix}_cc"),
+        ("CH Distal", f"distal_{dv_suffix}_ch"),
+        ("DIV Distal", f"distal_{dv_suffix}_div"),
     ]
     if include_proximate_agent:
         ordered_condition_metadata += [
@@ -7964,6 +9063,7 @@ def plot_response_distribution_histogram_by_condition(
 
     return fig
 
+
 "=========================================================================================="
 "==================================== Table Generation ===================================="
 "=========================================================================================="
@@ -8230,7 +9330,7 @@ def _extract_exact_integrated_contrast_row(
 
     Arguments:
         • dataframe_integrated_models: pd.DataFrame
-            - Output of compute_integrated_clark_blame_results.
+            - Output of compute_integrated_distal_blame_results.
         • analysis_scope: str
             - between_subjects_first_vignette or within_subjects_repeated_measures.
         • inclusion_filter: str
@@ -8287,9 +9387,9 @@ def _build_within_subject_pairwise_blame_matrix(
         analysis_dataframe = analysis_dataframe.loc[analysis_dataframe["included"] == True].copy()  # noqa: E712
 
     ordered_series_metadata: list[tuple[str, str]] = [
-        ("CC Distal", "clark_blame_cc"),
-        ("CH Distal", "clark_blame_ch"),
-        ("DIV Distal", "clark_blame_div"),
+        ("CC Distal", "distal_blame_cc"),
+        ("CH Distal", "distal_blame_ch"),
+        ("DIV Distal", "distal_blame_div"),
         ("CC Proximate", "proximate_blame_cc"),
         ("CH Proximate", "proximate_blame_ch"),
     ]
@@ -8968,7 +10068,7 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
     return dataframe_table_flat
 
 
-def compute_manuscript_table_3_primary_clark_blame_contrasts(
+def compute_manuscript_table_3_primary_distal_blame_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -8992,7 +10092,7 @@ def compute_manuscript_table_3_primary_clark_blame_contrasts(
 
     table_names = general_settings["filing"]["table_names"]
 
-    base_table_file_name = table_names["table_3_primary_clark_blame_contrasts"]
+    base_table_file_name = table_names["table_3_primary_distal_blame_contrasts"]
     table_file_name = (
         base_table_file_name.replace(".csv", "_Integrated.csv")
         if use_integrated_models
@@ -9023,7 +10123,7 @@ def compute_manuscript_table_3_primary_clark_blame_contrasts(
     )
 
     if use_integrated_models:
-        dataframe_integrated_models = compute_integrated_clark_blame_results(
+        dataframe_integrated_models = compute_integrated_distal_blame_results(
             general_settings=general_settings,
             cleaned_dataframe=cleaned_dataframe,
             force_rebuild=force_rebuild,
@@ -9032,8 +10132,8 @@ def compute_manuscript_table_3_primary_clark_blame_contrasts(
     table_rows: list[dict[str, Any]] = []
 
     contrast_metadata = [
-        ("CH", "BCH - BCC", "clark_blame_ch_minus_cc", "CH - CC"),
-        ("DIV", "BDIV - BCC", "clark_blame_div_minus_cc", "DIV - CC"),
+        ("CH", "BCH - BCC", "distal_blame_ch_minus_cc", "CH - CC"),
+        ("DIV", "BDIV - BCC", "distal_blame_div_minus_cc", "DIV - CC"),
     ]
 
     for inclusion_filter_value, inclusion_display_label in [
@@ -9045,7 +10145,7 @@ def compute_manuscript_table_3_primary_clark_blame_contrasts(
             if inclusion_filter_value == "included_only":
                 between_row = _extract_exact_test_row_from_test_csv(
                     dataframe_tests=dataframe_tests,
-                    dv="first_vignette_clark_blame",
+                    dv="first_vignette_distal_blame",
                     group_a=between_group_a_value,
                     group_b="CC",
                     inclusion_filter="included_only",
@@ -9056,7 +10156,7 @@ def compute_manuscript_table_3_primary_clark_blame_contrasts(
             else:
                 between_row = _extract_exact_test_row_from_test_csv(
                     dataframe_tests=dataframe_tests,
-                    dv="first_vignette_clark_blame",
+                    dv="first_vignette_distal_blame",
                     group_a=between_group_a_value,
                     group_b="CC",
                     inclusion_filter="all_finishers",
@@ -9176,7 +10276,7 @@ def compute_manuscript_table_3_primary_clark_blame_contrasts(
     return dataframe_table_3
 
 
-def compute_manuscript_table_4_story_specific_clark_blame_contrasts(
+def compute_manuscript_table_4_story_specific_distal_blame_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
@@ -9200,7 +10300,7 @@ def compute_manuscript_table_4_story_specific_clark_blame_contrasts(
 
     table_names = general_settings["filing"]["table_names"]
 
-    base_table_file_name = table_names["table_4_story_specific_clark_blame_contrasts"]
+    base_table_file_name = table_names["table_4_story_specific_distal_blame_contrasts"]
     table_file_name = (
         base_table_file_name.replace(".csv", "_Integrated.csv")
         if use_integrated_models
@@ -9226,7 +10326,7 @@ def compute_manuscript_table_4_story_specific_clark_blame_contrasts(
         cleaned_dataframe = cleaned_dataframe.copy()
 
     if use_integrated_models:
-        dataframe_integrated_models = compute_integrated_clark_blame_results(
+        dataframe_integrated_models = compute_integrated_distal_blame_results(
             general_settings=general_settings,
             cleaned_dataframe=cleaned_dataframe,
             force_rebuild=force_rebuild,
@@ -9241,8 +10341,8 @@ def compute_manuscript_table_4_story_specific_clark_blame_contrasts(
 
     story_display_map = {"firework": "Firework", "trolley": "Trolley"}
     contrast_metadata = [
-        ("CH", "BCH - BCC", "clark_blame_ch_minus_cc", "CH - CC"),
-        ("DIV", "BDIV - BCC", "clark_blame_div_minus_cc", "DIV - CC"),
+        ("CH", "BCH - BCC", "distal_blame_ch_minus_cc", "CH - CC"),
+        ("DIV", "BDIV - BCC", "distal_blame_div_minus_cc", "DIV - CC"),
     ]
 
     for story_condition_value in ["firework", "trolley"]:
@@ -9279,7 +10379,7 @@ def compute_manuscript_table_4_story_specific_clark_blame_contrasts(
             for between_group_a_value, contrast_display_label, within_dv_name, _ in contrast_metadata:
                 between_row = _extract_exact_test_row_from_test_csv(
                     dataframe_tests=dataframe_tests,
-                    dv="first_vignette_clark_blame",
+                    dv="first_vignette_distal_blame",
                     group_a=between_group_a_value,
                     group_b="CC",
                     inclusion_filter="included_only",
@@ -9568,8 +10668,8 @@ def compute_supplementary_table_7_cognitive_load_blame_contrasts(
 
     load_display_map = {"all": "Pooled", "high": "High", "low": "Low"}
     dv_map = {
-        "clark_blame_ch_minus_cc": "BCH - BCC",
-        "clark_blame_div_minus_cc": "BDIV - BCC",
+        "distal_blame_ch_minus_cc": "BCH - BCC",
+        "distal_blame_div_minus_cc": "BDIV - BCC",
     }
 
     table_rows: list[dict[str, Any]] = []
@@ -9672,7 +10772,7 @@ def compute_supplementary_table_8_order_effects_summary(
         cleaned_dataframe = cleaned_dataframe.copy()
 
     if use_integrated_models:
-        dataframe_integrated_models = compute_integrated_clark_blame_results(
+        dataframe_integrated_models = compute_integrated_distal_blame_results(
             general_settings=general_settings,
             cleaned_dataframe=cleaned_dataframe,
             force_rebuild=force_rebuild,
@@ -9752,9 +10852,9 @@ def compute_supplementary_table_8_order_effects_summary(
         table_rows: list[dict[str, Any]] = []
 
         dv_display_map = {
-            "clark_blame": "Blame",
-            "clark_wrong": "Wrongness",
-            "clark_punish": "Punishment",
+            "distal_blame": "Blame",
+            "distal_wrong": "Wrongness",
+            "distal_punish": "Punishment",
         }
 
         comparison_suffixes = [
@@ -9854,9 +10954,9 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
     )
 
     dv_display_map = {
-        "blame": ("first_vignette_clark_blame", "clark_blame", "Blame"),
-        "wrongness": ("first_vignette_clark_wrong", "clark_wrong", "Wrongness"),
-        "punishment": ("first_vignette_clark_punish", "clark_punish", "Punishment"),
+        "blame": ("first_vignette_distal_blame", "distal_blame", "Blame"),
+        "wrongness": ("first_vignette_distal_wrong", "distal_wrong", "Wrongness"),
+        "punishment": ("first_vignette_distal_punish", "distal_punish", "Punishment"),
     }
     contrast_map = {
         "CH - CC": ("CH", "CC", "ch_minus_cc"),
@@ -9973,27 +11073,27 @@ def _compute_extra_terminal_statistics_for_manuscript(
     included_dataframe = cleaned_dataframe.loc[cleaned_dataframe["included"] == True].copy()  # noqa: E712
 
     first_vignette_blame_wrong_dataframe = included_dataframe[
-        ["first_vignette_clark_blame", "first_vignette_clark_wrong"]
+        ["first_vignette_distal_blame", "first_vignette_distal_wrong"]
     ].dropna().copy()
     first_vignette_blame_wrong_correlation = stats.pearsonr(
-        first_vignette_blame_wrong_dataframe["first_vignette_clark_blame"],
-        first_vignette_blame_wrong_dataframe["first_vignette_clark_wrong"],
+        first_vignette_blame_wrong_dataframe["first_vignette_distal_blame"],
+        first_vignette_blame_wrong_dataframe["first_vignette_distal_wrong"],
     )
 
     participant_means_dataframe = pd.DataFrame(
         {
-            "mean_clark_blame": included_dataframe[["clark_blame_cc", "clark_blame_ch", "clark_blame_div"]].mean(axis=1),
-            "mean_clark_wrong": included_dataframe[["clark_wrong_cc", "clark_wrong_ch", "clark_wrong_div"]].mean(axis=1),
+            "mean_distal_blame": included_dataframe[["distal_blame_cc", "distal_blame_ch", "distal_blame_div"]].mean(axis=1),
+            "mean_distal_wrong": included_dataframe[["distal_wrong_cc", "distal_wrong_ch", "distal_wrong_div"]].mean(axis=1),
         }
     ).dropna()
     participant_means_blame_wrong_correlation = stats.pearsonr(
-        participant_means_dataframe["mean_clark_blame"],
-        participant_means_dataframe["mean_clark_wrong"],
+        participant_means_dataframe["mean_distal_blame"],
+        participant_means_dataframe["mean_distal_wrong"],
     )
 
     cognitive_load_blame_difference_row = run_welch_t_test_between_groups(
         dataframe=included_dataframe,
-        dv_column_name="clark_blame_ch_minus_cc",
+        dv_column_name="distal_blame_ch_minus_cc",
         group_column_name="load_condition",
         group_a_value="high",
         group_b_value="low",
@@ -10055,12 +11155,12 @@ def generate_manuscript_and_supplementary_tables(
         general_settings=general_settings,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_3 = compute_manuscript_table_3_primary_clark_blame_contrasts(
+    dataframe_table_3 = compute_manuscript_table_3_primary_distal_blame_contrasts(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
     )
-    dataframe_table_4 = compute_manuscript_table_4_story_specific_clark_blame_contrasts(
+    dataframe_table_4 = compute_manuscript_table_4_story_specific_distal_blame_contrasts(
         general_settings=general_settings,
         cleaned_dataframe=cleaned_dataframe,
         force_rebuild=force_rebuild,
@@ -10108,13 +11208,13 @@ def generate_manuscript_and_supplementary_tables(
         {
             "table_key": "table_3",
             "table_title": "Table 3. Primary Clark-blame contrasts",
-            "file_name": table_names["table_3_primary_clark_blame_contrasts"],
+            "file_name": table_names["table_3_primary_distal_blame_contrasts"],
             "table_meaning": "Main-text primary contrast table showing blame contrasts between- and within-subjects.",
         },
         {
             "table_key": "table_4",
             "table_title": "Table 4. Story-specific Clark-blame contrasts",
-            "file_name": table_names["table_4_story_specific_clark_blame_contrasts"],
+            "file_name": table_names["table_4_story_specific_distal_blame_contrasts"],
             "table_meaning": "Main-text story-specific decomposition of Clark blame contrasts.",
         },
         {
@@ -10241,13 +11341,15 @@ file_names: FileNames = {
     "first_vignette": "responsibility_shielding_integrated_first_vignette_blame_models.csv",
     "within_subject": "responsibility_shielding_integrated_within_subject_blame_models.csv",
     "blame_models": "responsibility_shielding_integrated_blame_models.csv",
+    "punishment_tests": "responsibility_shielding_punishment_tests.csv",
+    "punishment_consistency_effects": "responsibility_shielding_punishment_consistency_effects.csv",
 }
 
 table_names: dict[str, str] = {
     "table_1_participant_counts": "Table_1_Participant_Counts.csv",
     "table_2_means_by_dv_and_condition": "Table_2_Means_by_DV_and_Condition.csv",
-    "table_3_primary_clark_blame_contrasts": "table_3_Primary_Clark_Blame_Contrasts.csv",
-    "table_4_story_specific_clark_blame_contrasts": "table_4_Story_Specific_Clark_Blame_Contrasts.csv",
+    "table_3_primary_distal_blame_contrasts": "table_3_Primary_distal_Blame_Contrasts.csv",
+    "table_4_story_specific_distal_blame_contrasts": "table_4_Story_Specific_distal_Blame_Contrasts.csv",
     "table_5_two_alternative_forced_choice_distribution": "table_5_Two_Alternative_Forced_Choice_Distribution.csv",
     "table_6_within_subject_pairwise_blame_matrix": "table_6_Within_Subject_Pairwise_Blame_Matrix.csv",
     "table_6_within_subject_pairwise_blame_long": "table_6_Within_Subject_Pairwise_Blame_Long.csv",
@@ -10273,6 +11375,7 @@ rebuild_cleaned_dataframe = True
 print_tables_to_terminal = True
 use_integrated_models = False
 force_rebuild = True
+one_tailed = False
 
 default_marker_size = 7
 create_figures = True
@@ -10337,6 +11440,11 @@ general_settings: GeneralSettings = {
         "dark_mode": dark_mode,
         "base_hue": base_hue
     },
+    "punish": {
+        "analysis_mode": "raw_nonparametric", # Alt: "log1p_parametric"
+        "bootstrap_iterations": 5000,
+        "random_seed": 2026
+    },
     "misc": {
         "confirmatory_between_subjects_method": confirmatory_between_subjects_method,
         "rebuild_cleaned_dataframe": rebuild_cleaned_dataframe,
@@ -10344,8 +11452,9 @@ general_settings: GeneralSettings = {
         "freeze_timestamp_first": freeze_timestamp_first,
         "freeze_timestamp_last": freeze_timestamp_last,
         "use_integrated_models": use_integrated_models,
-        "force_rebuild": force_rebuild
-    }
+        "force_rebuild": force_rebuild,
+        "one_tailed": one_tailed
+    },
 }
 
 
@@ -10380,9 +11489,9 @@ def main() -> None:
         confirmatory_pooled_ols_covariance_type=None,
         force_rebuild=None
     )
-    
+
     "Integrated models"
-    compute_integrated_clark_blame_results(
+    compute_integrated_distal_blame_results(
         general_settings=general_settings,
         force_rebuild=None,
     )

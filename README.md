@@ -129,9 +129,9 @@ The repository is organized so that the paper’s outputs can be matched directl
 - **Trolley -  Choice-Choice** → [`images/stimuli/rshielding_trolley_choice-chance_dark_mode.png`](images/stimuli/rshielding_trolley_choice-chance_dark_mode.png) 
 - **Trolley -  Choice-Chance** → [`images/stimuli/rshielding_trolley_choice-choice_dark_mode.png`](images/stimuli/rshielding_trolley_choice-choice_dark_mode.png) 
 - **Trolley -  Division** →      [`images/stimuli/rshielding_trolley_division_dark_mode.png`](images/stimuli/rshielding_trolley_division_dark_mode.png) 
-- **Firework - Choice-Choice** → [`images/stimuli/rshielding_trolley_choice-chance_dark_mode.png`](images/stimuli/rshielding_trolley_choice-chance_dark_mode.png) 
-- **Firework - Choice-Chance** → [`images/stimuli/rshielding_trolley_choice-choice_dark_mode.png`](images/stimuli/rshielding_trolley_choice-choice_dark_mode.png) 
-- **Firework - Division** →      [`images/stimuli/rshielding_trolley_division_dark_mode.png`](images/stimuli/rshielding_trolley_division_dark_mode.png) 
+- **Firework - Choice-Choice** → [`images/stimuli/rshielding_fireworks_choice-chance_dark_mode.png`](images/stimuli/rshielding_fireworks_choice-chance_dark_mode.png) 
+- **Firework - Choice-Chance** → [`images/stimuli/rshielding_fireworks_choice-choice_dark_mode.png`](images/stimuli/rshielding_fireworks_choice-choice_dark_mode.png) 
+- **Firework - Division** →      [`images/stimuli/rshielding_fireworks_division_dark_mode.png`](images/stimuli/rshielding_fireworks_division_dark_mode.png) 
 
 ---
 
