@@ -1,9 +1,0 @@
-﻿Story,Design,Contrast,Estimate,95% CI,p-value,p_value_raw,source_file,source_row_note
-Firework,Between-subj,BCH - BCC,1.33,"[0.65, 2.02]",2.09e-04,0.0002089703349936061,tests.csv,Between-subject first vignette (included): CH vs CC on Clark blame
-Firework,Between-subj,BDIV - BCC,0.65,"[-0.10, 1.40]",0.0873,0.08731902446198161,tests.csv,Between-subject first vignette (included): DIV vs CC on Clark blame
-Firework,Within-subj,BCH - BCC,1.22,"[0.96, 1.48]",4.27e-16,4.268064998754664e-16,tests.csv,Within-subject delta vs 0 (included_only): Clark blame CH-CC
-Firework,Within-subj,BDIV - BCC,0.72,"[0.45, 0.99]",3.98e-07,3.975516408316147e-07,tests.csv,Within-subject delta vs 0 (included_only): Clark blame DIV-CC
-Trolley,Between-subj,BCH - BCC,0.74,"[0.05, 1.42]",0.0353,0.03531177385960326,tests.csv,Between-subject first vignette (included): CH vs CC on Clark blame
-Trolley,Between-subj,BDIV - BCC,0.74,"[0.06, 1.42]",0.0327,0.0326892018597061,tests.csv,Between-subject first vignette (included): DIV vs CC on Clark blame
-Trolley,Within-subj,BCH - BCC,0.77,"[0.43, 1.11]",1.35e-05,1.3547406785990493e-05,tests.csv,Within-subject delta vs 0 (included_only): Clark blame CH-CC
-Trolley,Within-subj,BDIV - BCC,0.47,"[0.16, 0.79]",0.0038,0.003768656060007102,tests.csv,Within-subject delta vs 0 (included_only): Clark blame DIV-CC

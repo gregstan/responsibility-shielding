@@ -50,8 +50,7 @@ class FileNames(TypedDict):
     first_vignette: Path
     within_subject: Path
     blame_models: Path
-    punishment_consistency_effects: Path
-    punishment_tests: Path
+    codebook : Path
 
 class TableNames(TypedDict):
     table_1_participant_counts: Path
@@ -537,11 +536,11 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
     raw_dataframe["story_condition"] = raw_dataframe["story_condition"].str.replace("parade", "firework", regex=False)
     raw_dataframe["load_condition"] = raw_dataframe["LoadCondition"].astype(str).str.strip().str.lower()
 
-    raw_dataframe["case_order"] = raw_dataframe["CaseOrder"].astype(str)
+    raw_dataframe["vignette_condition_order"] = raw_dataframe["CaseOrder"].astype(str)
 
-    raw_dataframe["case_code_position_1"] = raw_dataframe["case_order"].str.split("-").str[0]
-    raw_dataframe["case_code_position_2"] = raw_dataframe["case_order"].str.split("-").str[1]
-    raw_dataframe["case_code_position_3"] = raw_dataframe["case_order"].str.split("-").str[2]
+    raw_dataframe["vignette_condition_position_1"] = raw_dataframe["vignette_condition_order"].str.split("-").str[0]
+    raw_dataframe["vignette_condition_position_2"] = raw_dataframe["vignette_condition_order"].str.split("-").str[1]
+    raw_dataframe["vignette_condition_position_3"] = raw_dataframe["vignette_condition_order"].str.split("-").str[2]
 
     raw_dataframe["cognitive_load_digits_response"] = raw_dataframe["cog_load_check"]
     raw_dataframe["cognitive_load_digits_correct_bool"] = raw_dataframe.apply(
@@ -649,7 +648,7 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
 
     "Helper columns for between-subjects confirmatory analysis (first vignette only)"
     def choose_first_case_value(row, column_cc: str, column_ch: str, column_div: str) -> float:
-        case_code_value = row["case_code_position_1"]
+        case_code_value = row["vignette_condition_position_1"]
         if case_code_value == "CC":
             return row[column_cc]
         if case_code_value == "CH":
@@ -966,10 +965,10 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
         "load_condition",
         "cognitive_load_digits_response",
         "cognitive_load_digits_correct_bool",
-        "case_order",
-        "case_code_position_1",
-        "case_code_position_2",
-        "case_code_position_3",
+        "vignette_condition_order",
+        "vignette_condition_position_1",
+        "vignette_condition_position_2",
+        "vignette_condition_position_3",
         "first_vignette_distal_blame",
         "first_vignette_distal_wrong",
         "first_vignette_distal_punish",
@@ -1144,6 +1143,861 @@ def load_analysis_dataframe(general_settings: GeneralSettings, file_name_key: st
         "message": message, 
         "dataframe": dataframe
     }    
+
+
+def generate_processed_data_codebook(general_settings: GeneralSettings, force_rebuild: bool | None = None) -> pd.DataFrame:
+    """
+    Generate a column-by-column codebook for the main processed CSVs.
+
+    This version is designed first and foremost to help a human reader understand the cleaned dataframe.
+    It creates one row for every single column in:
+        • responsibility_shielding_cleaned.csv
+        • responsibility_shielding_tests.csv
+        • responsibility_shielding_group_summaries.csv
+
+    Rows are grouped by file and preserve the actual column order in each CSV.
+
+    Columns in the codebook:
+        • file_name
+        • column_name
+        • logical_field
+        • meaning
+        • allowed_values_or_pattern
+        • example_values
+        • notes
+
+    Arguments:
+        • general_settings: GeneralSettings
+            - Master settings dictionary.
+        • force_rebuild: bool | None
+            - If None, inherit general_settings["misc"]["force_rebuild"].
+            - If False and the codebook already exists, load and return it.
+
+    Returns:
+        • pd.DataFrame
+            - Codebook dataframe saved to processed/responsibility_shielding_processed_codebook.csv
+    """
+    if force_rebuild is None:
+        force_rebuild = general_settings["misc"]["force_rebuild"]
+
+    file_name_codebook = dict(general_settings["filing"]["file_names"]).get(
+        "codebook",
+        "responsibility_shielding_processed_codebook.csv",
+    )
+    file_path_codebook = general_settings["filing"]["file_paths"]["processed"] / file_name_codebook
+
+    "Load and return dataframe if one already exists and not directed to rebuild."
+    if file_path_codebook.exists() and not force_rebuild:
+        return pd.read_csv(file_path_codebook, encoding="utf-8-sig")
+
+    "Load the three processed dataframes that the codebook should document."
+    cleaned_dataframe = load_or_build_cleaned_dataframe(
+        general_settings=general_settings,
+        force_rebuild=False,
+    )
+    tests_dataframe = run_confirmatory_and_exploratory_tests(
+        general_settings=general_settings,
+        force_rebuild=False,
+    )
+    group_summaries_dataframe = compute_group_summaries(
+        general_settings=general_settings,
+        force_rebuild=False,
+    )
+
+    "========================"
+    "Small formatting helpers."
+    "========================"
+    def format_example_values(column_series: pd.Series, max_examples: int = 5) -> str:
+        """
+        Build a human-readable example string from the first few distinct non-missing values.
+        """
+        nonmissing_values = column_series.dropna()
+
+        if nonmissing_values.shape[0] == 0:
+            return "No non-missing values"
+
+        distinct_values_in_order = list(dict.fromkeys(nonmissing_values.astype(str).tolist()))
+        distinct_values_in_order = distinct_values_in_order[:max_examples]
+
+        return ", ".join(distinct_values_in_order)
+
+    def infer_allowed_values_or_pattern_from_series(column_series: pd.Series) -> str:
+        """
+        Infer a simple allowed-values / type description from the series itself.
+        """
+        nonmissing_values = column_series.dropna()
+
+        if nonmissing_values.shape[0] == 0:
+            return "No observed non-missing values"
+
+        unique_values = pd.unique(nonmissing_values)
+        unique_count = len(unique_values)
+
+        if pd.api.types.is_bool_dtype(nonmissing_values):
+            return "True | False"
+
+        if pd.api.types.is_numeric_dtype(nonmissing_values):
+            if unique_count <= 8:
+                displayed_values = [str(value) for value in unique_values]
+                return " | ".join(displayed_values)
+            return "numeric"
+
+        if pd.api.types.is_datetime64_any_dtype(nonmissing_values):
+            return "datetime"
+
+        if unique_count <= 8:
+            displayed_values = [str(value) for value in unique_values]
+            return " | ".join(displayed_values)
+
+        return "string / text"
+
+    def humanize_dv_code(dv_code: str) -> str:
+        dv_map = {
+            "blame": "blameworthiness",
+            "wrong": "wrongness",
+            "punish": "punishment",
+        }
+        return dv_map.get(dv_code, dv_code)
+
+    def humanize_condition_code(condition_code: str) -> str:
+        condition_map = {
+            "cc": "Choice-Choice (CC; shielded)",
+            "ch": "Choice-Chance (CH; non-shielded)",
+            "div": "Division (DIV)",
+            "CC": "Choice-Choice (CC; shielded)",
+            "CH": "Choice-Chance (CH; non-shielded)",
+            "DIV": "Division (DIV)",
+        }
+        return condition_map.get(condition_code, condition_code)
+
+    "===================================="
+    "Per-file metadata inference helpers."
+    "===================================="
+    def infer_cleaned_column_metadata(column_name: str, column_series: pd.Series) -> dict[str, str]:
+        """
+        Infer codebook metadata for one cleaned-dataframe column.
+        """
+        cleaned_exact_map: dict[str, dict[str, str]] = {
+            "response_id": {
+                "logical_field": "participant identifier",
+                "meaning": "Unique Qualtrics response identifier for one participant.",
+                "allowed_values_or_pattern": "string identifier",
+                "notes": "Useful for row-level inspection, merging, and traceability; not theoretically meaningful.",
+            },
+            "start_date": {
+                "logical_field": "survey start time",
+                "meaning": "Timestamp when the participant began the Qualtrics survey.",
+                "allowed_values_or_pattern": "datetime",
+                "notes": "Used for freeze-window filtering and duration calculations.",
+            },
+            "end_date": {
+                "logical_field": "survey end time",
+                "meaning": "Timestamp when the participant finished the Qualtrics survey.",
+                "allowed_values_or_pattern": "datetime",
+                "notes": "Used for freeze-window filtering and duration calculations.",
+            },
+            "story_condition": {
+                "logical_field": "story family",
+                "meaning": "Which story family the participant received.",
+                "allowed_values_or_pattern": "firework | trolley",
+                "notes": "Firework and trolley are structurally matched story families.",
+            },
+            "load_condition": {
+                "logical_field": "cognitive load condition",
+                "meaning": "Working-memory load manipulation assigned to the participant.",
+                "allowed_values_or_pattern": "high | low",
+                "notes": "High = 7-digit memory load; Low = 2-digit memory load.",
+            },
+            "cognitive_load_digits_response": {
+                "logical_field": "digits recall response",
+                "meaning": "The digits string the participant typed during the cognitive-load recall check.",
+                "allowed_values_or_pattern": "string / numeric text",
+                "notes": "Raw memory-check response rather than a scored variable.",
+            },
+            "cognitive_load_digits_correct_bool": {
+                "logical_field": "digits recall accuracy",
+                "meaning": "Whether the participant correctly recalled the assigned high- or low-load digits.",
+                "allowed_values_or_pattern": "True | False",
+                "notes": "Manipulation-check variable for the cognitive-load task.",
+            },
+            "vignette_condition_order": {
+                "logical_field": "vignette order string",
+                "meaning": "The randomized order in which the participant encountered the three main vignette conditions.",
+                "allowed_values_or_pattern": "Three-condition order string, e.g. CC-CH-DIV",
+                "notes": "Convenient summary of the full order assignment.",
+            },
+            "case_order": {
+                "logical_field": "vignette order string",
+                "meaning": "The randomized order in which the participant encountered the three main vignette conditions.",
+                "allowed_values_or_pattern": "Three-condition order string, e.g. CC-CH-DIV",
+                "notes": "Older name for the same logical field as vignette_condition_order.",
+            },
+            "vignette_condition_position_1": {
+                "logical_field": "first vignette condition",
+                "meaning": "Which main vignette condition appeared first for that participant.",
+                "allowed_values_or_pattern": "CC | CH | DIV",
+                "notes": "Used in the confirmatory between-subjects analysis.",
+            },
+            "vignette_condition_position_2": {
+                "logical_field": "second vignette condition",
+                "meaning": "Which main vignette condition appeared second for that participant.",
+                "allowed_values_or_pattern": "CC | CH | DIV",
+                "notes": "Used for order-sensitivity analyses.",
+            },
+            "vignette_condition_position_3": {
+                "logical_field": "third vignette condition",
+                "meaning": "Which main vignette condition appeared third for that participant.",
+                "allowed_values_or_pattern": "CC | CH | DIV",
+                "notes": "Used for order-sensitivity analyses.",
+            },
+            "case_code_position_1": {
+                "logical_field": "first vignette condition",
+                "meaning": "Which main vignette condition appeared first for that participant.",
+                "allowed_values_or_pattern": "CC | CH | DIV",
+                "notes": "Older name for the same logical field as vignette_condition_position_1.",
+            },
+            "case_code_position_2": {
+                "logical_field": "second vignette condition",
+                "meaning": "Which main vignette condition appeared second for that participant.",
+                "allowed_values_or_pattern": "CC | CH | DIV",
+                "notes": "Older name for the same logical field as vignette_condition_position_2.",
+            },
+            "case_code_position_3": {
+                "logical_field": "third vignette condition",
+                "meaning": "Which main vignette condition appeared third for that participant.",
+                "allowed_values_or_pattern": "CC | CH | DIV",
+                "notes": "Older name for the same logical field as vignette_condition_position_3.",
+            },
+            "twoafc_bill_vs_clark": {
+                "logical_field": "2AFC interpersonal blame response",
+                "meaning": "Collapsed forced-choice response comparing Bill versus Clark on blame.",
+                "allowed_values_or_pattern": "Bill > Clark | Bill ≥ Clark | Bill ≤ Clark | Bill < Clark",
+                "notes": "Combines the initial 2AFC choice with the follow-up roughly-equal probe.",
+            },
+            "twoafc_ch_vs_cc": {
+                "logical_field": "2AFC CH versus CC response",
+                "meaning": "Collapsed forced-choice response comparing Clark in CH versus Clark in CC.",
+                "allowed_values_or_pattern": "CH > CC | CH ≥ CC | CH ≤ CC | CH < CC",
+                "notes": "Combines the initial 2AFC choice with the follow-up roughly-equal probe.",
+            },
+            "twoafc_div_vs_cc": {
+                "logical_field": "2AFC DIV versus CC response",
+                "meaning": "Collapsed forced-choice response comparing Clark in DIV versus Clark in CC.",
+                "allowed_values_or_pattern": "DIV > CC | DIV ≥ CC | DIV ≤ CC | DIV < CC",
+                "notes": "Combines the initial 2AFC choice with the follow-up roughly-equal probe.",
+            },
+            "comprehension_probability_same_bool": {
+                "logical_field": "comprehension check: matched probability",
+                "meaning": "Whether the participant correctly understood that the upstream actor faced the same downstream harm probability across conditions.",
+                "allowed_values_or_pattern": "True | False",
+                "notes": "One of the preregistered comprehension checks.",
+            },
+            "comprehension_distal_necessary_bool": {
+                "logical_field": "comprehension check: distal necessity",
+                "meaning": "Whether the participant correctly understood that the distal actor’s action was necessary for harm.",
+                "allowed_values_or_pattern": "True | False",
+                "notes": "One of the preregistered comprehension checks.",
+            },
+            "comprehension_clark_necessary_bool": {
+                "logical_field": "comprehension check: distal necessity",
+                "meaning": "Whether the participant correctly understood that the distal actor’s action was necessary for harm.",
+                "allowed_values_or_pattern": "True | False",
+                "notes": "Older name for the same logical field as comprehension_distal_necessary_bool.",
+            },
+            "comprehension_bill_necessary_bool": {
+                "logical_field": "comprehension check: proximate necessity",
+                "meaning": "Whether the participant correctly understood that the proximate node’s action was necessary for harm.",
+                "allowed_values_or_pattern": "True | False",
+                "notes": "One of the preregistered comprehension checks.",
+            },
+            "comprehension_all_correct_bool": {
+                "logical_field": "comprehension pass indicator",
+                "meaning": "Whether the participant passed all preregistered comprehension checks.",
+                "allowed_values_or_pattern": "True | False",
+                "notes": "Feeds directly into the included variable.",
+            },
+            "crt_score": {
+                "logical_field": "cognitive reflection score",
+                "meaning": "Total number of correct answers on the 3-item Cognitive Reflection Test.",
+                "allowed_values_or_pattern": "0 | 1 | 2 | 3",
+                "notes": "Exploratory individual-differences variable.",
+            },
+            "individualism_horizontal": {
+                "logical_field": "horizontal individualism score",
+                "meaning": "Derived INDCOL horizontal individualism summary score.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Exploratory individual-differences variable.",
+            },
+            "individualism_vertical": {
+                "logical_field": "vertical individualism score",
+                "meaning": "Derived INDCOL vertical individualism summary score.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Exploratory individual-differences variable.",
+            },
+            "individualism_score": {
+                "logical_field": "overall individualism score",
+                "meaning": "Composite individualism score derived from the INDCOL measure.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Exploratory individual-differences variable.",
+            },
+            "included": {
+                "logical_field": "analysis inclusion flag",
+                "meaning": "Whether the participant was included under the preregistered comprehension-based inclusion rule.",
+                "allowed_values_or_pattern": "True | False",
+                "notes": "True means included in the main analyses; False means all-finisher robustness only.",
+            },
+            "age": {
+                "logical_field": "age",
+                "meaning": "Participant age.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Demographic variable.",
+            },
+            "gender": {
+                "logical_field": "gender",
+                "meaning": "Participant gender response.",
+                "allowed_values_or_pattern": infer_allowed_values_or_pattern_from_series(column_series),
+                "notes": "Demographic variable.",
+            },
+            "race_compact": {
+                "logical_field": "race",
+                "meaning": "Participant race response in compact form, including self-describe text when applicable.",
+                "allowed_values_or_pattern": "categorical text",
+                "notes": "Demographic variable.",
+            },
+            "political_compact": {
+                "logical_field": "political orientation",
+                "meaning": "Participant political orientation response in compact form, including self-describe text when applicable.",
+                "allowed_values_or_pattern": "categorical text",
+                "notes": "Demographic variable.",
+            },
+            "ip_address": {
+                "logical_field": "IP address",
+                "meaning": "Qualtrics IP address field, retained only if still present in a local non-public copy.",
+                "allowed_values_or_pattern": "string",
+                "notes": "Potentially identifying. Should normally be absent from the public repo.",
+            },
+            "location_latitude": {
+                "logical_field": "latitude",
+                "meaning": "Qualtrics latitude field, retained only if still present in a local non-public copy.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Potentially identifying. Should normally be absent from the public repo.",
+            },
+            "location_longitude": {
+                "logical_field": "longitude",
+                "meaning": "Qualtrics longitude field, retained only if still present in a local non-public copy.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Potentially identifying. Should normally be absent from the public repo.",
+            },
+            "duration_seconds": {
+                "logical_field": "survey duration",
+                "meaning": "Qualtrics completion duration in seconds.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Descriptive timing variable.",
+            },
+        }
+
+        if column_name in cleaned_exact_map:
+            return cleaned_exact_map[column_name]
+
+        first_vignette_match = re.match(r"^first_vignette_(distal|clark)_(blame|wrong|punish)$", column_name)
+        if first_vignette_match:
+            agent_role_code, dv_code = first_vignette_match.groups()
+            return {
+                "logical_field": f"first-vignette {humanize_dv_code(dv_code)} rating",
+                "meaning": f"The participant’s first-vignette rating of the distal agent on {humanize_dv_code(dv_code)}.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Used in the confirmatory between-subjects analyses.",
+            }
+
+        level_rating_match = re.match(r"^(distal|clark|proximate)_(blame|wrong|punish)_(cc|ch|div)$", column_name)
+        if level_rating_match:
+            agent_role_code, dv_code, condition_code = level_rating_match.groups()
+
+            if agent_role_code in {"distal", "clark"}:
+                agent_role_label = "distal agent"
+            else:
+                agent_role_label = "proximate node"
+
+            return {
+                "logical_field": f"{agent_role_label} {humanize_dv_code(dv_code)} rating",
+                "meaning": f"Rating of the {agent_role_label} on {humanize_dv_code(dv_code)} in {humanize_condition_code(condition_code)}.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Raw rating column before contrast construction.",
+            }
+
+        delta_match = re.match(
+            r"^(distal|clark|proximate)_(blame|wrong|punish)_(ch|div)_minus_cc$",
+            column_name,
+        )
+        if delta_match:
+            agent_role_code, dv_code, left_condition_code = delta_match.groups()
+
+            if agent_role_code in {"distal", "clark"}:
+                agent_role_label = "distal agent"
+            else:
+                agent_role_label = "proximate node"
+
+            return {
+                "logical_field": f"within-subject {humanize_dv_code(dv_code)} contrast",
+                "meaning": f"Participant-level within-subject difference on {humanize_dv_code(dv_code)} for the {agent_role_label}: {left_condition_code.upper()} minus CC.",
+                "allowed_values_or_pattern": "numeric difference score",
+                "notes": "Positive values mean the left condition exceeds CC for that participant.",
+            }
+
+        cc_minus_ch_match = re.match(
+            r"^(distal|clark|proximate)_(blame|wrong|punish)_cc_minus_ch$",
+            column_name,
+        )
+        if cc_minus_ch_match:
+            agent_role_code, dv_code = cc_minus_ch_match.groups()
+
+            if agent_role_code in {"distal", "clark"}:
+                agent_role_label = "distal agent"
+            else:
+                agent_role_label = "proximate node"
+
+            return {
+                "logical_field": f"within-subject {humanize_dv_code(dv_code)} contrast",
+                "meaning": f"Participant-level within-subject difference on {humanize_dv_code(dv_code)} for the {agent_role_label}: CC minus CH.",
+                "allowed_values_or_pattern": "numeric difference score",
+                "notes": "Most often used for the proximate manipulation-check comparison.",
+            }
+
+        min_delta_match = re.match(
+            r"^(distal|clark|proximate)_(blame|wrong|punish)_min_ch_div_minus_cc$",
+            column_name,
+        )
+        if min_delta_match:
+            agent_role_code, dv_code = min_delta_match.groups()
+
+            if agent_role_code in {"distal", "clark"}:
+                agent_role_label = "distal agent"
+            else:
+                agent_role_label = "proximate node"
+
+            return {
+                "logical_field": f"strict shielding contrast on {humanize_dv_code(dv_code)}",
+                "meaning": f"Participant-level difference between CC and the smaller of CH and DIV on {humanize_dv_code(dv_code)} for the {agent_role_label}.",
+                "allowed_values_or_pattern": "numeric difference score",
+                "notes": "Implements the stricter MIN(CH, DIV) − CC style comparison.",
+            }
+
+        interpersonal_match = re.match(
+            r"^bill_minus_(distal|clark)_(cc|ch)_(blame|wrong|punish)$",
+            column_name,
+        )
+        if interpersonal_match:
+            distal_code, condition_code, dv_code = interpersonal_match.groups()
+            return {
+                "logical_field": f"interpersonal disparity on {humanize_dv_code(dv_code)}",
+                "meaning": f"Proximate minus distal difference on {humanize_dv_code(dv_code)} within {humanize_condition_code(condition_code)}.",
+                "allowed_values_or_pattern": "numeric difference score",
+                "notes": "Diagnostic interpersonal disparity, not the main counterfactual shielding definition.",
+            }
+
+        timing_match = re.match(
+            r"^(.+)_timing_(first_click_seconds|last_click_seconds|last_minus_first_seconds)$",
+            column_name,
+        )
+        if timing_match:
+            timing_block, timing_measure = timing_match.groups()
+            return {
+                "logical_field": "page timing variable",
+                "meaning": f"Unified Qualtrics timing measure for the {timing_block} block: {timing_measure}.",
+                "allowed_values_or_pattern": "numeric seconds",
+                "notes": "Derived from story-specific Qualtrics timing fields.",
+            }
+
+        return {
+            "logical_field": "cleaned dataframe field",
+            "meaning": "Column in the cleaned participant-level dataframe.",
+            "allowed_values_or_pattern": infer_allowed_values_or_pattern_from_series(column_series),
+            "notes": "No specialized rule matched this column name. Read alongside neighboring columns for context.",
+        }
+
+    def infer_tests_column_metadata(column_name: str, column_series: pd.Series) -> dict[str, str]:
+        tests_exact_map: dict[str, dict[str, str]] = {
+            "analysis_family": {
+                "logical_field": "analysis family",
+                "meaning": "Whether the row belongs to the preregistered confirmatory family or the exploratory family.",
+                "allowed_values_or_pattern": "confirmatory | exploratory",
+                "notes": "Used heavily by the manuscript tables.",
+            },
+            "analysis_mode": {
+                "logical_field": "analysis mode",
+                "meaning": "How the row was analyzed statistically.",
+                "allowed_values_or_pattern": "raw_parametric | raw_nonparametric | log1p_parametric",
+                "notes": "Especially important for punishment rows.",
+            },
+            "test_type": {
+                "logical_field": "statistical test type",
+                "meaning": "The specific test used to compute the row.",
+                "allowed_values_or_pattern": infer_allowed_values_or_pattern_from_series(column_series),
+                "notes": "Examples include pooled OLS planned contrasts, Welch tests, and nonparametric tests.",
+            },
+            "transformation": {
+                "logical_field": "transformation flag",
+                "meaning": "Whether the dependent variable was transformed before analysis.",
+                "allowed_values_or_pattern": "none | log1p",
+                "notes": "Most relevant for punishment rows under log1p_parametric.",
+            },
+            "location_statistic_reported": {
+                "logical_field": "reported location statistic",
+                "meaning": "Which location difference the estimate columns should be interpreted as.",
+                "allowed_values_or_pattern": "mean_difference | median_difference",
+                "notes": "Mean for parametric rows; median for nonparametric rows.",
+            },
+            "participants": {
+                "logical_field": "inclusion filter",
+                "meaning": "Which participant set the row was computed on.",
+                "allowed_values_or_pattern": "included | all_finishers",
+                "notes": "The newer schema’s human-readable version of inclusion_filter.",
+            },
+            "inclusion_filter": {
+                "logical_field": "inclusion filter",
+                "meaning": "Which participant set the row was computed on.",
+                "allowed_values_or_pattern": "included_only | all_finishers",
+                "notes": "Older name for the same logical field as participants.",
+            },
+            "story_family": {
+                "logical_field": "story family",
+                "meaning": "Whether the row pools stories or restricts to one story family.",
+                "allowed_values_or_pattern": "pooled | firework | trolley",
+                "notes": "Used in story-specific and pooled contrasts.",
+            },
+            "story_condition": {
+                "logical_field": "story family",
+                "meaning": "Whether the row pools stories or restricts to one story family.",
+                "allowed_values_or_pattern": "pooled | firework | trolley | all",
+                "notes": "Older name for the same logical field as story_family.",
+            },
+            "load_condition": {
+                "logical_field": "load condition slice",
+                "meaning": "Whether the row pools load conditions or restricts to one load condition.",
+                "allowed_values_or_pattern": "pooled | high | low",
+                "notes": "Used in the cognitive-load breakdowns.",
+            },
+            "design": {
+                "logical_field": "analysis design",
+                "meaning": "Whether the row compares different participant groups or paired ratings from the same participants.",
+                "allowed_values_or_pattern": "between_subjects | within_subjects",
+                "notes": "This is the key high-level design distinction for the direct tests.",
+            },
+            "dv": {
+                "logical_field": "dependent variable",
+                "meaning": "Which dependent variable the row analyzes.",
+                "allowed_values_or_pattern": "blame | wrong | punish",
+                "notes": "Short schema names used throughout the code.",
+            },
+            "agent_role": {
+                "logical_field": "judged agent role",
+                "meaning": "Whether the row pertains to the distal actor or the proximate node.",
+                "allowed_values_or_pattern": "distal | proximate",
+                "notes": "Between-subject rows should always be distal in the new schema.",
+            },
+            "contrast_type": {
+                "logical_field": "contrast label",
+                "meaning": "Which substantive comparison the row represents.",
+                "allowed_values_or_pattern": "CH - CC | DIV - CC | CH - DIV | MIN(CH, DIV) - CC | CC - CH",
+                "notes": "The positive direction of the contrast is the direction assumed by p_value_one_tailed.",
+            },
+            "contrast_or_condition": {
+                "logical_field": "contrast label",
+                "meaning": "Which substantive comparison the row represents.",
+                "allowed_values_or_pattern": "CH - CC | DIV - CC | CH - DIV | MIN(CH, DIV) - CC | CC - CH",
+                "notes": "Older name for the same logical field as contrast_type.",
+            },
+            "group_a": {
+                "logical_field": "left side of contrast",
+                "meaning": "The group or condition on the left side of the estimated contrast.",
+                "allowed_values_or_pattern": "string label",
+                "notes": "Used together with group_b to define the sign of the estimate.",
+            },
+            "group_b": {
+                "logical_field": "right side of contrast",
+                "meaning": "The group or condition on the right side of the estimated contrast.",
+                "allowed_values_or_pattern": "string label",
+                "notes": "Used together with group_a to define the sign of the estimate.",
+            },
+            "n_a": {
+                "logical_field": "sample size for group A",
+                "meaning": "Number of usable observations on the left side of the contrast.",
+                "allowed_values_or_pattern": "numeric count",
+                "notes": "For within-subject paired rows this should match n_b.",
+            },
+            "n_b": {
+                "logical_field": "sample size for group B",
+                "meaning": "Number of usable observations on the right side of the contrast.",
+                "allowed_values_or_pattern": "numeric count",
+                "notes": "For within-subject paired rows this should match n_a.",
+            },
+            "mean_a": {
+                "logical_field": "group A mean",
+                "meaning": "Mean of the left-side group or condition on the analysis scale.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "If transformation='log1p', this mean is on the transformed scale.",
+            },
+            "mean_b": {
+                "logical_field": "group B mean",
+                "meaning": "Mean of the right-side group or condition on the analysis scale.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "If transformation='log1p', this mean is on the transformed scale.",
+            },
+            "median_a": {
+                "logical_field": "group A median",
+                "meaning": "Median of the left-side group or condition on the analysis scale.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Especially relevant for nonparametric rows.",
+            },
+            "median_b": {
+                "logical_field": "group B median",
+                "meaning": "Median of the right-side group or condition on the analysis scale.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Especially relevant for nonparametric rows.",
+            },
+            "mean_difference_a_minus_b": {
+                "logical_field": "mean contrast estimate",
+                "meaning": "Left-side mean minus right-side mean on the analysis scale.",
+                "allowed_values_or_pattern": "numeric contrast estimate",
+                "notes": "Primary estimate for parametric rows.",
+            },
+            "median_difference_a_minus_b": {
+                "logical_field": "median contrast estimate",
+                "meaning": "Left-side median minus right-side median on the analysis scale.",
+                "allowed_values_or_pattern": "numeric contrast estimate",
+                "notes": "Primary estimate for nonparametric rows.",
+            },
+            "ci95_lower": {
+                "logical_field": "lower confidence bound",
+                "meaning": "Lower 95% confidence interval bound for the reported location statistic.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Interpret together with ci95_upper and location_statistic_reported.",
+            },
+            "ci95_upper": {
+                "logical_field": "upper confidence bound",
+                "meaning": "Upper 95% confidence interval bound for the reported location statistic.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Interpret together with ci95_lower and location_statistic_reported.",
+            },
+            "t_statistic": {
+                "logical_field": "test statistic",
+                "meaning": "Test statistic reported for the row.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "For some nonparametric rows this is not literally a t statistic; it is the main test statistic field retained for consistency.",
+            },
+            "df": {
+                "logical_field": "degrees of freedom",
+                "meaning": "Degrees of freedom for parametric rows; often missing for nonparametric rows.",
+                "allowed_values_or_pattern": "numeric or missing",
+                "notes": "Missing values are expected for some nonparametric tests.",
+            },
+            "p_value_two_tailed": {
+                "logical_field": "two-tailed p-value",
+                "meaning": "Two-sided p-value for the row.",
+                "allowed_values_or_pattern": "numeric p-value",
+                "notes": "Use this when the manuscript or table is set to two-tailed reporting.",
+            },
+            "p_value_one_tailed": {
+                "logical_field": "one-tailed p-value",
+                "meaning": "One-tailed p-value assuming the positive direction of the named contrast.",
+                "allowed_values_or_pattern": "numeric p-value",
+                "notes": "The positive direction is defined by contrast_type / contrast_or_condition.",
+            },
+            "p_value_holm": {
+                "logical_field": "Holm-corrected p-value",
+                "meaning": "Holm-adjusted p-value for the confirmatory between-subject blame contrasts when applicable.",
+                "allowed_values_or_pattern": "numeric or missing",
+                "notes": "Usually populated only for the preregistered confirmatory family.",
+            },
+            "effect_size_name": {
+                "logical_field": "effect size label",
+                "meaning": "Name of the reported effect size.",
+                "allowed_values_or_pattern": infer_allowed_values_or_pattern_from_series(column_series),
+                "notes": "Examples include Hedges g, Cohen’s dz, and rank-biserial correlations.",
+            },
+            "effect_size": {
+                "logical_field": "effect size value",
+                "meaning": "Numeric effect-size estimate.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "Interpret together with effect_size_name.",
+            },
+            "notes": {
+                "logical_field": "plain-language row explanation",
+                "meaning": "Human-readable explanation of what the row means.",
+                "allowed_values_or_pattern": "free text",
+                "notes": "This is the main plain-English interpretation column in tests.csv.",
+            },
+        }
+
+        if column_name in tests_exact_map:
+            return tests_exact_map[column_name]
+
+        return {
+            "logical_field": "tests dataframe field",
+            "meaning": "Column in the standardized direct-tests dataframe.",
+            "allowed_values_or_pattern": infer_allowed_values_or_pattern_from_series(column_series),
+            "notes": "No specialized rule matched this tests.csv column name.",
+        }
+
+    def infer_group_summaries_column_metadata(column_name: str, column_series: pd.Series) -> dict[str, str]:
+        group_summaries_exact_map: dict[str, dict[str, str]] = {
+            "inclusion_filter": {
+                "logical_field": "inclusion filter",
+                "meaning": "Which participant set the summary row was computed on.",
+                "allowed_values_or_pattern": "included_only | all_finishers",
+                "notes": "Matches the preregistered inclusion split used throughout the analysis.",
+            },
+            "participants": {
+                "logical_field": "inclusion filter",
+                "meaning": "Which participant set the summary row was computed on.",
+                "allowed_values_or_pattern": "included | all_finishers",
+                "notes": "Human-readable version of inclusion_filter if present.",
+            },
+            "story_condition": {
+                "logical_field": "story family",
+                "meaning": "Whether the summary row pools stories or refers to one story family.",
+                "allowed_values_or_pattern": "pooled | firework | trolley | all",
+                "notes": "Older or transitional name for story_family.",
+            },
+            "story_family": {
+                "logical_field": "story family",
+                "meaning": "Whether the summary row pools stories or refers to one story family.",
+                "allowed_values_or_pattern": "pooled | firework | trolley",
+                "notes": "Preferred newer name for this field.",
+            },
+            "load_condition": {
+                "logical_field": "load condition slice",
+                "meaning": "Whether the summary row pools load conditions or refers to one load condition.",
+                "allowed_values_or_pattern": "pooled | high | low | all",
+                "notes": "Used for descriptive breakdowns by cognitive load.",
+            },
+            "analysis_scope": {
+                "logical_field": "summary design scope",
+                "meaning": "What kind of descriptive aggregation the row represents.",
+                "allowed_values_or_pattern": "between_subjects_first_vignette | within_subjects_all_vignettes | within_subjects_deltas",
+                "notes": "Older or transitional name for design in group_summaries.csv.",
+            },
+            "design": {
+                "logical_field": "summary design scope",
+                "meaning": "What kind of descriptive aggregation the row represents.",
+                "allowed_values_or_pattern": "between_subjects_first_vignette | within_subjects_all_vignettes | within_subjects_deltas",
+                "notes": "Preferred newer name for this field if present.",
+            },
+            "agent_role": {
+                "logical_field": "judged agent role",
+                "meaning": "Whether the row summarizes the distal agent or the proximate node.",
+                "allowed_values_or_pattern": "distal | proximate | clark",
+                "notes": "Some transitional files may still use clark instead of distal.",
+            },
+            "dv": {
+                "logical_field": "dependent variable",
+                "meaning": "Which dependent variable the summary row refers to.",
+                "allowed_values_or_pattern": "blame | wrong | punish | wrongness | punishment",
+                "notes": "Transitional files may still use longer DV names.",
+            },
+            "condition": {
+                "logical_field": "condition or delta label",
+                "meaning": "Raw vignette condition for level summaries or contrast label for delta summaries.",
+                "allowed_values_or_pattern": "CC | CH | DIV | CH - CC | DIV - CC | MIN(CH, DIV) - CC | CC - CH",
+                "notes": "Interpret together with analysis_scope / design.",
+            },
+            "n": {
+                "logical_field": "sample size",
+                "meaning": "Number of usable observations contributing to the descriptive row.",
+                "allowed_values_or_pattern": "numeric count",
+                "notes": "Counts can differ across rows because of missingness.",
+            },
+            "mean": {
+                "logical_field": "mean",
+                "meaning": "Mean of the summarized values.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "For punishment under log1p_parametric, this should be on the transformed scale.",
+            },
+            "median": {
+                "logical_field": "median",
+                "meaning": "Median of the summarized values.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "For punishment under log1p_parametric, this should be on the transformed scale.",
+            },
+            "std": {
+                "logical_field": "standard deviation",
+                "meaning": "Standard deviation of the summarized values.",
+                "allowed_values_or_pattern": "numeric",
+                "notes": "For punishment under log1p_parametric, this should be on the transformed scale.",
+            },
+        }
+
+        if column_name in group_summaries_exact_map:
+            return group_summaries_exact_map[column_name]
+
+        return {
+            "logical_field": "group summaries field",
+            "meaning": "Column in the descriptive summaries dataframe.",
+            "allowed_values_or_pattern": infer_allowed_values_or_pattern_from_series(column_series),
+            "notes": "No specialized rule matched this group_summaries.csv column name.",
+        }
+
+    def infer_column_metadata(
+        file_key: str,
+        column_name: str,
+        column_series: pd.Series,
+    ) -> dict[str, str]:
+        if file_key == "cleaned":
+            return infer_cleaned_column_metadata(column_name, column_series)
+        if file_key == "tests":
+            return infer_tests_column_metadata(column_name, column_series)
+        if file_key == "group_summaries":
+            return infer_group_summaries_column_metadata(column_name, column_series)
+
+        return {
+            "logical_field": "processed dataframe field",
+            "meaning": "Processed-data column.",
+            "allowed_values_or_pattern": infer_allowed_values_or_pattern_from_series(column_series),
+            "notes": "",
+        }
+
+    "============================================="
+    "Build one row for every column in every file."
+    "============================================="
+    dataframe_rows = []
+
+    file_iteration_specifications = [
+        ("cleaned", dict(general_settings["filing"]["file_names"]).get("cleaned", "responsibility_shielding_cleaned.csv"), cleaned_dataframe),
+        ("tests", dict(general_settings["filing"]["file_names"]).get("tests", "responsibility_shielding_tests.csv"), tests_dataframe),
+        ("group_summaries", dict(general_settings["filing"]["file_names"]).get("group_summaries", "responsibility_shielding_group_summaries.csv"), group_summaries_dataframe),
+    ]
+
+    for file_key, file_name, source_dataframe in file_iteration_specifications:
+        for column_position, column_name in enumerate(source_dataframe.columns, start=1):
+            column_series = source_dataframe[column_name]
+            metadata = infer_column_metadata(
+                file_key=file_key,
+                column_name=column_name,
+                column_series=column_series,
+            )
+
+            dataframe_rows.append(
+                {
+                    "file_name": file_name,
+                    "column_name": column_name,
+                    "logical_field": metadata["logical_field"],
+                    "meaning": metadata["meaning"],
+                    "allowed_values_or_pattern": metadata["allowed_values_or_pattern"],
+                    "example_values": format_example_values(column_series),
+                    "notes": metadata["notes"],
+                    "file_order": {"cleaned": 0, "tests": 1, "group_summaries": 2}[file_key],
+                    "column_position": column_position,
+                }
+            )
+
+    dataframe_codebook = pd.DataFrame(dataframe_rows).sort_values(
+        by=["file_order", "column_position"],
+        kind="stable",
+    ).drop(columns=["file_order", "column_position"]).reset_index(drop=True)
+
+    dataframe_codebook.to_csv(file_path_codebook, index=False, encoding="utf-8-sig")
+
+    return dataframe_codebook
 
 
 "=========================================================================================="
@@ -1355,7 +2209,7 @@ def run_welch_t_test_between_groups(dataframe: pd.DataFrame, dv_column_name: str
     }
 
 
-def run_pooled_ols_planned_contrasts(dataframe: pd.DataFrame, dv_column_name: str, group_column_name: str = "case_code_position_1", covariance_type: str | None = None) -> pd.DataFrame:
+def run_pooled_ols_planned_contrasts(dataframe: pd.DataFrame, dv_column_name: str, group_column_name: str = "vignette_condition_position_1", covariance_type: str | None = None) -> pd.DataFrame:
     """
     Fits the preregistered pooled OLS / one-way ANOVA style model and returns the two planned contrasts.
 
@@ -1364,7 +2218,7 @@ def run_pooled_ols_planned_contrasts(dataframe: pd.DataFrame, dv_column_name: st
             The dataframe containing the dependent variable and the three-level group factor.
         • dv_column_name: str
             The dependent variable column to analyze.
-        • group_column_name: str = "case_code_position_1"
+        • group_column_name: str = "vignette_condition_position_1"
             The grouping factor with levels CC, CH, and DIV.
         • covariance_type: str | None = None
             Optional statsmodels covariance type. If None, uses the classical pooled-variance OLS fit.
@@ -1576,71 +2430,185 @@ def compute_group_summaries(general_settings: GeneralSettings, force_rebuild: bo
 
     "Load and return dataframe if one already exists and not directed to rebuild."
     group_summaries_extraction = load_analysis_dataframe(
-        general_settings=general_settings, file_name_key="group_summaries", force_rebuild=force_rebuild)
+        general_settings=general_settings,
+        file_name_key="group_summaries",
+        force_rebuild=force_rebuild,
+    )
     if group_summaries_extraction["success"]:
         group_summaries_dataframe: pd.DataFrame = group_summaries_extraction["dataframe"]
         return group_summaries_dataframe
     if group_summaries_extraction["error"]:
         raise Exception(group_summaries_extraction["message"])
 
-    "Load of rebuild preprocessed dataframe"
-    cleaned_dataframe = load_or_build_cleaned_dataframe(general_settings=general_settings, force_rebuild=False)
+    "Load or rebuild preprocessed dataframe."
+    cleaned_dataframe = load_or_build_cleaned_dataframe(
+        general_settings=general_settings,
+        force_rebuild=False,
+    )
 
-    dataframes = {}
-    for inclusion_filter_value_and_analysis_dataframe in [
-            ("included_only", cleaned_dataframe[cleaned_dataframe["included"]].copy()), 
-            ("all_finishers", cleaned_dataframe.copy())
-        ]:
-        inclusion_filter_value, analysis_dataframe = inclusion_filter_value_and_analysis_dataframe
+    punishment_analysis_mode = str(
+        general_settings.get("punish", {}).get("analysis_mode", "raw_nonparametric")
+    ).strip().lower()
 
-        summary_rows = []
+    def summarize_numeric_values(values: pd.Series | np.ndarray) -> dict[str, float]:
+        """
+        Compute n, mean, median, and std for one numeric vector.
+        """
+        numeric_values = pd.to_numeric(values, errors="coerce")
+        numeric_values = pd.Series(numeric_values).dropna()
 
-        "Within-subject condition means (each participant contributes to each condition once)"
-        dv_map = {
-            "blame": ("distal_blame_cc", "distal_blame_ch", "distal_blame_div"),
-            "wrongness": ("distal_wrong_cc", "distal_wrong_ch", "distal_wrong_div"),
-            "punishment": ("distal_punish_cc", "distal_punish_ch", "distal_punish_div"),
+        if numeric_values.shape[0] == 0:
+            return {
+                "n": 0,
+                "mean": np.nan,
+                "median": np.nan,
+                "std": np.nan,
+            }
+
+        return {
+            "n": int(numeric_values.shape[0]),
+            "mean": float(numeric_values.mean()),
+            "median": float(numeric_values.median()),
+            "std": float(numeric_values.std(ddof=1)),
         }
 
-        for story_condition_value in ["all", "firework", "trolley"]:
-            for load_condition_value in ["all", "high", "low"]:
-                subset = analysis_dataframe.copy()
+    def transform_punishment_values_if_requested(values: pd.Series | np.ndarray, dv_name: str) -> pd.Series:
+        """
+        Transform punishment values for descriptive summaries when requested.
 
-                if story_condition_value != "all":
-                    subset = subset[subset["story_condition"] == story_condition_value]
+        Notes:
+            • For blame and wrong, values are always returned unchanged.
+            • For punish:
+                - raw_nonparametric  -> raw values
+                - raw_parametric     -> raw values
+                - log1p_parametric   -> log(1 + x)
+        """
+        numeric_values = pd.to_numeric(values, errors="coerce")
+        numeric_values = pd.Series(numeric_values).dropna()
 
-                if load_condition_value != "all":
-                    subset = subset[subset["load_condition"] == load_condition_value]
+        if dv_name != "punish":
+            return numeric_values
 
-                for dv_name, (column_cc, column_ch, column_div) in dv_map.items():
-                    for condition_code, column_name in [("CC", column_cc), ("CH", column_ch), ("DIV", column_div)]:
-                        values = pd.to_numeric(subset[column_name], errors="coerce")
+        if punishment_analysis_mode == "log1p_parametric":
+            if (numeric_values < 0).any():
+                minimum_value = float(numeric_values.min())
+                raise ValueError(
+                    "compute_group_summaries encountered negative raw punishment values while "
+                    f"punishment_analysis_mode='log1p_parametric'. Minimum offending value: {minimum_value:.4f}"
+                )
+            return np.log1p(numeric_values)
+
+        return numeric_values
+
+    def build_log1p_punishment_delta(
+        subset_dataframe: pd.DataFrame,
+        left_column_name: str,
+        right_column_name: str,
+    ) -> pd.Series:
+        """
+        Build paired log(1 + x) punishment deltas for descriptive summaries.
+        """
+        left_values = pd.to_numeric(subset_dataframe[left_column_name], errors="coerce")
+        right_values = pd.to_numeric(subset_dataframe[right_column_name], errors="coerce")
+
+        valid_mask = (~left_values.isna()) & (~right_values.isna())
+        transformed_delta_values = np.log1p(left_values[valid_mask].to_numpy(dtype=float)) - np.log1p(
+            right_values[valid_mask].to_numpy(dtype=float)
+        )
+
+        return pd.Series(transformed_delta_values)
+
+    def build_log1p_punishment_min_delta(subset_dataframe: pd.DataFrame) -> pd.Series:
+        """
+        Build paired log(1 + x) MIN(CH, DIV) - CC punishment deltas for descriptive summaries.
+        """
+        ch_values = pd.to_numeric(subset_dataframe["distal_punish_ch"], errors="coerce")
+        div_values = pd.to_numeric(subset_dataframe["distal_punish_div"], errors="coerce")
+        cc_values = pd.to_numeric(subset_dataframe["distal_punish_cc"], errors="coerce")
+
+        valid_mask = (~ch_values.isna()) & (~div_values.isna()) & (~cc_values.isna())
+
+        transformed_delta_values = np.minimum(
+            np.log1p(ch_values[valid_mask].to_numpy(dtype=float)),
+            np.log1p(div_values[valid_mask].to_numpy(dtype=float)),
+        ) - np.log1p(cc_values[valid_mask].to_numpy(dtype=float))
+
+        return pd.Series(transformed_delta_values)
+
+    dataframes = {}
+
+    for inclusion_filter_value, analysis_dataframe in [
+        ("included_only", cleaned_dataframe.loc[cleaned_dataframe["included"] == True].copy()),  # noqa: E712
+        ("all_finishers", cleaned_dataframe.copy()),
+    ]:
+        summary_rows = []
+
+        distal_condition_columns_by_dv = {
+            "blame": ("distal_blame_cc", "distal_blame_ch", "distal_blame_div"),
+            "wrong": ("distal_wrong_cc", "distal_wrong_ch", "distal_wrong_div"),
+            "punish": ("distal_punish_cc", "distal_punish_ch", "distal_punish_div"),
+        }
+
+        proximate_condition_columns_by_dv = {
+            "blame": ("proximate_blame_cc", "proximate_blame_ch"),
+            "wrong": ("proximate_wrong_cc", "proximate_wrong_ch"),
+            "punish": ("proximate_punish_cc", "proximate_punish_ch"),
+        }
+
+        first_vignette_columns_by_dv = {
+            "blame": "first_vignette_distal_blame",
+            "wrong": "first_vignette_distal_wrong",
+            "punish": "first_vignette_distal_punish",
+        }
+
+        for story_condition_value in ["pooled", "firework", "trolley"]:
+            for load_condition_value in ["pooled", "high", "low"]:
+                subset_dataframe = analysis_dataframe.copy()
+
+                if story_condition_value != "pooled":
+                    subset_dataframe = subset_dataframe.loc[
+                        subset_dataframe["story_condition"] == story_condition_value
+                    ].copy()
+
+                if load_condition_value != "pooled":
+                    subset_dataframe = subset_dataframe.loc[
+                        subset_dataframe["load_condition"] == load_condition_value
+                    ].copy()
+
+                "Within-subject all-vignettes summaries for the distal agent."
+                for dv_name, (column_cc, column_ch, column_div) in distal_condition_columns_by_dv.items():
+                    for condition_code, column_name in [
+                        ("CC", column_cc),
+                        ("CH", column_ch),
+                        ("DIV", column_div),
+                    ]:
+                        transformed_values = transform_punishment_values_if_requested(
+                            values=subset_dataframe[column_name],
+                            dv_name=dv_name,
+                        )
                         summary_rows.append(
                             {
                                 "inclusion_filter": inclusion_filter_value,
                                 "story_condition": story_condition_value,
                                 "load_condition": load_condition_value,
                                 "analysis_scope": "within_subjects_all_vignettes",
-                                "agent_role": "clark",
+                                "agent_role": "distal",
                                 "dv": dv_name,
                                 "condition": condition_code,
-                                "n": int(values.dropna().shape[0]),
-                                "mean": float(values.mean()),
-                                "median": float(values.median()),
-                                "std": float(values.std(ddof=1)),
+                                **summarize_numeric_values(transformed_values),
                             }
                         )
 
-                "Proximate ratings exist for CC and CH"
-                proximate_map = {
-                    "blame": ("proximate_blame_cc", "proximate_blame_ch"),
-                    "wrongness": ("proximate_wrong_cc", "proximate_wrong_ch"),
-                    "punishment": ("proximate_punish_cc", "proximate_punish_ch"),
-                }
-
-                for dv_name, (column_cc, column_ch) in proximate_map.items():
-                    for condition_code, column_name in [("CC", column_cc), ("CH", column_ch)]:
-                        values = pd.to_numeric(subset[column_name], errors="coerce")
+                "Within-subject all-vignettes summaries for the proximate agent."
+                for dv_name, (column_cc, column_ch) in proximate_condition_columns_by_dv.items():
+                    for condition_code, column_name in [
+                        ("CC", column_cc),
+                        ("CH", column_ch),
+                    ]:
+                        transformed_values = transform_punishment_values_if_requested(
+                            values=subset_dataframe[column_name],
+                            dv_name=dv_name,
+                        )
                         summary_rows.append(
                             {
                                 "inclusion_filter": inclusion_filter_value,
@@ -1650,76 +2618,117 @@ def compute_group_summaries(general_settings: GeneralSettings, force_rebuild: bo
                                 "agent_role": "proximate",
                                 "dv": dv_name,
                                 "condition": condition_code,
-                                "n": int(values.dropna().shape[0]),
-                                "mean": float(values.mean()),
-                                "median": float(values.median()),
-                                "std": float(values.std(ddof=1)),
+                                **summarize_numeric_values(transformed_values),
                             }
                         )
 
-                "Between-subject first-vignette summaries"
-                for dv_name, first_column_name in [
-                    ("blame", "first_vignette_distal_blame"),
-                    ("wrongness", "first_vignette_distal_wrong"),
-                    ("punishment", "first_vignette_distal_punish"),
-                ]:
+                "Between-subject first-vignette summaries for the distal agent only."
+                for dv_name, first_column_name in first_vignette_columns_by_dv.items():
                     for condition_code in ["CC", "CH", "DIV"]:
-                        subset_first = subset[subset["case_code_position_1"] == condition_code]
-                        values = pd.to_numeric(subset_first[first_column_name], errors="coerce")
+                        subset_first_vignette = subset_dataframe.loc[
+                            subset_dataframe["vignette_condition_position_1"] == condition_code
+                        ].copy()
+
+                        transformed_values = transform_punishment_values_if_requested(
+                            values=subset_first_vignette[first_column_name],
+                            dv_name=dv_name,
+                        )
                         summary_rows.append(
                             {
                                 "inclusion_filter": inclusion_filter_value,
                                 "story_condition": story_condition_value,
                                 "load_condition": load_condition_value,
                                 "analysis_scope": "between_subjects_first_vignette",
-                                "agent_role": "clark",
+                                "agent_role": "distal",
                                 "dv": dv_name,
                                 "condition": condition_code,
-                                "n": int(values.dropna().shape[0]),
-                                "mean": float(values.mean()),
-                                "median": float(values.median()),
-                                "std": float(values.std(ddof=1)),
+                                **summarize_numeric_values(transformed_values),
                             }
                         )
 
-                "Delta summaries (within-subject)"
-                delta_map = {
-                    "blame": ("distal_blame_ch_minus_cc", "distal_blame_div_minus_cc", "proximate_blame_cc_minus_ch", "distal_blame_min_ch_div_minus_cc"),
-                    "wrongness": ("distal_wrong_ch_minus_cc", "distal_wrong_div_minus_cc", "proximate_wrong_cc_minus_ch", "distal_wrong_min_ch_div_minus_cc"),
-                    "punishment": ("distal_punish_ch_minus_cc", "distal_punish_div_minus_cc", "proximate_punish_cc_minus_ch", "distal_punish_min_ch_div_minus_cc"),
+                "Within-subject delta summaries."
+                delta_column_map = {
+                    "blame": {
+                        "CH - CC": "distal_blame_ch_minus_cc",
+                        "DIV - CC": "distal_blame_div_minus_cc",
+                        "MIN(CH, DIV) - CC": "distal_blame_min_ch_div_minus_cc",
+                        "CC - CH": "proximate_blame_cc_minus_ch",
+                    },
+                    "wrong": {
+                        "CH - CC": "distal_wrong_ch_minus_cc",
+                        "DIV - CC": "distal_wrong_div_minus_cc",
+                        "MIN(CH, DIV) - CC": "distal_wrong_min_ch_div_minus_cc",
+                        "CC - CH": "proximate_wrong_cc_minus_ch",
+                    },
+                    "punish": {
+                        "CH - CC": "distal_punish_ch_minus_cc",
+                        "DIV - CC": "distal_punish_div_minus_cc",
+                        "MIN(CH, DIV) - CC": "distal_punish_min_ch_div_minus_cc",
+                        "CC - CH": "proximate_punish_cc_minus_ch",
+                    },
                 }
 
-                for dv_name, (delta_ch, delta_div, delta_prox, delta_min) in delta_map.items():
-                    for delta_name, column_name in [
-                        ("CH-CC", delta_ch),
-                        ("DIV-CC", delta_div),
-                        ("MIN(CH,DIV)-CC", delta_min),
-                        ("CC-CH_proximate", delta_prox),
-                    ]:
-                        values = pd.to_numeric(subset[column_name], errors="coerce")
+                for dv_name, contrast_map in delta_column_map.items():
+                    for contrast_label, column_name in contrast_map.items():
+                        if dv_name == "punish" and punishment_analysis_mode == "log1p_parametric":
+                            if contrast_label == "CH - CC":
+                                transformed_values = build_log1p_punishment_delta(
+                                    subset_dataframe=subset_dataframe,
+                                    left_column_name="distal_punish_ch",
+                                    right_column_name="distal_punish_cc",
+                                )
+                            elif contrast_label == "DIV - CC":
+                                transformed_values = build_log1p_punishment_delta(
+                                    subset_dataframe=subset_dataframe,
+                                    left_column_name="distal_punish_div",
+                                    right_column_name="distal_punish_cc",
+                                )
+                            elif contrast_label == "MIN(CH, DIV) - CC":
+                                transformed_values = build_log1p_punishment_min_delta(
+                                    subset_dataframe=subset_dataframe,
+                                )
+                            elif contrast_label == "CC - CH":
+                                transformed_values = build_log1p_punishment_delta(
+                                    subset_dataframe=subset_dataframe,
+                                    left_column_name="proximate_punish_cc",
+                                    right_column_name="proximate_punish_ch",
+                                )
+                            else:
+                                transformed_values = pd.Series(dtype=float)
+                        else:
+                            transformed_values = pd.to_numeric(
+                                subset_dataframe[column_name],
+                                errors="coerce",
+                            )
+
                         summary_rows.append(
                             {
                                 "inclusion_filter": inclusion_filter_value,
                                 "story_condition": story_condition_value,
                                 "load_condition": load_condition_value,
                                 "analysis_scope": "within_subjects_deltas",
-                                "agent_role": "clark" if "proximate" not in delta_name else "proximate",
+                                "agent_role": ("proximate" if contrast_label == "CC - CH" else "distal"),
                                 "dv": dv_name,
-                                "condition": delta_name,
-                                "n": int(values.dropna().shape[0]),
-                                "mean": float(values.mean()),
-                                "median": float(values.median()),
-                                "std": float(values.std(ddof=1)),
+                                "condition": contrast_label,
+                                **summarize_numeric_values(transformed_values),
                             }
                         )
 
-            dataframes[inclusion_filter_value] = pd.DataFrame(summary_rows)
+        dataframes[inclusion_filter_value] = pd.DataFrame(summary_rows)
 
-    group_summaries = pd.concat(list(dataframe for dataframe in dataframes.values()), axis=0, ignore_index=True)
-    _save_analysis_dataframe_to_processed_folder(dataframe_to_save=group_summaries, 
-                                                 general_settings=general_settings, file_name_key="group_summaries")
+    group_summaries_dataframe = pd.concat(
+        list(dataframes.values()),
+        axis=0,
+        ignore_index=True,
+    )
 
-    return group_summaries
+    _save_analysis_dataframe_to_processed_folder(
+        dataframe_to_save=group_summaries_dataframe,
+        general_settings=general_settings,
+        file_name_key="group_summaries",
+    )
+
+    return group_summaries_dataframe
 
 
 def compute_twoafc_counts(general_settings: GeneralSettings, force_rebuild: bool | None = None, table_form: bool = False) -> pd.DataFrame:
@@ -1814,7 +2823,7 @@ def compute_twoafc_counts(general_settings: GeneralSettings, force_rebuild: bool
                         }
                     )
 
-        add_counts_for_subset(analysis_dataframe, "all")
+        add_counts_for_subset(analysis_dataframe, "pooled")
         add_counts_for_subset(analysis_dataframe[analysis_dataframe["story_condition"] == "firework"], "firework")
         add_counts_for_subset(analysis_dataframe[analysis_dataframe["story_condition"] == "trolley"], "trolley")
 
@@ -1835,7 +2844,7 @@ def compute_twoafc_counts(general_settings: GeneralSettings, force_rebuild: bool
 
 def compute_correlations(general_settings: GeneralSettings, force_rebuild: bool | None = None) -> pd.DataFrame:
     """
-    Computes basic correlations among Clark blame/wrongness/punishment.
+    Computes basic correlations among Clark blame/wrong/punishment.
 
     I compute correlations in two ways:
         • Between-subjects first vignette (one row per participant)
@@ -1873,8 +2882,8 @@ def compute_correlations(general_settings: GeneralSettings, force_rebuild: bool 
         first_wrong = pd.to_numeric(analysis_dataframe["first_vignette_distal_wrong"], errors="coerce")
         first_punish = pd.to_numeric(analysis_dataframe["first_vignette_distal_punish"], errors="coerce")
 
-        for label_a, series_a in [("blame", first_blame), ("wrongness", first_wrong), ("punishment", first_punish)]:
-            for label_b, series_b in [("blame", first_blame), ("wrongness", first_wrong), ("punishment", first_punish)]:
+        for label_a, series_a in [("blame", first_blame), ("wrong", first_wrong), ("punish", first_punish)]:
+            for label_b, series_b in [("blame", first_blame), ("wrong", first_wrong), ("punish", first_punish)]:
                 if label_a >= label_b:
                     continue
                 valid_mask = (~series_a.isna()) & (~series_b.isna())
@@ -1903,8 +2912,8 @@ def compute_correlations(general_settings: GeneralSettings, force_rebuild: bool 
         mean_wrong = pd.to_numeric(analysis_dataframe["distal_wrong_mean"], errors="coerce")
         mean_punish = pd.to_numeric(analysis_dataframe["distal_punish_mean"], errors="coerce")
 
-        for label_a, series_a in [("blame_mean", mean_blame), ("wrongness_mean", mean_wrong), ("punishment_mean", mean_punish)]:
-            for label_b, series_b in [("blame_mean", mean_blame), ("wrongness_mean", mean_wrong), ("punishment_mean", mean_punish)]:
+        for label_a, series_a in [("blame_mean", mean_blame), ("wrong_mean", mean_wrong), ("punish_mean", mean_punish)]:
+            for label_b, series_b in [("blame_mean", mean_blame), ("wrong_mean", mean_wrong), ("punish_mean", mean_punish)]:
                 if label_a >= label_b:
                     continue
                 valid_mask = (~series_a.isna()) & (~series_b.isna())
@@ -2065,14 +3074,14 @@ def compute_consistency_effects(general_settings: GeneralSettings, force_rebuild
             column_cc = f"{dv_prefix}_cc"
             column_ch = f"{dv_prefix}_ch"
 
-            subset_cc_first = analysis_dataframe[analysis_dataframe["case_code_position_1"] == "CC"].copy()
-            subset_ch_first = analysis_dataframe[analysis_dataframe["case_code_position_1"] == "CH"].copy()
+            subset_cc_first = analysis_dataframe[analysis_dataframe["vignette_condition_position_1"] == "CC"].copy()
+            subset_ch_first = analysis_dataframe[analysis_dataframe["vignette_condition_position_1"] == "CH"].copy()
 
             "CH rating: CH-first vs CC-first"
             test_ch_rating = run_welch_t_test_between_groups(
                 pd.concat([subset_ch_first, subset_cc_first], axis=0),
                 dv_column_name=column_ch,
-                group_column_name="case_code_position_1",
+                group_column_name="vignette_condition_position_1",
                 group_a_value="CH",
                 group_b_value="CC",
             )
@@ -2084,7 +3093,7 @@ def compute_consistency_effects(general_settings: GeneralSettings, force_rebuild
             test_cc_rating = run_welch_t_test_between_groups(
                 pd.concat([subset_ch_first, subset_cc_first], axis=0),
                 dv_column_name=column_cc,
-                group_column_name="case_code_position_1",
+                group_column_name="vignette_condition_position_1",
                 group_a_value="CH",
                 group_b_value="CC",
             )
@@ -2331,10 +3340,10 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
     "Human-readable constants and maps."
     "=================================="
     participants_sort_map = {
-        "included": 0,
+        "included_only": 0,
         "all_finishers": 1,
     }
-    story_family_sort_map = {
+    story_condition_sort_map = {
         "pooled": 0,
         "firework": 1,
         "trolley": 2,
@@ -2403,16 +3412,16 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
 
         return float(1 - p_value_two_tailed / 2)
 
-    def filter_dataframe_by_story_family_and_load_condition(
+    def filter_dataframe_by_story_condition_and_load_condition(
         analysis_dataframe: pd.DataFrame,
-        story_family_value: str,
+        story_condition_value: str,
         load_condition_value: str,
     ) -> pd.DataFrame:
         filtered_dataframe = analysis_dataframe.copy()
 
-        if story_family_value != "pooled":
+        if story_condition_value != "pooled":
             filtered_dataframe = filtered_dataframe.loc[
-                filtered_dataframe["story_condition"] == story_family_value
+                filtered_dataframe["story_condition"] == story_condition_value
             ].copy()
 
         if load_condition_value != "pooled":
@@ -2523,8 +3532,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         dv_key: str,
         agent_role: str,
         contrast_type: str,
-        participants: str,
-        story_family: str,
+        inclusion_filter: str,
+        story_condition: str,
         load_condition: str,
         analysis_mode: str,
         transformation: str,
@@ -2533,8 +3542,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
     ) -> str:
         dv_plain_language = dv_plain_language_map[dv_key]
         design_plain_language = design.replace("_", " ")
-        participants_plain_language = participants.replace("_", " ")
-        story_plain_language = story_family
+        inclusion_filter_plain_language = inclusion_filter.replace("_", " ")
+        story_plain_language = story_condition
         load_plain_language = load_condition
 
         if agent_role == "distal":
@@ -2554,7 +3563,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
 
         note_string = (
             f"{analysis_family.capitalize()} {design_plain_language} comparison on {dv_plain_language} "
-            f"for the {agent_plain_language}. Contrast type: {contrast_type}. Participants: {participants_plain_language}. "
+            f"for the {agent_plain_language}. Contrast type: {contrast_type}. Participants: {inclusion_filter_plain_language}. "
             f"Story family: {story_plain_language}. Load condition: {load_plain_language}. "
             f"Analysis mode: {analysis_mode}. Transformation: {transformation_plain_language}. "
             f"The location statistic represented by the contrast columns is the {location_plain_language}. "
@@ -2572,8 +3581,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         test_type: str,
         transformation: str,
         location_statistic_reported: str,
-        participants: str,
-        story_family: str,
+        inclusion_filter: str,
+        story_condition: str,
         load_condition: str,
         design: str,
         dv: str,
@@ -2606,8 +3615,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
             "test_type": test_type,
             "transformation": transformation,
             "location_statistic_reported": location_statistic_reported,
-            "participants": participants,
-            "story_family": story_family,
+            "inclusion_filter": inclusion_filter,
+            "story_condition": story_condition,
             "load_condition": load_condition,
             "design": design,
             "dv": dv,
@@ -2919,7 +3928,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
     def extract_independent_samples_for_between_subjects_contrast(
         subset_dataframe: pd.DataFrame,
         dv_key: str,
-        story_family: str,
+        story_condition: str,
         load_condition: str,
         contrast_type: str,
     ) -> tuple[np.ndarray, np.ndarray, str, str, str]:
@@ -2929,13 +3938,13 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
             return (
                 coerce_numeric_array(
                     subset_dataframe.loc[
-                        subset_dataframe["case_code_position_1"] == "CH",
+                        subset_dataframe["vignette_condition_position_1"] == "CH",
                         first_vignette_column_name,
                     ]
                 ),
                 coerce_numeric_array(
                     subset_dataframe.loc[
-                        subset_dataframe["case_code_position_1"] == "CC",
+                        subset_dataframe["vignette_condition_position_1"] == "CC",
                         first_vignette_column_name,
                     ]
                 ),
@@ -2948,13 +3957,13 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
             return (
                 coerce_numeric_array(
                     subset_dataframe.loc[
-                        subset_dataframe["case_code_position_1"] == "DIV",
+                        subset_dataframe["vignette_condition_position_1"] == "DIV",
                         first_vignette_column_name,
                     ]
                 ),
                 coerce_numeric_array(
                     subset_dataframe.loc[
-                        subset_dataframe["case_code_position_1"] == "CC",
+                        subset_dataframe["vignette_condition_position_1"] == "CC",
                         first_vignette_column_name,
                     ]
                 ),
@@ -2967,13 +3976,13 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
             return (
                 coerce_numeric_array(
                     subset_dataframe.loc[
-                        subset_dataframe["case_code_position_1"] == "CH",
+                        subset_dataframe["vignette_condition_position_1"] == "CH",
                         first_vignette_column_name,
                     ]
                 ),
                 coerce_numeric_array(
                     subset_dataframe.loc[
-                        subset_dataframe["case_code_position_1"] == "DIV",
+                        subset_dataframe["vignette_condition_position_1"] == "DIV",
                         first_vignette_column_name,
                     ]
                 ),
@@ -2987,19 +3996,19 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
 
             sample_ch_raw = coerce_numeric_array(
                 subset_dataframe.loc[
-                    subset_dataframe["case_code_position_1"] == "CH",
+                    subset_dataframe["vignette_condition_position_1"] == "CH",
                     first_vignette_column_name,
                 ]
             )
             sample_div_raw = coerce_numeric_array(
                 subset_dataframe.loc[
-                    subset_dataframe["case_code_position_1"] == "DIV",
+                    subset_dataframe["vignette_condition_position_1"] == "DIV",
                         first_vignette_column_name,
                     ]
             )
             sample_cc_raw = coerce_numeric_array(
                 subset_dataframe.loc[
-                    subset_dataframe["case_code_position_1"] == "CC",
+                    subset_dataframe["vignette_condition_position_1"] == "CC",
                     first_vignette_column_name,
                 ]
             )
@@ -3159,15 +4168,15 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
     "============================================="
     all_test_rows = []
 
-    for participants_label, analysis_dataframe in [
-        ("included", cleaned_dataframe.loc[cleaned_dataframe["included"] == True].copy()),  # noqa: E712
+    for inclusion_filter_label, analysis_dataframe in [
+        ("included_only", cleaned_dataframe.loc[cleaned_dataframe["included"] == True].copy()),  # noqa: E712
         ("all_finishers", cleaned_dataframe.copy()),
     ]:
-        for story_family_value in ["pooled", "firework", "trolley"]:
+        for story_condition_value in ["pooled", "firework", "trolley"]:
             for load_condition_value in ["pooled", "high", "low"]:
-                subset_dataframe = filter_dataframe_by_story_family_and_load_condition(
+                subset_dataframe = filter_dataframe_by_story_condition_and_load_condition(
                     analysis_dataframe=analysis_dataframe,
-                    story_family_value=story_family_value,
+                    story_condition_value=story_condition_value,
                     load_condition_value=load_condition_value,
                 )
 
@@ -3184,15 +4193,15 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                         sample_a_raw, sample_b_raw, group_a_label, group_b_label, extra_detail = extract_independent_samples_for_between_subjects_contrast(
                             subset_dataframe=subset_dataframe,
                             dv_key=dv_key,
-                            story_family=story_family_value,
+                            story_condition=story_condition_value,
                             load_condition=load_condition_value,
                             contrast_type=contrast_type,
                         )
 
                         is_confirmatory_row = (
                             dv_key == "blame"
-                            and participants_label == "included"
-                            and story_family_value == "pooled"
+                            and inclusion_filter_label == "included_only"
+                            and story_condition_value == "pooled"
                             and load_condition_value == "pooled"
                             and contrast_type in {"CH - CC", "DIV - CC"}
                         )
@@ -3201,7 +4210,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                             pooled_ols_rows_dataframe = run_pooled_ols_planned_contrasts(
                                 dataframe=subset_dataframe,
                                 dv_column_name=dv_specifications[dv_key]["first_vignette_column"],
-                                group_column_name="case_code_position_1",
+                                group_column_name="vignette_condition_position_1",
                                 covariance_type=confirmatory_pooled_ols_covariance_type,
                             ).copy()
 
@@ -3225,8 +4234,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                                 test_type="pooled_ols_planned_contrast",
                                 transformation="none",
                                 location_statistic_reported="mean_difference",
-                                participants=participants_label,
-                                story_family=story_family_value,
+                                inclusion_filter=inclusion_filter_label,
+                                story_condition=story_condition_value,
                                 load_condition=load_condition_value,
                                 design="between_subjects",
                                 dv=dv_key,
@@ -3257,8 +4266,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                                     dv_key=dv_key,
                                     agent_role="distal",
                                     contrast_type=contrast_type,
-                                    participants=participants_label,
-                                    story_family=story_family_value,
+                                    inclusion_filter=inclusion_filter_label,
+                                    story_condition=story_condition_value,
                                     load_condition=load_condition_value,
                                     analysis_mode="raw_parametric",
                                     transformation="none",
@@ -3288,8 +4297,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                                 test_type=independent_samples_test_row["test_type"],
                                 transformation=independent_samples_test_row["transformation"],
                                 location_statistic_reported=independent_samples_test_row["location_statistic_reported"],
-                                participants=participants_label,
-                                story_family=story_family_value,
+                                inclusion_filter=inclusion_filter_label,
+                                story_condition=story_condition_value,
                                 load_condition=load_condition_value,
                                 design="between_subjects",
                                 dv=dv_key,
@@ -3320,8 +4329,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                                     dv_key=dv_key,
                                     agent_role="distal",
                                     contrast_type=contrast_type,
-                                    participants=participants_label,
-                                    story_family=story_family_value,
+                                    inclusion_filter=inclusion_filter_label,
+                                    story_condition=story_condition_value,
                                     load_condition=load_condition_value,
                                     analysis_mode=independent_samples_test_row["analysis_mode"],
                                     transformation=independent_samples_test_row["transformation"],
@@ -3357,8 +4366,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                             test_type=paired_samples_test_row["test_type"],
                             transformation=paired_samples_test_row["transformation"],
                             location_statistic_reported=paired_samples_test_row["location_statistic_reported"],
-                            participants=participants_label,
-                            story_family=story_family_value,
+                            inclusion_filter=inclusion_filter_label,
+                            story_condition=story_condition_value,
                             load_condition=load_condition_value,
                             design="within_subjects",
                             dv=dv_key,
@@ -3389,8 +4398,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                                 dv_key=dv_key,
                                 agent_role="distal",
                                 contrast_type=contrast_type,
-                                participants=participants_label,
-                                story_family=story_family_value,
+                                inclusion_filter=inclusion_filter_label,
+                                story_condition=story_condition_value,
                                 load_condition=load_condition_value,
                                 analysis_mode=paired_samples_test_row["analysis_mode"],
                                 transformation=paired_samples_test_row["transformation"],
@@ -3418,8 +4427,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                             test_type=paired_samples_test_row["test_type"],
                             transformation=paired_samples_test_row["transformation"],
                             location_statistic_reported=paired_samples_test_row["location_statistic_reported"],
-                            participants=participants_label,
-                            story_family=story_family_value,
+                            inclusion_filter=inclusion_filter_label,
+                            story_condition=story_condition_value,
                             load_condition=load_condition_value,
                             design="within_subjects",
                             dv=dv_key,
@@ -3450,8 +4459,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                                 dv_key=dv_key,
                                 agent_role="proximate",
                                 contrast_type=contrast_type,
-                                participants=participants_label,
-                                story_family=story_family_value,
+                                inclusion_filter=inclusion_filter_label,
+                                story_condition=story_condition_value,
                                 load_condition=load_condition_value,
                                 analysis_mode=paired_samples_test_row["analysis_mode"],
                                 transformation=paired_samples_test_row["transformation"],
@@ -3467,8 +4476,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
 
     confirmatory_row_mask = (
         (dataframe_tests["analysis_family"] == "confirmatory")
-        & (dataframe_tests["participants"] == "included")
-        & (dataframe_tests["story_family"] == "pooled")
+        & (dataframe_tests["inclusion_filter"] == "included_only")
+        & (dataframe_tests["story_condition"] == "pooled")
         & (dataframe_tests["load_condition"] == "pooled")
         & (dataframe_tests["design"] == "between_subjects")
         & (dataframe_tests["dv"] == "blame")
@@ -3499,8 +4508,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
     "======================="
     "Sort and reorder rows."
     "======================="
-    dataframe_tests["participants_sort_order"] = dataframe_tests["participants"].map(participants_sort_map)
-    dataframe_tests["story_family_sort_order"] = dataframe_tests["story_family"].map(story_family_sort_map)
+    dataframe_tests["inclusion_filter_sort_order"] = dataframe_tests["inclusion_filter"].map(participants_sort_map)
+    dataframe_tests["story_condition_sort_order"] = dataframe_tests["story_condition"].map(story_condition_sort_map)
     dataframe_tests["load_condition_sort_order"] = dataframe_tests["load_condition"].map(load_condition_sort_map)
     dataframe_tests["design_sort_order"] = dataframe_tests["design"].map(design_sort_map)
     dataframe_tests["dv_sort_order"] = dataframe_tests["dv"].map(dv_sort_map)
@@ -3514,8 +4523,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
 
     dataframe_tests = dataframe_tests.sort_values(
         by=[
-            "participants_sort_order",
-            "story_family_sort_order",
+            "inclusion_filter_sort_order",
+            "story_condition_sort_order",
             "load_condition_sort_order",
             "design_sort_order",
             "dv_sort_order",
@@ -3526,8 +4535,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         kind="stable",
     ).drop(
         columns=[
-            "participants_sort_order",
-            "story_family_sort_order",
+            "inclusion_filter_sort_order",
+            "story_condition_sort_order",
             "load_condition_sort_order",
             "design_sort_order",
             "dv_sort_order",
@@ -3544,8 +4553,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         "test_type",
         "transformation",
         "location_statistic_reported",
-        "participants",
-        "story_family",
+        "inclusion_filter",
+        "story_condition",
         "load_condition",
         "design",
         "dv",
@@ -3763,7 +4772,7 @@ def _extract_model_coefficient_rows_from_fitted_results(
                 "analysis_scope": analysis_scope,
                 "row_type": "coefficient",
                 "inclusion_filter": inclusion_filter,
-                "story_condition": "all",
+                "story_condition": "pooled",
                 "contrast_label": np.nan,
                 "display_label": term_name,
                 "estimate": float(fitted_model_result.params[term_name]),
@@ -3842,7 +4851,7 @@ def compute_first_vignette_distal_blame_integrated_models(
                 "response_id",
                 "included",
                 "story_condition",
-                "case_code_position_1",
+                "vignette_condition_position_1",
                 "first_vignette_distal_blame",
             ]
         ].copy()
@@ -3855,8 +4864,8 @@ def compute_first_vignette_distal_blame_integrated_models(
             categories=["firework", "trolley"],
             ordered=True,
         )
-        analysis_dataframe["case_code_position_1"] = pd.Categorical(
-            analysis_dataframe["case_code_position_1"],
+        analysis_dataframe["vignette_condition_position_1"] = pd.Categorical(
+            analysis_dataframe["vignette_condition_position_1"],
             categories=["CC", "CH", "DIV"],
             ordered=True,
         )
@@ -3866,12 +4875,12 @@ def compute_first_vignette_distal_blame_integrated_models(
         )
 
         analysis_dataframe = analysis_dataframe.dropna(
-            subset=["first_vignette_distal_blame", "story_condition", "case_code_position_1"]
+            subset=["first_vignette_distal_blame", "story_condition", "vignette_condition_position_1"]
         ).copy()
 
         model_formula_string = (
             "first_vignette_distal_blame ~ "
-            "C(case_code_position_1, Treatment(reference='CC')) * "
+            "C(vignette_condition_position_1, Treatment(reference='CC')) * "
             "C(story_condition, Treatment(reference='firework'))"
         )
 
@@ -3888,14 +4897,14 @@ def compute_first_vignette_distal_blame_integrated_models(
         "Observed cell descriptives"
         observed_descriptives = (
             analysis_dataframe
-            .groupby(["story_condition", "case_code_position_1"], observed=True)["first_vignette_distal_blame"]
+            .groupby(["story_condition", "vignette_condition_position_1"], observed=True)["first_vignette_distal_blame"]
             .agg(["count", "mean", "std", "median"])
             .reset_index()
         )
 
         for _, descriptive_row in observed_descriptives.iterrows():
             story_condition_value: str = str(descriptive_row["story_condition"])
-            vignette_condition_value: str = str(descriptive_row["case_code_position_1"])
+            vignette_condition_value: str = str(descriptive_row["vignette_condition_position_1"])
 
             output_rows.append(
                 {
@@ -3927,11 +4936,11 @@ def compute_first_vignette_distal_blame_integrated_models(
         "Coefficient rows"
         coefficient_meaning_dictionary = {
             "Intercept": "Predicted mean for CC in the firework story family.",
-            "C(case_code_position_1, Treatment(reference='CC'))[T.CH]": "CH - CC in the firework story family.",
-            "C(case_code_position_1, Treatment(reference='CC'))[T.DIV]": "DIV - CC in the firework story family.",
+            "C(vignette_condition_position_1, Treatment(reference='CC'))[T.CH]": "CH - CC in the firework story family.",
+            "C(vignette_condition_position_1, Treatment(reference='CC'))[T.DIV]": "DIV - CC in the firework story family.",
             "C(story_condition, Treatment(reference='firework'))[T.trolley]": "How the CC baseline changes in trolley relative to firework.",
-            "C(case_code_position_1, Treatment(reference='CC'))[T.CH]:C(story_condition, Treatment(reference='firework'))[T.trolley]": "How the CH - CC contrast changes in trolley relative to firework.",
-            "C(case_code_position_1, Treatment(reference='CC'))[T.DIV]:C(story_condition, Treatment(reference='firework'))[T.trolley]": "How the DIV - CC contrast changes in trolley relative to firework.",
+            "C(vignette_condition_position_1, Treatment(reference='CC'))[T.CH]:C(story_condition, Treatment(reference='firework'))[T.trolley]": "How the CH - CC contrast changes in trolley relative to firework.",
+            "C(vignette_condition_position_1, Treatment(reference='CC'))[T.DIV]:C(story_condition, Treatment(reference='firework'))[T.trolley]": "How the DIV - CC contrast changes in trolley relative to firework.",
         }
 
         output_rows.extend(
@@ -3957,13 +4966,13 @@ def compute_first_vignette_distal_blame_integrated_models(
         ]:
             pooled_grid_group_a = pd.DataFrame(
                 {
-                    "case_code_position_1": [contrast_group_a_value, contrast_group_a_value],
+                    "vignette_condition_position_1": [contrast_group_a_value, contrast_group_a_value],
                     "story_condition": ["firework", "trolley"],
                 }
             )
             pooled_grid_group_b = pd.DataFrame(
                 {
-                    "case_code_position_1": [contrast_group_b_value, contrast_group_b_value],
+                    "vignette_condition_position_1": [contrast_group_b_value, contrast_group_b_value],
                     "story_condition": ["firework", "trolley"],
                 }
             )
@@ -3977,7 +4986,7 @@ def compute_first_vignette_distal_blame_integrated_models(
                     model_variant="primary_hc3_ols",
                     analysis_scope="between_subjects_first_vignette",
                     inclusion_filter=inclusion_filter_value,
-                    story_condition="all",
+                    story_condition="pooled",
                     contrast_label=contrast_label,
                     display_label=f"Between-subj | {inclusion_filter_value} | Pooled | {contrast_label}",
                     formula_string=model_formula_string,
@@ -3991,13 +5000,13 @@ def compute_first_vignette_distal_blame_integrated_models(
             for story_condition_value in ["firework", "trolley"]:
                 story_grid_group_a = pd.DataFrame(
                     {
-                        "case_code_position_1": [contrast_group_a_value],
+                        "vignette_condition_position_1": [contrast_group_a_value],
                         "story_condition": [story_condition_value],
                     }
                 )
                 story_grid_group_b = pd.DataFrame(
                     {
-                        "case_code_position_1": [contrast_group_b_value],
+                        "vignette_condition_position_1": [contrast_group_b_value],
                         "story_condition": [story_condition_value],
                     }
                 )
@@ -4046,7 +5055,7 @@ def compute_first_vignette_distal_blame_integrated_models(
                     "analysis_scope": "between_subjects_first_vignette",
                     "row_type": "omnibus_test",
                     "inclusion_filter": inclusion_filter_value,
-                    "story_condition": "all",
+                    "story_condition": "pooled",
                     "contrast_label": "condition_by_story_interaction",
                     "display_label": f"Between-subj | {inclusion_filter_value} | Omnibus story interaction",
                     "estimate": np.nan,
@@ -4168,9 +5177,9 @@ def compute_within_subject_distal_blame_integrated_models(
                 "response_id",
                 "included",
                 "story_condition",
-                "case_code_position_1",
-                "case_code_position_2",
-                "case_code_position_3",
+                "vignette_condition_position_1",
+                "vignette_condition_position_2",
+                "vignette_condition_position_3",
                 "distal_blame_cc",
                 "distal_blame_ch",
                 "distal_blame_div",
@@ -4186,9 +5195,9 @@ def compute_within_subject_distal_blame_integrated_models(
 
         for _, participant_row in wide_analysis_dataframe.iterrows():
             vignette_position_by_condition = {
-                participant_row["case_code_position_1"]: 1,
-                participant_row["case_code_position_2"]: 2,
-                participant_row["case_code_position_3"]: 3,
+                participant_row["vignette_condition_position_1"]: 1,
+                participant_row["vignette_condition_position_2"]: 2,
+                participant_row["vignette_condition_position_3"]: 3,
             }
 
             for vignette_condition_value in ["CC", "CH", "DIV"]:
@@ -4279,7 +5288,7 @@ def compute_within_subject_distal_blame_integrated_models(
                     "analysis_scope": "within_subjects_repeated_measures",
                     "row_type": "observed_descriptive",
                     "inclusion_filter": inclusion_filter_value,
-                    "story_condition": "all",
+                    "story_condition": "pooled",
                     "contrast_label": np.nan,
                     "display_label": f"Within-subj | {inclusion_filter_value} | {vignette_condition_value} observed mean",
                     "estimate": float(descriptive_row["mean"]),
@@ -4364,7 +5373,7 @@ def compute_within_subject_distal_blame_integrated_models(
                     model_variant="primary_gee_condition_story_plus_position",
                     analysis_scope="within_subjects_repeated_measures",
                     inclusion_filter=inclusion_filter_value,
-                    story_condition="all",
+                    story_condition="pooled",
                     contrast_label=contrast_label,
                     display_label=f"Within-subj | {inclusion_filter_value} | Pooled | {contrast_label}",
                     formula_string=primary_formula_string,
@@ -4439,7 +5448,7 @@ def compute_within_subject_distal_blame_integrated_models(
                     "analysis_scope": "within_subjects_repeated_measures",
                     "row_type": "omnibus_test",
                     "inclusion_filter": inclusion_filter_value,
-                    "story_condition": "all",
+                    "story_condition": "pooled",
                     "contrast_label": "condition_by_story_interaction",
                     "display_label": f"Within-subj | {inclusion_filter_value} | Omnibus story interaction",
                     "estimate": np.nan,
@@ -4484,7 +5493,7 @@ def compute_within_subject_distal_blame_integrated_models(
                     "analysis_scope": "within_subjects_repeated_measures",
                     "row_type": "omnibus_test",
                     "inclusion_filter": inclusion_filter_value,
-                    "story_condition": "all",
+                    "story_condition": "pooled",
                     "contrast_label": "condition_by_position_interaction",
                     "display_label": f"Within-subj | {inclusion_filter_value} | Omnibus condition-by-position interaction",
                     "estimate": np.nan,
@@ -4675,7 +5684,6 @@ def _normalize_story_condition_input(story_condition: str | Any = None) -> str |
     """
     Normalizes story-condition filters to the canonical values used in the cleaned dataframe.
     """
-
     if story_condition is None:
         return None
 
@@ -4703,7 +5711,6 @@ def _normalize_load_condition_input(cognitive_load: str | Any = None) -> str | N
     """
     Normalizes cognitive-load filters to the canonical values used in the cleaned dataframe.
     """
-
     if cognitive_load is None:
         return None
 
@@ -4725,12 +5732,11 @@ def _normalize_subjects_input(subjects: str | Any = None) -> str:
     """
     Normalizes the subjects-display option for plotting.
     """
-
     if subjects is None:
         return "both"
 
     subjects_normalized = str(subjects).strip().lower()
-    if subjects_normalized in {"both", "all", "combined", "subplots"}:
+    if subjects_normalized in {"both", "all", "pooled", "combined", "subplots"}:
         return "both"
     if subjects_normalized in {"between", "between-subjects", "between_subjects", "bs"}:
         return "between"
@@ -4787,7 +5793,7 @@ def _normalize_condition_subset_input(conditions: Sequence[str] | str | Any | No
                 "Choice-Choice"
                 "Choice-Chance"
                 "Division"
-                "all"
+                "pooled"
             - If a sequence, each element is normalized individually.
 
     Returns:
@@ -4816,7 +5822,7 @@ def _normalize_condition_subset_input(conditions: Sequence[str] | str | Any | No
     for raw_condition_token in condition_tokens:
         token_normalized = raw_condition_token.strip().lower()
 
-        if token_normalized in {"all", "both", "all_conditions", "all conditions"}:
+        if token_normalized in {"pooled", "both", "all_conditions", "all conditions"}:
             return ["CC", "CH", "DIV"]
         if token_normalized in {"cc", "choice-choice", "choice_choice", "choice choice"}:
             normalized_condition_codes.append("CC")
@@ -4879,7 +5885,7 @@ def _normalize_delta_type_input(delta_type: str | Sequence[str] | Any | None = N
     for raw_delta_token in delta_tokens:
         token_normalized = raw_delta_token.strip().lower()
 
-        if token_normalized in {"both", "all", "all_deltas", "all deltas"}:
+        if token_normalized in {"both", "pooled", "all_deltas", "all deltas"}:
             return ["CH_CC", "DIV_CC"]
         if token_normalized in {"ch_cc", "ch-cc", "ch − cc", "shielding", "chminuscc"}:
             normalized_delta_types.append("CH_CC")
@@ -5300,7 +6306,7 @@ def plot_ratings_by_vignette_condition(
 
     between_long = pd.DataFrame(
         {
-            "condition_code": analysis_dataframe["case_code_position_1"].astype(str).str.upper(),
+            "condition_code": analysis_dataframe["vignette_condition_position_1"].astype(str).str.upper(),
             "rating_value": analysis_dataframe[first_vignette_value_column],
         }
     )
@@ -5874,7 +6880,7 @@ def plot_participant_level_shielding_heatmap(
 
     Arguments:
         • dv: str | Any
-            - Which dependent variable to use. Supported: 'blame', 'wrong', 'punishment'.
+            - Which dependent variable to use. Supported: 'blame', 'wrong', 'punish'.
         • include_marginals: bool
             - If True, show top and right marginal histograms.
         • annotate_regions: bool
@@ -6369,7 +7375,7 @@ def plot_within_subject_pairwise_comparisons(
 
     Arguments:
         • dv: str | Any
-            - Which dependent variable to use. Supported: 'blame', 'wrong', 'punishment'.
+            - Which dependent variable to use. Supported: 'blame', 'wrong', 'punish'.
         • include_proximate_agent: bool
             - If True, include proximate ratings (CC Proximate, CH Proximate).
         • story_condition: str | Any
@@ -6413,7 +7419,7 @@ def plot_within_subject_pairwise_comparisons(
 
         Arguments:
             • dv: str | Any
-                - Which dependent variable to use. Supported: 'blame', 'wrong', 'punishment'.
+                - Which dependent variable to use. Supported: 'blame', 'wrong', 'punish'.
             • include_proximate_agent: bool
                 - If True, include CC Proximate and CH Proximate in addition to the three distal categories.
             • story_condition: str | Any
@@ -6704,7 +7710,7 @@ def plot_shielding_effects_by_cognitive_load(
 
     Arguments:
         • dv: str | Any
-            - Which dependent variable to use. Supported: 'blame', 'wrong', 'punishment'.
+            - Which dependent variable to use. Supported: 'blame', 'wrong', 'punish'.
         • delta_type: str | Sequence[str] | Any | None
             - Which delta(s) to include. Supports:
                 "both"
@@ -7150,7 +8156,7 @@ def plot_trial_order_effects_line_graph(
 
     Arguments:
         • dv: str | Any
-            - Which dependent variable to plot. Supported: 'blame', 'wrong', 'punishment'.
+            - Which dependent variable to plot. Supported: 'blame', 'wrong', 'punish'.
         • conditions: Sequence[str] | str | Any | None
             - Which vignette conditions to plot.
             - Defaults to all three conditions: CC, CH, DIV.
@@ -7244,9 +8250,9 @@ def plot_trial_order_effects_line_graph(
 
         required_columns = [
             "response_id",
-            "case_code_position_1",
-            "case_code_position_2",
-            "case_code_position_3",
+            "vignette_condition_position_1",
+            "vignette_condition_position_2",
+            "vignette_condition_position_3",
             cc_value_column_name,
             ch_value_column_name,
         ]
@@ -7262,9 +8268,9 @@ def plot_trial_order_effects_line_graph(
         pairwise_order_dataframe = analysis_dataframe[
             [
                 "response_id",
-                "case_code_position_1",
-                "case_code_position_2",
-                "case_code_position_3",
+                "vignette_condition_position_1",
+                "vignette_condition_position_2",
+                "vignette_condition_position_3",
                 cc_value_column_name,
                 ch_value_column_name,
             ]
@@ -7272,9 +8278,9 @@ def plot_trial_order_effects_line_graph(
 
         pairwise_order_dataframe["cc_position"] = np.select(
             condlist=[
-                pairwise_order_dataframe["case_code_position_1"] == "CC",
-                pairwise_order_dataframe["case_code_position_2"] == "CC",
-                pairwise_order_dataframe["case_code_position_3"] == "CC",
+                pairwise_order_dataframe["vignette_condition_position_1"] == "CC",
+                pairwise_order_dataframe["vignette_condition_position_2"] == "CC",
+                pairwise_order_dataframe["vignette_condition_position_3"] == "CC",
             ],
             choicelist=[1, 2, 3],
             default=np.nan,
@@ -7282,9 +8288,9 @@ def plot_trial_order_effects_line_graph(
 
         pairwise_order_dataframe["ch_position"] = np.select(
             condlist=[
-                pairwise_order_dataframe["case_code_position_1"] == "CH",
-                pairwise_order_dataframe["case_code_position_2"] == "CH",
-                pairwise_order_dataframe["case_code_position_3"] == "CH",
+                pairwise_order_dataframe["vignette_condition_position_1"] == "CH",
+                pairwise_order_dataframe["vignette_condition_position_2"] == "CH",
+                pairwise_order_dataframe["vignette_condition_position_3"] == "CH",
             ],
             choicelist=[1, 2, 3],
             default=np.nan,
@@ -7551,9 +8557,9 @@ def plot_trial_order_effects_line_graph(
         column_name
         for column_name in [
             "response_id",
-            "case_code_position_1",
-            "case_code_position_2",
-            "case_code_position_3",
+            "vignette_condition_position_1",
+            "vignette_condition_position_2",
+            "vignette_condition_position_3",
             *[condition_code_to_value_column[condition_code] for condition_code in selected_condition_codes],
         ]
         if column_name not in analysis_dataframe.columns
@@ -7572,18 +8578,18 @@ def plot_trial_order_effects_line_graph(
         temp_dataframe = analysis_dataframe[
             [
                 "response_id",
-                "case_code_position_1",
-                "case_code_position_2",
-                "case_code_position_3",
+                "vignette_condition_position_1",
+                "vignette_condition_position_2",
+                "vignette_condition_position_3",
                 value_column_name,
             ]
         ].copy()
 
         temp_dataframe["position_numeric"] = np.select(
             condlist=[
-                temp_dataframe["case_code_position_1"] == selected_condition_code,
-                temp_dataframe["case_code_position_2"] == selected_condition_code,
-                temp_dataframe["case_code_position_3"] == selected_condition_code,
+                temp_dataframe["vignette_condition_position_1"] == selected_condition_code,
+                temp_dataframe["vignette_condition_position_2"] == selected_condition_code,
+                temp_dataframe["vignette_condition_position_3"] == selected_condition_code,
             ],
             choicelist=[1, 2, 3],
             default=np.nan,
@@ -8091,7 +9097,7 @@ def plot_triangulation_2afc_vs_rating_delta(
                 "DIV_CC"
         • dv: str | Any
             - Which dependent variable to use for the numeric delta. Supported:
-                'blame', 'wrong', 'punishment'
+                'blame', 'wrong', 'punish'
             - Note: the current 2AFC columns correspond most directly to blame comparisons.
         • story_condition: str | Any
             - If None, pool stories.
@@ -8301,7 +9307,7 @@ def plot_shielding_by_individual_difference(
         • predictor: str | Any
             - Which individual-difference predictor to use. Supported: 'crt', 'indcol'.
         • dv: str | Any
-            - Which dependent variable to use. Supported: 'blame', 'wrong', 'punishment'.
+            - Which dependent variable to use. Supported: 'blame', 'wrong', 'punish'.
         • delta_type: str | Sequence[str] | Any | None
             - Which delta(s) to include. Supports:
                 "CH_CC"
@@ -8625,7 +9631,7 @@ def plot_shielding_by_individual_difference(
 
 def plot_response_distribution_histogram_by_condition(
     general_settings: GeneralSettings,
-    dv: str | Any = "punishment",
+    dv: str | Any = "punish",
     include_proximate_agent: bool = True,
     story_condition: str | Any = None,
     cognitive_load: str | Any = None,
@@ -8657,7 +9663,7 @@ def plot_response_distribution_histogram_by_condition(
             - Which dependent variable to plot. Supported:
                 "blame"
                 "wrong"
-                "punishment"
+                "punish"
         • include_proximate_agent: bool
             - If True, include CC Proximate and CH Proximate in the dropdown and plot.
             - If False, only the three distal series are shown.
@@ -9223,62 +10229,169 @@ def _pretty_print_table_to_terminal(
 
 def _extract_exact_test_row_from_test_csv(
     dataframe_tests: pd.DataFrame,
-    dv: str,
-    group_a: str,
-    group_b: str,
     inclusion_filter: str,
-    story_condition: str = "all",
-    load_condition: str = "all",
+    story_family: str,
+    load_condition: str,
+    design: str,
+    dv: str,
+    agent_role: str,
+    contrast_type: str,
     analysis_family: str | None = None,
 ) -> pd.Series:
     """
-    Extract exactly one row from tests.csv.
+    Extract exactly one row from responsibility_shielding_tests.csv.
 
     Arguments:
         • dataframe_tests: pd.DataFrame
-            - Output of run_confirmatory_and_exploratory_tests.
-        • dv: str
-            - Dependent-variable row label.
-        • group_a: str
-            - Left-hand group label.
-        • group_b: str
-            - Right-hand group label.
+            - Dataframe loaded from responsibility_shielding_tests.csv.
         • inclusion_filter: str
-            - included_only or all_finishers.
-        • story_condition: str
-            - all, firework, trolley.
+            - "included_only" or "all_finishers"
+        • story_family: str
+            - "pooled", "firework", or "trolley"
         • load_condition: str
-            - all, high, low.
+            - "pooled", "high", or "low"
+        • design: str
+            - "between_subjects" or "within_subjects"
+        • dv: str
+            - "blame", "wrong", or "punish"
+        • agent_role: str
+            - "distal" or "proximate"
+        • contrast_type: str
+            - E.g. "CH - CC", "DIV - CC", "CH - DIV", "MIN(CH, DIV) - CC", "CC - CH"
         • analysis_family: str | None
-            - Optional confirmatory/exploratory family filter.
+            - "confirmatory", "exploratory", or None to ignore this column.
 
     Returns:
         • pd.Series
-            - The unique matching row.
+            - Exactly one matching row.
+
+    Notes:
+        • This helper is tolerant to minor schema drift while the codebase is being standardized.
+        • It accepts the preferred logical names and maps them onto whichever concrete column names
+          currently exist in tests.csv.
     """
+    tests_dataframe = dataframe_tests.copy()
+
+    participants_column_name = (
+        "inclusion_filter" if "inclusion_filter" in tests_dataframe.columns else "participants"
+    )
+    story_family_column_name = (
+        "story_condition" if "story_condition" in tests_dataframe.columns else "story_family"
+    )
+    contrast_type_column_name = (
+        "contrast_or_condition" if "contrast_or_condition" in tests_dataframe.columns else "contrast_type"
+    )
+
+    def normalize_inclusion_filter_value(value: str) -> set[str]:
+        if value in {"included_only", "included"}:
+            return {"included_only", "included"}
+        if value == "all_finishers":
+            return {"all_finishers"}
+        return {value}
+
+    def normalize_story_family_value(value: str) -> set[str]:
+        if value in {"pooled", "all"}:
+            return {"pooled", "all"}
+        return {value}
+
+    def normalize_agent_role_value(value: str) -> set[str]:
+        if value in {"distal", "clark"}:
+            return {"distal", "clark"}
+        return {value}
+
+    def normalize_dv_value(value: str) -> set[str]:
+        if value in {"wrong", "wrongness"}:
+            return {"wrong", "wrongness"}
+        if value in {"punish", "punishment"}:
+            return {"punish", "punishment"}
+        return {value}
+
+    valid_inclusion_filter_values = normalize_inclusion_filter_value(inclusion_filter)
+    valid_story_family_values = normalize_story_family_value(story_family)
+    valid_agent_role_values = normalize_agent_role_value(agent_role)
+    valid_dv_values = normalize_dv_value(dv)
+
     row_mask = (
-        (dataframe_tests["dv"] == dv)
-        & (dataframe_tests["group_a"] == group_a)
-        & (dataframe_tests["group_b"] == group_b)
-        & (dataframe_tests["inclusion_filter"] == inclusion_filter)
-        & (dataframe_tests["story_condition"] == story_condition)
-        & (dataframe_tests["load_condition"] == load_condition)
+        tests_dataframe[participants_column_name].isin(valid_inclusion_filter_values)
+        & tests_dataframe[story_family_column_name].isin(valid_story_family_values)
+        & (tests_dataframe["load_condition"] == load_condition)
+        & (tests_dataframe["design"] == design)
+        & tests_dataframe["dv"].isin(valid_dv_values)
+        & tests_dataframe["agent_role"].isin(valid_agent_role_values)
+        & (tests_dataframe[contrast_type_column_name] == contrast_type)
     )
 
     if analysis_family is not None:
-        row_mask = row_mask & (dataframe_tests["analysis_family"] == analysis_family)
+        row_mask = row_mask & (tests_dataframe["analysis_family"] == analysis_family)
 
-    matching_rows = dataframe_tests.loc[row_mask].copy()
+    matching_rows = tests_dataframe.loc[row_mask].copy()
 
     if matching_rows.shape[0] != 1:
         raise Exception(
-            f"Expected exactly one row in tests.csv for dv={dv!r}, group_a={group_a!r}, "
-            f"group_b={group_b!r}, inclusion_filter={inclusion_filter!r}, "
-            f"story_condition={story_condition!r}, load_condition={load_condition!r}, "
-            f"analysis_family={analysis_family!r}, but found {matching_rows.shape[0]} rows."
+            "Expected exactly one row in tests.csv for "
+            f"inclusion_filter={inclusion_filter!r}, "
+            f"story_family={story_family!r}, "
+            f"load_condition={load_condition!r}, "
+            f"design={design!r}, "
+            f"dv={dv!r}, "
+            f"agent_role={agent_role!r}, "
+            f"contrast_type={contrast_type!r}, "
+            f"analysis_family={analysis_family!r}, "
+            f"but found {matching_rows.shape[0]} rows."
         )
 
     return matching_rows.iloc[0]
+
+
+def _extract_estimate_from_test_row(row_series: pd.Series) -> float:
+    """
+    Extract the estimate that should be reported from one tests.csv row.
+
+    Arguments:
+        • row_series: pd.Series
+            - One row from responsibility_shielding_tests.csv.
+
+    Returns:
+        • float
+            - mean_difference_a_minus_b or median_difference_a_minus_b, depending on
+              location_statistic_reported.
+    """
+    location_statistic_reported = str(row_series["location_statistic_reported"]).strip().lower()
+
+    if location_statistic_reported == "median_difference":
+        return float(row_series["median_difference_a_minus_b"])
+
+    return float(row_series["mean_difference_a_minus_b"])
+
+
+def _extract_reported_p_value_from_test_row(
+    row_series: pd.Series,
+    general_settings: GeneralSettings,
+    use_holm_if_available: bool = False,
+) -> float:
+    """
+    Extract the p-value that should be displayed from one tests.csv row.
+
+    Arguments:
+        • row_series: pd.Series
+            - One row from responsibility_shielding_tests.csv.
+        • general_settings: GeneralSettings
+            - Master settings dictionary.
+        • use_holm_if_available: bool
+            - If True, use p_value_holm when present and non-missing.
+
+    Returns:
+        • float
+            - Holm-corrected p-value if requested and available, otherwise the one- or two-tailed
+              p-value depending on general_settings["misc"]["one_tailed"].
+    """
+    if use_holm_if_available and "p_value_holm" in row_series.index and pd.notna(row_series["p_value_holm"]):
+        return float(row_series["p_value_holm"])
+
+    if general_settings["misc"].get("one_tailed", False):
+        return float(row_series["p_value_one_tailed"])
+
+    return float(row_series["p_value_two_tailed"])
 
 
 def _extract_exact_consistency_row_from_csv(
@@ -9313,52 +10426,6 @@ def _extract_exact_consistency_row_from_csv(
             f"Expected exactly one row in consistency_effects.csv for "
             f"inclusion_filter={inclusion_filter!r}, comparison={comparison!r}, "
             f"but found {matching_rows.shape[0]} rows."
-        )
-
-    return matching_rows.iloc[0]
-
-
-def _extract_exact_integrated_contrast_row(
-    dataframe_integrated_models: pd.DataFrame,
-    analysis_scope: str,
-    inclusion_filter: str,
-    story_condition: str,
-    contrast_label: str,
-) -> pd.Series:
-    """
-    Extract exactly one contrast row from the integrated-model CSV.
-
-    Arguments:
-        • dataframe_integrated_models: pd.DataFrame
-            - Output of compute_integrated_distal_blame_results.
-        • analysis_scope: str
-            - between_subjects_first_vignette or within_subjects_repeated_measures.
-        • inclusion_filter: str
-            - included_only or all_finishers.
-        • story_condition: str
-            - all, firework, trolley.
-        • contrast_label: str
-            - CH - CC, DIV - CC, or CH - DIV.
-
-    Returns:
-        • pd.Series
-            - The unique matching contrast row.
-    """
-    row_mask = (
-        (dataframe_integrated_models["analysis_scope"] == analysis_scope)
-        & (dataframe_integrated_models["row_type"] == "contrast")
-        & (dataframe_integrated_models["inclusion_filter"] == inclusion_filter)
-        & (dataframe_integrated_models["story_condition"] == story_condition)
-        & (dataframe_integrated_models["contrast_label"] == contrast_label)
-    )
-
-    matching_rows = dataframe_integrated_models.loc[row_mask].copy()
-
-    if matching_rows.shape[0] != 1:
-        raise Exception(
-            f"Expected exactly one integrated-model contrast row for analysis_scope={analysis_scope!r}, "
-            f"inclusion_filter={inclusion_filter!r}, story_condition={story_condition!r}, "
-            f"contrast_label={contrast_label!r}, but found {matching_rows.shape[0]} rows."
         )
 
     return matching_rows.iloc[0]
@@ -9534,9 +10601,9 @@ def compute_manuscript_table_1_participant_counts(
     def count_subset(subset_dataframe: pd.DataFrame) -> dict[str, Any]:
         return {
             "Subjects": "Included" if subset_dataframe["included"].eq(True).all() else "Everyone",
-            "CC": int((subset_dataframe["case_code_position_1"] == "CC").sum()),
-            "CH": int((subset_dataframe["case_code_position_1"] == "CH").sum()),
-            "DIV": int((subset_dataframe["case_code_position_1"] == "DIV").sum()),
+            "CC": int((subset_dataframe["vignette_condition_position_1"] == "CC").sum()),
+            "CH": int((subset_dataframe["vignette_condition_position_1"] == "CH").sum()),
+            "DIV": int((subset_dataframe["vignette_condition_position_1"] == "DIV").sum()),
             "Firework": int((subset_dataframe["story_condition"] == "firework").sum()),
             "Trolley": int((subset_dataframe["story_condition"] == "trolley").sum()),
             "High": int((subset_dataframe["load_condition"] == "high").sum()),
@@ -9657,116 +10724,60 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
         force_rebuild=force_rebuild,
     ).copy()
 
+    inclusion_filter_column_name = (
+        "participants" if "participants" in group_summaries_dataframe.columns else "inclusion_filter"
+    )
+    story_condition_column_name = (
+        "story_family" if "story_family" in group_summaries_dataframe.columns else "story_condition"
+    )
+    analysis_scope_column_name = (
+        "design" if "design" in group_summaries_dataframe.columns else "analysis_scope"
+    )
+
+    def normalize_inclusion_filter_for_group_summaries(value: str) -> set[str]:
+        if value in {"included_only", "included"}:
+            return {"included_only", "included"}
+        if value == "all_finishers":
+            return {"all_finishers"}
+        return {value}
+
     group_summaries_dataframe = group_summaries_dataframe.loc[
-        (group_summaries_dataframe["inclusion_filter"] == inclusion_filter)
-        & (group_summaries_dataframe["load_condition"] == "all")
+        group_summaries_dataframe[inclusion_filter_column_name].isin(
+            normalize_inclusion_filter_for_group_summaries(inclusion_filter)
+        )
+        & (group_summaries_dataframe["load_condition"] == "pooled")
     ].copy()
 
     story_condition_display_map = {
-        "all": "Pooled",
+        "pooled": "Pooled",
         "firework": "Firework",
         "trolley": "Trolley",
     }
 
     dv_short_map = {
         "blame": "Blame",
-        "wrongness": "Wrong",
-        "punishment": "Punish",
+        "wrong": "Wrong",
+        "punish": "Punish",
     }
 
     row_specifications: list[dict[str, str]] = [
-        {
-            "dv": "blame",
-            "condition_code": "CC",
-            "condition_display": "CC Distal",
-            "agent_role": "clark",
-        },
-        {
-            "dv": "blame",
-            "condition_code": "CH",
-            "condition_display": "CH Distal",
-            "agent_role": "clark",
-        },
-        {
-            "dv": "blame",
-            "condition_code": "DIV",
-            "condition_display": "DIV Distal",
-            "agent_role": "clark",
-        },
-        {
-            "dv": "blame",
-            "condition_code": "CC",
-            "condition_display": "CC Proximate",
-            "agent_role": "proximate",
-        },
-        {
-            "dv": "blame",
-            "condition_code": "CH",
-            "condition_display": "CH Proximate",
-            "agent_role": "proximate",
-        },
+        {"dv": "blame", "condition_code": "CC", "condition_display": "CC Distal", "agent_role": "distal"},
+        {"dv": "blame", "condition_code": "CH", "condition_display": "CH Distal", "agent_role": "distal"},
+        {"dv": "blame", "condition_code": "DIV", "condition_display": "DIV Distal", "agent_role": "distal"},
+        {"dv": "blame", "condition_code": "CC", "condition_display": "CC Proximate", "agent_role": "proximate"},
+        {"dv": "blame", "condition_code": "CH", "condition_display": "CH Proximate", "agent_role": "proximate"},
 
-        {
-            "dv": "wrongness",
-            "condition_code": "CC",
-            "condition_display": "CC Distal",
-            "agent_role": "clark",
-        },
-        {
-            "dv": "wrongness",
-            "condition_code": "CH",
-            "condition_display": "CH Distal",
-            "agent_role": "clark",
-        },
-        {
-            "dv": "wrongness",
-            "condition_code": "DIV",
-            "condition_display": "DIV Distal",
-            "agent_role": "clark",
-        },
-        {
-            "dv": "wrongness",
-            "condition_code": "CC",
-            "condition_display": "CC Proximate",
-            "agent_role": "proximate",
-        },
-        {
-            "dv": "wrongness",
-            "condition_code": "CH",
-            "condition_display": "CH Proximate",
-            "agent_role": "proximate",
-        },
+        {"dv": "wrong", "condition_code": "CC", "condition_display": "CC Distal", "agent_role": "distal"},
+        {"dv": "wrong", "condition_code": "CH", "condition_display": "CH Distal", "agent_role": "distal"},
+        {"dv": "wrong", "condition_code": "DIV", "condition_display": "DIV Distal", "agent_role": "distal"},
+        {"dv": "wrong", "condition_code": "CC", "condition_display": "CC Proximate", "agent_role": "proximate"},
+        {"dv": "wrong", "condition_code": "CH", "condition_display": "CH Proximate", "agent_role": "proximate"},
 
-        {
-            "dv": "punishment",
-            "condition_code": "CC",
-            "condition_display": "CC Distal",
-            "agent_role": "clark",
-        },
-        {
-            "dv": "punishment",
-            "condition_code": "CH",
-            "condition_display": "CH Distal",
-            "agent_role": "clark",
-        },
-        {
-            "dv": "punishment",
-            "condition_code": "DIV",
-            "condition_display": "DIV Distal",
-            "agent_role": "clark",
-        },
-        {
-            "dv": "punishment",
-            "condition_code": "CC",
-            "condition_display": "CC Proximate",
-            "agent_role": "proximate",
-        },
-        {
-            "dv": "punishment",
-            "condition_code": "CH",
-            "condition_display": "CH Proximate",
-            "agent_role": "proximate",
-        },
+        {"dv": "punish", "condition_code": "CC", "condition_display": "CC Distal", "agent_role": "distal"},
+        {"dv": "punish", "condition_code": "CH", "condition_display": "CH Distal", "agent_role": "distal"},
+        {"dv": "punish", "condition_code": "DIV", "condition_display": "DIV Distal", "agent_role": "distal"},
+        {"dv": "punish", "condition_code": "CC", "condition_display": "CC Proximate", "agent_role": "proximate"},
+        {"dv": "punish", "condition_code": "CH", "condition_display": "CH Proximate", "agent_role": "proximate"},
     ]
 
     story_condition_sort_order = {
@@ -9790,9 +10801,15 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
         dv_value: str,
         condition_code: str,
     ) -> pd.Series | None:
+        valid_analysis_scope_values = {analysis_scope}
+        if analysis_scope == "within_subjects_all_vignettes":
+            valid_analysis_scope_values.add("within_subjects")
+        if analysis_scope == "between_subjects_first_vignette":
+            valid_analysis_scope_values.add("between_subjects")
+
         matching_rows = group_summaries_dataframe.loc[
-            (group_summaries_dataframe["analysis_scope"] == analysis_scope)
-            & (group_summaries_dataframe["story_condition"] == story_condition)
+            group_summaries_dataframe[analysis_scope_column_name].isin(valid_analysis_scope_values)
+            & (group_summaries_dataframe[story_condition_column_name] == story_condition)
             & (group_summaries_dataframe["agent_role"] == agent_role)
             & (group_summaries_dataframe["dv"] == dv_value)
             & (group_summaries_dataframe["condition"] == condition_code)
@@ -9810,11 +10827,9 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
 
         return matching_rows.iloc[0]
 
-    "Build a flat intermediate record per story condition, DV, and condition with all statistics."
-
     intermediate_rows: list[dict[str, Any]] = []
 
-    for story_condition in ["all", "firework", "trolley"]:
+    for story_condition in ["pooled", "firework", "trolley"]:
         story_condition_display = story_condition_display_map[story_condition]
 
         for row_specification in row_specifications:
@@ -9831,49 +10846,25 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
                 condition_code=condition_code,
             )
 
-            if agent_role == "clark":
+            if agent_role == "distal":
                 first_vignette_summary_row = extract_summary_row(
                     analysis_scope="between_subjects_first_vignette",
                     story_condition=story_condition,
-                    agent_role="clark",
+                    agent_role="distal",
                     dv_value=dv_value,
                     condition_code=condition_code,
                 )
-                first_vignette_mean = (
-                    float(first_vignette_summary_row["mean"])
-                    if first_vignette_summary_row is not None
-                    else np.nan
-                )
-                first_vignette_median = (
-                    float(first_vignette_summary_row["median"])
-                    if first_vignette_summary_row is not None
-                    else np.nan
-                )
-                first_vignette_std = (
-                    float(first_vignette_summary_row["std"])
-                    if first_vignette_summary_row is not None
-                    else np.nan
-                )
+                first_vignette_mean = float(first_vignette_summary_row["mean"]) if first_vignette_summary_row is not None else np.nan
+                first_vignette_median = float(first_vignette_summary_row["median"]) if first_vignette_summary_row is not None else np.nan
+                first_vignette_std = float(first_vignette_summary_row["std"]) if first_vignette_summary_row is not None else np.nan
             else:
                 first_vignette_mean = np.nan
                 first_vignette_median = np.nan
                 first_vignette_std = np.nan
 
-            all_vignettes_mean = (
-                float(all_vignettes_summary_row["mean"])
-                if all_vignettes_summary_row is not None
-                else np.nan
-            )
-            all_vignettes_median = (
-                float(all_vignettes_summary_row["median"])
-                if all_vignettes_summary_row is not None
-                else np.nan
-            )
-            all_vignettes_std = (
-                float(all_vignettes_summary_row["std"])
-                if all_vignettes_summary_row is not None
-                else np.nan
-            )
+            all_vignettes_mean = float(all_vignettes_summary_row["mean"]) if all_vignettes_summary_row is not None else np.nan
+            all_vignettes_median = float(all_vignettes_summary_row["median"]) if all_vignettes_summary_row is not None else np.nan
+            all_vignettes_std = float(all_vignettes_summary_row["std"]) if all_vignettes_summary_row is not None else np.nan
 
             intermediate_rows.append(
                 {
@@ -9894,23 +10885,13 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
 
     intermediate_dataframe = pd.DataFrame(intermediate_rows)
 
-    "Shape the output table according to include_medians / include_std."
-
     use_wide_format = not include_medians and not include_std
 
     if use_wide_format:
-        "One row per Story Condition and Condition; DVs spread across columns."
-
         wide_rows: list[dict[str, Any]] = []
 
-        for story_condition_display, _ in sorted(
-            story_condition_sort_order.items(),
-            key=lambda item: item[1],
-        ):
-            for condition_display, _ in sorted(
-                condition_sort_order.items(),
-                key=lambda item: item[1],
-            ):
+        for story_condition_display, _ in sorted(story_condition_sort_order.items(), key=lambda item: item[1]):
+            for condition_display, _ in sorted(condition_sort_order.items(), key=lambda item: item[1]):
                 condition_group = intermediate_dataframe.loc[
                     (intermediate_dataframe["Story Condition"] == story_condition_display)
                     & (intermediate_dataframe["Condition"] == condition_display)
@@ -9941,22 +10922,14 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
         dataframe_table_flat = pd.DataFrame(wide_rows)[column_order]
 
     else:
-        "One row per Story Condition, Vignette, and Condition; DVs as column groups."
-
         long_rows: list[dict[str, Any]] = []
 
-        for story_condition_display, _ in sorted(
-            story_condition_sort_order.items(),
-            key=lambda item: item[1],
-        ):
+        for story_condition_display, _ in sorted(story_condition_sort_order.items(), key=lambda item: item[1]):
             for vignette_label, mean_key, median_key, std_key in [
                 ("First", "first_mean", "first_median", "first_std"),
                 ("All", "all_mean", "all_median", "all_std"),
             ]:
-                for condition_display, _ in sorted(
-                    condition_sort_order.items(),
-                    key=lambda item: item[1],
-                ):
+                for condition_display, _ in sorted(condition_sort_order.items(), key=lambda item: item[1]):
                     condition_group = intermediate_dataframe.loc[
                         (intermediate_dataframe["Story Condition"] == story_condition_display)
                         & (intermediate_dataframe["Condition"] == condition_display)
@@ -9979,26 +10952,11 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
                     long_rows.append(long_row)
 
         mean_columns = ["Blame Mean", "Wrong Mean", "Punish Mean"]
-        median_columns = (
-            ["Blame Median", "Wrong Median", "Punish Median"]
-            if include_medians
-            else []
-        )
-        std_columns = (
-            ["Blame Std", "Wrong Std", "Punish Std"]
-            if include_std
-            else []
-        )
+        median_columns = ["Blame Median", "Wrong Median", "Punish Median"] if include_medians else []
+        std_columns = ["Blame Std", "Wrong Std", "Punish Std"] if include_std else []
 
-        column_order = (
-            ["Story Condition", "Vignette", "Condition"]
-            + mean_columns
-            + median_columns
-            + std_columns
-        )
+        column_order = ["Story Condition", "Vignette", "Condition"] + mean_columns + median_columns + std_columns
         dataframe_table_flat = pd.DataFrame(long_rows)[column_order]
-
-    "Save flat CSV."
 
     _save_table_dataframe_to_tables_folder(
         dataframe_table=dataframe_table_flat,
@@ -10006,18 +10964,12 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
         table_file_name=table_file_name,
     )
 
-    "Optionally save a pretty multilevel CSV."
-
     if save_pretty_multilevel_version:
         pretty_dataframe = dataframe_table_flat.copy()
 
-        float_columns = [
-            col
-            for col in pretty_dataframe.columns
-            if col not in {"Story Condition", "Vignette", "Condition"}
-        ]
-        for col in float_columns:
-            pretty_dataframe[col] = pretty_dataframe[col].map(
+        float_columns = [column_name for column_name in pretty_dataframe.columns if column_name not in {"Story Condition", "Vignette", "Condition"}]
+        for column_name in float_columns:
+            pretty_dataframe[column_name] = pretty_dataframe[column_name].map(
                 lambda value: "—" if pd.isna(value) else f"{float(value):.2f}"
             )
 
@@ -10036,34 +10988,16 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
             )
         else:
             mean_tuples = [("Mean", dv) for dv in ["Blame", "Wrong", "Punish"]]
-            median_tuples = (
-                [("Median", dv) for dv in ["Blame", "Wrong", "Punish"]]
-                if include_medians
-                else []
-            )
-            std_tuples = (
-                [("Std", dv) for dv in ["Blame", "Wrong", "Punish"]]
-                if include_std
-                else []
-            )
+            median_tuples = [("Median", dv) for dv in ["Blame", "Wrong", "Punish"]] if include_medians else []
+            std_tuples = [("Std", dv) for dv in ["Blame", "Wrong", "Punish"]] if include_std else []
 
             pretty_dataframe.columns = pd.MultiIndex.from_tuples(
-                [
-                    ("", "Story Condition"),
-                    ("", "Vignette"),
-                    ("", "Condition"),
-                ]
-                + mean_tuples
-                + median_tuples
-                + std_tuples
+                [("", "Story Condition"), ("", "Vignette"), ("", "Condition")] + mean_tuples + median_tuples + std_tuples
             )
 
-        pretty_table_file_path = (
-            general_settings["filing"]["file_paths"]["tables"]
-            / table_file_name.replace(".csv", "_Pretty.csv")
-        )
-        pretty_table_file_path.parent.mkdir(parents=True, exist_ok=True)
-        pretty_dataframe.to_csv(pretty_table_file_path, index=False, encoding="utf-8-sig")
+        pretty_file_name = table_file_name.replace(".csv", "_Pretty.csv")
+        pretty_file_path = general_settings["filing"]["file_paths"]["tables"] / pretty_file_name
+        pretty_dataframe.to_csv(pretty_file_path, index=False, encoding="utf-8-sig")
 
     return dataframe_table_flat
 
@@ -10074,7 +11008,7 @@ def compute_manuscript_table_3_primary_distal_blame_contrasts(
     force_rebuild: bool | None = None,
 ) -> pd.DataFrame:
     """
-    Compute manuscript Table 3: primary Clark-blame contrasts.
+    Compute manuscript Table 3: primary distal blame contrasts.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -10088,20 +11022,16 @@ def compute_manuscript_table_3_primary_distal_blame_contrasts(
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
 
-    use_integrated_models = general_settings["misc"]["use_integrated_models"]
-
     table_names = general_settings["filing"]["table_names"]
-
-    base_table_file_name = table_names["table_3_primary_distal_blame_contrasts"]
-    table_file_name = (
-        base_table_file_name.replace(".csv", "_Integrated.csv")
-        if use_integrated_models
-        else base_table_file_name
+    table_name_key = (
+        "table_3_primary_distal_blame_contrasts"
+        if "table_3_primary_distal_blame_contrasts" in table_names
+        else "table_3_primary_clark_blame_contrasts"
     )
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_file_name,
+        table_file_name=table_names[table_name_key],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -10122,53 +11052,34 @@ def compute_manuscript_table_3_primary_distal_blame_contrasts(
         force_rebuild=force_rebuild,
     )
 
-    if use_integrated_models:
-        dataframe_integrated_models = compute_integrated_distal_blame_results(
-            general_settings=general_settings,
-            cleaned_dataframe=cleaned_dataframe,
-            force_rebuild=force_rebuild,
-        )
+    contrast_display_map = {
+        "CH - CC": "BCH - BCC",
+        "DIV - CC": "BDIV - BCC",
+    }
 
     table_rows: list[dict[str, Any]] = []
-
-    contrast_metadata = [
-        ("CH", "BCH - BCC", "distal_blame_ch_minus_cc", "CH - CC"),
-        ("DIV", "BDIV - BCC", "distal_blame_div_minus_cc", "DIV - CC"),
-    ]
 
     for inclusion_filter_value, inclusion_display_label in [
         ("included_only", "Included"),
         ("all_finishers", "Everyone"),
     ]:
-        "Between-subject rows always come from tests.csv"
-        for between_group_a_value, contrast_display_label, _, _ in contrast_metadata:
-            if inclusion_filter_value == "included_only":
-                between_row = _extract_exact_test_row_from_test_csv(
-                    dataframe_tests=dataframe_tests,
-                    dv="first_vignette_distal_blame",
-                    group_a=between_group_a_value,
-                    group_b="CC",
-                    inclusion_filter="included_only",
-                    story_condition="all",
-                    load_condition="all",
-                    analysis_family="confirmatory",
-                )
-            else:
-                between_row = _extract_exact_test_row_from_test_csv(
-                    dataframe_tests=dataframe_tests,
-                    dv="first_vignette_distal_blame",
-                    group_a=between_group_a_value,
-                    group_b="CC",
-                    inclusion_filter="all_finishers",
-                    story_condition="all",
-                    load_condition="all",
-                    analysis_family=None,
-                )
+        for contrast_type_value, contrast_display_label in contrast_display_map.items():
+            between_row = _extract_exact_test_row_from_test_csv(
+                dataframe_tests=dataframe_tests,
+                inclusion_filter=inclusion_filter_value,
+                story_family="pooled",
+                load_condition="pooled",
+                design="between_subjects",
+                dv="blame",
+                agent_role="distal",
+                contrast_type=contrast_type_value,
+                analysis_family=("confirmatory" if inclusion_filter_value == "included_only" else "exploratory"),
+            )
 
-            reported_p_value = (
-                between_row["p_value_holm"]
-                if inclusion_filter_value == "included_only" and pd.notna(between_row["p_value_holm"])
-                else between_row["p_value"]
+            displayed_between_subject_p_value = _extract_reported_p_value_from_test_row(
+                row_series=between_row,
+                general_settings=general_settings,
+                use_holm_if_available=(inclusion_filter_value == "included_only"),
             )
 
             table_rows.append(
@@ -10176,16 +11087,20 @@ def compute_manuscript_table_3_primary_distal_blame_contrasts(
                     "Inclusion": inclusion_display_label,
                     "Design": "Between-subj",
                     "Contrast": contrast_display_label,
-                    "Estimate": round(float(between_row["mean_difference_a_minus_b"]), 2),
-                    "95% CI": _format_ci_for_manuscript_table(between_row["ci95_lower"], between_row["ci95_upper"]),
-                    "p-value": _format_p_value_for_manuscript_table(reported_p_value),
-                    "p_value_raw": float(between_row["p_value"]),
+                    "Estimate": round(_extract_estimate_from_test_row(between_row), 2),
+                    "95% CI": _format_ci_for_manuscript_table(
+                        between_row["ci95_lower"],
+                        between_row["ci95_upper"],
+                    ),
+                    "p-value": _format_p_value_for_manuscript_table(displayed_between_subject_p_value),
+                    "p_value_two_tailed": float(between_row["p_value_two_tailed"]),
+                    "p_value_one_tailed": float(between_row["p_value_one_tailed"]),
                     "p_value_holm": (
                         float(between_row["p_value_holm"])
                         if pd.notna(between_row["p_value_holm"])
                         else np.nan
                     ),
-                    "p_value_reported": float(reported_p_value),
+                    "p_value_displayed": float(displayed_between_subject_p_value),
                     "p_value_correction": (
                         "Holm corrected"
                         if inclusion_filter_value == "included_only" and pd.notna(between_row["p_value_holm"])
@@ -10196,57 +11111,42 @@ def compute_manuscript_table_3_primary_distal_blame_contrasts(
                 }
             )
 
-        "Within-subject rows: either integrated-model rows or direct tests from tests.csv"
-        for _, contrast_display_label, within_dv_name, integrated_contrast_label in contrast_metadata:
-            if use_integrated_models:
-                within_row = _extract_exact_integrated_contrast_row(
-                    dataframe_integrated_models=dataframe_integrated_models,
-                    analysis_scope="within_subjects_repeated_measures",
-                    inclusion_filter=inclusion_filter_value,
-                    story_condition="all",
-                    contrast_label=integrated_contrast_label,
-                )
+            within_row = _extract_exact_test_row_from_test_csv(
+                dataframe_tests=dataframe_tests,
+                inclusion_filter=inclusion_filter_value,
+                story_family="pooled",
+                load_condition="pooled",
+                design="within_subjects",
+                dv="blame",
+                agent_role="distal",
+                contrast_type=contrast_type_value,
+                analysis_family="exploratory",
+            )
 
-                estimate_value = float(within_row["estimate"])
-                ci95_lower = float(within_row["ci95_lower"])
-                ci95_upper = float(within_row["ci95_upper"])
-                p_value_value = float(within_row["p_value"])
-                source_file_value = "integrated_blame_models.csv"
-                source_note_value = within_row["analysis_meaning"]
-
-            else:
-                within_row = _extract_exact_test_row_from_test_csv(
-                    dataframe_tests=dataframe_tests,
-                    dv=within_dv_name,
-                    group_a="delta",
-                    group_b="0",
-                    inclusion_filter=inclusion_filter_value,
-                    story_condition="all",
-                    load_condition="all",
-                    analysis_family=None,
-                )
-
-                estimate_value = float(within_row["mean_difference_a_minus_b"])
-                ci95_lower = float(within_row["ci95_lower"])
-                ci95_upper = float(within_row["ci95_upper"])
-                p_value_value = float(within_row["p_value"])
-                source_file_value = "tests.csv"
-                source_note_value = within_row["notes"]
+            displayed_within_subject_p_value = _extract_reported_p_value_from_test_row(
+                row_series=within_row,
+                general_settings=general_settings,
+                use_holm_if_available=False,
+            )
 
             table_rows.append(
                 {
                     "Inclusion": inclusion_display_label,
                     "Design": "Within-subj",
                     "Contrast": contrast_display_label,
-                    "Estimate": round(estimate_value, 2),
-                    "95% CI": _format_ci_for_manuscript_table(ci95_lower, ci95_upper),
-                    "p-value": _format_p_value_for_manuscript_table(p_value_value),
-                    "p_value_raw": p_value_value,
+                    "Estimate": round(_extract_estimate_from_test_row(within_row), 2),
+                    "95% CI": _format_ci_for_manuscript_table(
+                        within_row["ci95_lower"],
+                        within_row["ci95_upper"],
+                    ),
+                    "p-value": _format_p_value_for_manuscript_table(displayed_within_subject_p_value),
+                    "p_value_two_tailed": float(within_row["p_value_two_tailed"]),
+                    "p_value_one_tailed": float(within_row["p_value_one_tailed"]),
                     "p_value_holm": np.nan,
-                    "p_value_reported": p_value_value,
+                    "p_value_displayed": float(displayed_within_subject_p_value),
                     "p_value_correction": "Unadjusted",
-                    "source_file": source_file_value,
-                    "source_row_note": source_note_value,
+                    "source_file": "tests.csv",
+                    "source_row_note": within_row["notes"],
                 }
             )
 
@@ -10263,14 +11163,12 @@ def compute_manuscript_table_3_primary_distal_blame_contrasts(
     dataframe_table_3 = dataframe_table_3.sort_values(
         by=["inclusion_sort_order", "design_sort_order", "contrast_sort_order"],
         kind="stable",
-    ).drop(
-        columns=["inclusion_sort_order", "design_sort_order", "contrast_sort_order"],
-    )
+    ).drop(columns=["inclusion_sort_order", "design_sort_order", "contrast_sort_order"])
 
     _save_table_dataframe_to_tables_folder(
         dataframe_table=dataframe_table_3,
         general_settings=general_settings,
-        table_file_name=table_file_name,
+        table_file_name=table_names[table_name_key],
     )
 
     return dataframe_table_3
@@ -10282,7 +11180,7 @@ def compute_manuscript_table_4_story_specific_distal_blame_contrasts(
     force_rebuild: bool | None = None,
 ) -> pd.DataFrame:
     """
-    Compute manuscript Table 4: story-specific Clark-blame contrasts.
+    Compute manuscript Table 4: story-specific distal blame contrasts.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -10296,20 +11194,16 @@ def compute_manuscript_table_4_story_specific_distal_blame_contrasts(
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
 
-    use_integrated_models = general_settings["misc"]["use_integrated_models"]
-
     table_names = general_settings["filing"]["table_names"]
-
-    base_table_file_name = table_names["table_4_story_specific_distal_blame_contrasts"]
-    table_file_name = (
-        base_table_file_name.replace(".csv", "_Integrated.csv")
-        if use_integrated_models
-        else base_table_file_name
+    table_name_key = (
+        "table_4_story_specific_distal_blame_contrasts"
+        if "table_4_story_specific_distal_blame_contrasts" in table_names
+        else "table_4_story_specific_clark_blame_contrasts"
     )
 
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_file_name,
+        table_file_name=table_names[table_name_key],
         force_rebuild=force_rebuild,
     )
     if table_extraction["success"]:
@@ -10325,107 +11219,97 @@ def compute_manuscript_table_4_story_specific_distal_blame_contrasts(
     else:
         cleaned_dataframe = cleaned_dataframe.copy()
 
-    if use_integrated_models:
-        dataframe_integrated_models = compute_integrated_distal_blame_results(
-            general_settings=general_settings,
-            cleaned_dataframe=cleaned_dataframe,
-            force_rebuild=force_rebuild,
-        )
-    else:
-        dataframe_tests = run_confirmatory_and_exploratory_tests(
-            general_settings=general_settings,
-            force_rebuild=force_rebuild,
-        )
+    dataframe_tests = run_confirmatory_and_exploratory_tests(
+        general_settings=general_settings,
+        force_rebuild=force_rebuild,
+    )
+
+    story_display_map = {
+        "firework": "Firework",
+        "trolley": "Trolley",
+    }
+    contrast_display_map = {
+        "CH - CC": "BCH - BCC",
+        "DIV - CC": "BDIV - BCC",
+    }
 
     table_rows: list[dict[str, Any]] = []
 
-    story_display_map = {"firework": "Firework", "trolley": "Trolley"}
-    contrast_metadata = [
-        ("CH", "BCH - BCC", "distal_blame_ch_minus_cc", "CH - CC"),
-        ("DIV", "BDIV - BCC", "distal_blame_div_minus_cc", "DIV - CC"),
-    ]
+    for story_family_value, story_display_label in story_display_map.items():
+        for contrast_type_value, contrast_display_label in contrast_display_map.items():
+            between_row = _extract_exact_test_row_from_test_csv(
+                dataframe_tests=dataframe_tests,
+                inclusion_filter="included_only",
+                story_family=story_family_value,
+                load_condition="pooled",
+                design="between_subjects",
+                dv="blame",
+                agent_role="distal",
+                contrast_type=contrast_type_value,
+                analysis_family="exploratory",
+            )
 
-    for story_condition_value in ["firework", "trolley"]:
-        if use_integrated_models:
-            for analysis_scope_value, design_display_label in [
-                ("between_subjects_first_vignette", "Between-subj"),
-                ("within_subjects_repeated_measures", "Within-subj"),
-            ]:
-                for _, contrast_display_label, _, integrated_contrast_label in contrast_metadata:
-                    integrated_row = _extract_exact_integrated_contrast_row(
-                        dataframe_integrated_models=dataframe_integrated_models,
-                        analysis_scope=analysis_scope_value,
-                        inclusion_filter="included_only",
-                        story_condition=story_condition_value,
-                        contrast_label=integrated_contrast_label,
-                    )
+            displayed_between_subject_p_value = _extract_reported_p_value_from_test_row(
+                row_series=between_row,
+                general_settings=general_settings,
+                use_holm_if_available=False,
+            )
 
-                    table_rows.append(
-                        {
-                            "Story": story_display_map[story_condition_value],
-                            "Design": design_display_label,
-                            "Contrast": contrast_display_label,
-                            "Estimate": round(float(integrated_row["estimate"]), 2),
-                            "95% CI": _format_ci_for_manuscript_table(integrated_row["ci95_lower"], integrated_row["ci95_upper"]),
-                            "p-value": _format_p_value_for_manuscript_table(integrated_row["p_value"]),
-                            "p_value_raw": float(integrated_row["p_value"]),
-                            "source_file": "integrated_blame_models.csv",
-                            "source_row_note": integrated_row["analysis_meaning"],
-                        }
-                    )
+            table_rows.append(
+                {
+                    "Story": story_display_label,
+                    "Design": "Between-subj",
+                    "Contrast": contrast_display_label,
+                    "Estimate": round(_extract_estimate_from_test_row(between_row), 2),
+                    "95% CI": _format_ci_for_manuscript_table(
+                        between_row["ci95_lower"],
+                        between_row["ci95_upper"],
+                    ),
+                    "p-value": _format_p_value_for_manuscript_table(displayed_between_subject_p_value),
+                    "p_value_two_tailed": float(between_row["p_value_two_tailed"]),
+                    "p_value_one_tailed": float(between_row["p_value_one_tailed"]),
+                    "p_value_displayed": float(displayed_between_subject_p_value),
+                    "source_file": "tests.csv",
+                    "source_row_note": between_row["notes"],
+                }
+            )
 
-        else:
-            "Between-subject story-specific rows from tests.csv"
-            for between_group_a_value, contrast_display_label, within_dv_name, _ in contrast_metadata:
-                between_row = _extract_exact_test_row_from_test_csv(
-                    dataframe_tests=dataframe_tests,
-                    dv="first_vignette_distal_blame",
-                    group_a=between_group_a_value,
-                    group_b="CC",
-                    inclusion_filter="included_only",
-                    story_condition=story_condition_value,
-                    load_condition="all",
-                    analysis_family="exploratory",
-                )
+            within_row = _extract_exact_test_row_from_test_csv(
+                dataframe_tests=dataframe_tests,
+                inclusion_filter="included_only",
+                story_family=story_family_value,
+                load_condition="pooled",
+                design="within_subjects",
+                dv="blame",
+                agent_role="distal",
+                contrast_type=contrast_type_value,
+                analysis_family="exploratory",
+            )
 
-                table_rows.append(
-                    {
-                        "Story": story_display_map[story_condition_value],
-                        "Design": "Between-subj",
-                        "Contrast": contrast_display_label,
-                        "Estimate": round(float(between_row["mean_difference_a_minus_b"]), 2),
-                        "95% CI": _format_ci_for_manuscript_table(between_row["ci95_lower"], between_row["ci95_upper"]),
-                        "p-value": _format_p_value_for_manuscript_table(between_row["p_value"]),
-                        "p_value_raw": float(between_row["p_value"]),
-                        "source_file": "tests.csv",
-                        "source_row_note": between_row["notes"],
-                    }
-                )
+            displayed_within_subject_p_value = _extract_reported_p_value_from_test_row(
+                row_series=within_row,
+                general_settings=general_settings,
+                use_holm_if_available=False,
+            )
 
-                within_row = _extract_exact_test_row_from_test_csv(
-                    dataframe_tests=dataframe_tests,
-                    dv=within_dv_name,
-                    group_a="delta",
-                    group_b="0",
-                    inclusion_filter="included_only",
-                    story_condition=story_condition_value,
-                    load_condition="all",
-                    analysis_family=None,
-                )
-
-                table_rows.append(
-                    {
-                        "Story": story_display_map[story_condition_value],
-                        "Design": "Within-subj",
-                        "Contrast": contrast_display_label,
-                        "Estimate": round(float(within_row["mean_difference_a_minus_b"]), 2),
-                        "95% CI": _format_ci_for_manuscript_table(within_row["ci95_lower"], within_row["ci95_upper"]),
-                        "p-value": _format_p_value_for_manuscript_table(within_row["p_value"]),
-                        "p_value_raw": float(within_row["p_value"]),
-                        "source_file": "tests.csv",
-                        "source_row_note": within_row["notes"],
-                    }
-                )
+            table_rows.append(
+                {
+                    "Story": story_display_label,
+                    "Design": "Within-subj",
+                    "Contrast": contrast_display_label,
+                    "Estimate": round(_extract_estimate_from_test_row(within_row), 2),
+                    "95% CI": _format_ci_for_manuscript_table(
+                        within_row["ci95_lower"],
+                        within_row["ci95_upper"],
+                    ),
+                    "p-value": _format_p_value_for_manuscript_table(displayed_within_subject_p_value),
+                    "p_value_two_tailed": float(within_row["p_value_two_tailed"]),
+                    "p_value_one_tailed": float(within_row["p_value_one_tailed"]),
+                    "p_value_displayed": float(displayed_within_subject_p_value),
+                    "source_file": "tests.csv",
+                    "source_row_note": within_row["notes"],
+                }
+            )
 
     dataframe_table_4 = pd.DataFrame(table_rows)
 
@@ -10440,14 +11324,12 @@ def compute_manuscript_table_4_story_specific_distal_blame_contrasts(
     dataframe_table_4 = dataframe_table_4.sort_values(
         by=["story_sort_order", "design_sort_order", "contrast_sort_order"],
         kind="stable",
-    ).drop(
-        columns=["story_sort_order", "design_sort_order", "contrast_sort_order"],
-    )
+    ).drop(columns=["story_sort_order", "design_sort_order", "contrast_sort_order"])
 
     _save_table_dataframe_to_tables_folder(
         dataframe_table=dataframe_table_4,
         general_settings=general_settings,
-        table_file_name=table_file_name,
+        table_file_name=table_names[table_name_key],
     )
 
     return dataframe_table_4
@@ -10499,7 +11381,7 @@ def compute_manuscript_table_5_two_alternative_forced_choice_distribution(
         dataframe_table_5 = (
             dataframe_twoafc_counts.loc[
                 (dataframe_twoafc_counts["inclusion_filter"] == "included_only")
-                & (dataframe_twoafc_counts["story_condition"] == "all")
+                & (dataframe_twoafc_counts["story_condition"] == "pooled")
             ]
             [["operator", "Bill ? Clark", "CH ? CC", "DIV ? CC"]]
             .copy()
@@ -10510,7 +11392,7 @@ def compute_manuscript_table_5_two_alternative_forced_choice_distribution(
         "Fallback: received long form — pivot it manually"
         dataframe_twoafc_counts = dataframe_twoafc_counts.loc[
             (dataframe_twoafc_counts["inclusion_filter"] == "included_only")
-            & (dataframe_twoafc_counts["story_condition"] == "all")
+            & (dataframe_twoafc_counts["story_condition"] == "pooled")
         ].copy()
 
         dataframe_table_5 = (
@@ -10624,7 +11506,7 @@ def compute_supplementary_table_6_within_subject_pairwise_blame_matrix(
 def compute_supplementary_table_7_cognitive_load_blame_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
-    force_rebuild: bool | None = None
+    force_rebuild: bool | None = None,
 ) -> pd.DataFrame:
     """
     Compute supplementary Table 7: cognitive-load contrasts for the core blame deltas.
@@ -10666,35 +11548,51 @@ def compute_supplementary_table_7_cognitive_load_blame_contrasts(
         force_rebuild=force_rebuild,
     )
 
-    load_display_map = {"all": "Pooled", "high": "High", "low": "Low"}
-    dv_map = {
-        "distal_blame_ch_minus_cc": "BCH - BCC",
-        "distal_blame_div_minus_cc": "BDIV - BCC",
+    load_display_map = {
+        "pooled": "Pooled",
+        "high": "High",
+        "low": "Low",
+    }
+    contrast_display_map = {
+        "CH - CC": "BCH - BCC",
+        "DIV - CC": "BDIV - BCC",
     }
 
     table_rows: list[dict[str, Any]] = []
 
-    for load_condition_value in ["all", "high", "low"]:
-        for dv_value, contrast_display_label in dv_map.items():
+    for load_condition_value, load_display_label in load_display_map.items():
+        for contrast_type_value, contrast_display_label in contrast_display_map.items():
             row_series = _extract_exact_test_row_from_test_csv(
                 dataframe_tests=dataframe_tests,
-                dv=dv_value,
-                group_a="delta",
-                group_b="0",
                 inclusion_filter="included_only",
-                story_condition="all",
+                story_family="pooled",
                 load_condition=load_condition_value,
-                analysis_family=None,
+                design="within_subjects",
+                dv="blame",
+                agent_role="distal",
+                contrast_type=contrast_type_value,
+                analysis_family="exploratory",
+            )
+
+            displayed_p_value = _extract_reported_p_value_from_test_row(
+                row_series=row_series,
+                general_settings=general_settings,
+                use_holm_if_available=False,
             )
 
             table_rows.append(
                 {
-                    "Cognitive Load": load_display_map[load_condition_value],
+                    "Cognitive Load": load_display_label,
                     "Contrast": contrast_display_label,
-                    "Estimate": round(float(row_series["mean_difference_a_minus_b"]), 2),
-                    "95% CI": _format_ci_for_manuscript_table(row_series["ci95_lower"], row_series["ci95_upper"]),
-                    "p-value": _format_p_value_for_manuscript_table(row_series["p_value"]),
-                    "p_value_raw": float(row_series["p_value"]),
+                    "Estimate": round(_extract_estimate_from_test_row(row_series), 2),
+                    "95% CI": _format_ci_for_manuscript_table(
+                        row_series["ci95_lower"],
+                        row_series["ci95_upper"],
+                    ),
+                    "p-value": _format_p_value_for_manuscript_table(displayed_p_value),
+                    "p_value_two_tailed": float(row_series["p_value_two_tailed"]),
+                    "p_value_one_tailed": float(row_series["p_value_one_tailed"]),
+                    "p_value_displayed": float(displayed_p_value),
                     "source_file": "tests.csv",
                     "source_row_note": row_series["notes"],
                 }
@@ -10885,7 +11783,7 @@ def compute_supplementary_table_8_order_effects_summary(
 
         dataframe_table_8 = pd.DataFrame(table_rows)
 
-        dv_sort_order = {"Blame": 0, "Wrongness": 1, "Punishment": 2}
+        dv_sort_order = {"Blame": 0, "Wrong": 1, "Punish": 2}
         comparison_sort_order = {
             "CH rating when CH first vs CC first": 0,
             "CC rating when CH first vs CC first": 1,
@@ -10914,7 +11812,7 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
     force_rebuild: bool | None = None,
 ) -> pd.DataFrame:
     """
-    Compute supplementary Table 9: included-only contrasts across blame, wrongness, and punishment.
+    Compute supplementary Table 9: secondary dependent-variable contrasts.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -10923,7 +11821,7 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
 
     Returns:
         • pd.DataFrame
-            - Manuscript-facing secondary-DV contrast table.
+            - Manuscript-facing secondary-DV table.
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
@@ -10954,88 +11852,75 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
     )
 
     dv_display_map = {
-        "blame": ("first_vignette_distal_blame", "distal_blame", "Blame"),
-        "wrongness": ("first_vignette_distal_wrong", "distal_wrong", "Wrongness"),
-        "punishment": ("first_vignette_distal_punish", "distal_punish", "Punishment"),
+        "blame": "Blame",
+        "wrong": "Wrongness",
+        "punish": "Punishment",
     }
-    contrast_map = {
-        "CH - CC": ("CH", "CC", "ch_minus_cc"),
-        "DIV - CC": ("DIV", "CC", "div_minus_cc"),
+    design_display_map = {
+        "between_subjects": "Between-subj",
+        "within_subjects": "Within-subj",
+    }
+    contrast_display_map = {
+        "CH - CC": "BCH - BCC",
+        "DIV - CC": "BDIV - BCC",
     }
 
     table_rows: list[dict[str, Any]] = []
 
-    for dv_short_label, (between_dv_name, within_dv_prefix, dv_display_label) in dv_display_map.items():
-        for contrast_display_label, (between_group_a_value, between_group_b_value, within_dv_suffix) in contrast_map.items():
-            between_row = _extract_exact_test_row_from_test_csv(
-                dataframe_tests=dataframe_tests,
-                dv=between_dv_name,
-                group_a=between_group_a_value,
-                group_b=between_group_b_value,
-                inclusion_filter="included_only",
-                story_condition="all",
-                load_condition="all",
-                analysis_family="confirmatory" if dv_short_label == "blame" else None,
-            )
-
-            between_reported_p_value = (
-                between_row["p_value_holm"]
-                if dv_short_label == "blame" and pd.notna(between_row["p_value_holm"])
-                else between_row["p_value"]
-            )
-
-            table_rows.append(
-                {
-                    "DV": dv_display_label,
-                    "Design": "Between-subj",
-                    "Contrast": contrast_display_label,
-                    "Estimate": round(float(between_row["mean_difference_a_minus_b"]), 2),
-                    "95% CI": _format_ci_for_manuscript_table(between_row["ci95_lower"], between_row["ci95_upper"]),
-                    "p-value": _format_p_value_for_manuscript_table(between_reported_p_value),
-                    "p_value_raw": float(between_row["p_value"]),
-                    "p_value_holm": (
-                        float(between_row["p_value_holm"])
-                        if pd.notna(between_row["p_value_holm"])
-                        else np.nan
+    for dv_value, dv_display_label in dv_display_map.items():
+        for design_value, design_display_label in design_display_map.items():
+            for contrast_type_value, contrast_display_label in contrast_display_map.items():
+                row_series = _extract_exact_test_row_from_test_csv(
+                    dataframe_tests=dataframe_tests,
+                    inclusion_filter="included_only",
+                    story_family="pooled",
+                    load_condition="pooled",
+                    design=design_value,
+                    dv=dv_value,
+                    agent_role="distal",
+                    contrast_type=contrast_type_value,
+                    analysis_family=(
+                        "confirmatory"
+                        if dv_value == "blame" and design_value == "between_subjects"
+                        else "exploratory"
                     ),
-                    "p_value_reported": float(between_reported_p_value),
-                    "source_file": "tests.csv",
-                    "source_row_note": between_row["notes"],
-                }
-            )
+                )
 
-            within_row = _extract_exact_test_row_from_test_csv(
-                dataframe_tests=dataframe_tests,
-                dv=f"{within_dv_prefix}_{within_dv_suffix}",
-                group_a="delta",
-                group_b="0",
-                inclusion_filter="included_only",
-                story_condition="all",
-                load_condition="all",
-                analysis_family=None,
-            )
+                displayed_p_value = _extract_reported_p_value_from_test_row(
+                    row_series=row_series,
+                    general_settings=general_settings,
+                    use_holm_if_available=(dv_value == "blame" and design_value == "between_subjects"),
+                )
 
-            table_rows.append(
-                {
-                    "DV": dv_display_label,
-                    "Design": "Within-subj",
-                    "Contrast": contrast_display_label,
-                    "Estimate": round(float(within_row["mean_difference_a_minus_b"]), 2),
-                    "95% CI": _format_ci_for_manuscript_table(within_row["ci95_lower"], within_row["ci95_upper"]),
-                    "p-value": _format_p_value_for_manuscript_table(within_row["p_value"]),
-                    "p_value_raw": float(within_row["p_value"]),
-                    "p_value_holm": np.nan,
-                    "p_value_reported": float(within_row["p_value"]),
-                    "source_file": "tests.csv",
-                    "source_row_note": within_row["notes"],
-                }
-            )
+                table_rows.append(
+                    {
+                        "DV": dv_display_label,
+                        "Design": design_display_label,
+                        "Contrast": contrast_display_label,
+                        "Estimate": round(_extract_estimate_from_test_row(row_series), 2),
+                        "95% CI": _format_ci_for_manuscript_table(
+                            row_series["ci95_lower"],
+                            row_series["ci95_upper"],
+                        ),
+                        "p-value": _format_p_value_for_manuscript_table(displayed_p_value),
+                        "p_value_two_tailed": float(row_series["p_value_two_tailed"]),
+                        "p_value_one_tailed": float(row_series["p_value_one_tailed"]),
+                        "p_value_holm": (
+                            float(row_series["p_value_holm"])
+                            if "p_value_holm" in row_series.index and pd.notna(row_series["p_value_holm"])
+                            else np.nan
+                        ),
+                        "p_value_displayed": float(displayed_p_value),
+                        "source_file": "tests.csv",
+                        "source_row_note": row_series["notes"],
+                    }
+                )
 
     dataframe_table_9 = pd.DataFrame(table_rows)
 
-    dv_sort_order = {"Blame": 0, "Wrongness": 1, "Punishment": 2}
+    dv_sort_order = {"Blame": 0, "Wrong": 1, "Punish": 2}
     design_sort_order = {"Between-subj": 0, "Within-subj": 1}
-    contrast_sort_order = {"CH - CC": 0, "DIV - CC": 1}
+    contrast_sort_order = {"BCH - BCC": 0, "BDIV - BCC": 1}
 
     dataframe_table_9["dv_sort_order"] = dataframe_table_9["DV"].map(dv_sort_order)
     dataframe_table_9["design_sort_order"] = dataframe_table_9["Design"].map(design_sort_order)
@@ -11201,7 +12086,7 @@ def generate_manuscript_and_supplementary_tables(
         },
         {
             "table_key": "table_2",
-            "table_title": "Table 2. Participant counts by randomization condition",
+            "table_title": "Table 2. Mean values by story type, dependent variable, and vignette condition",
             "file_name": table_names["table_2_means_by_dv_and_condition"],
             "table_meaning": "Main-text mean scale values by DV and condition.",
         },        
@@ -11341,15 +12226,14 @@ file_names: FileNames = {
     "first_vignette": "responsibility_shielding_integrated_first_vignette_blame_models.csv",
     "within_subject": "responsibility_shielding_integrated_within_subject_blame_models.csv",
     "blame_models": "responsibility_shielding_integrated_blame_models.csv",
-    "punishment_tests": "responsibility_shielding_punishment_tests.csv",
-    "punishment_consistency_effects": "responsibility_shielding_punishment_consistency_effects.csv",
+    "codebook": "responsibility_shielding_processed_codebook.csv",
 }
 
 table_names: dict[str, str] = {
     "table_1_participant_counts": "Table_1_Participant_Counts.csv",
     "table_2_means_by_dv_and_condition": "Table_2_Means_by_DV_and_Condition.csv",
-    "table_3_primary_distal_blame_contrasts": "table_3_Primary_distal_Blame_Contrasts.csv",
-    "table_4_story_specific_distal_blame_contrasts": "table_4_Story_Specific_distal_Blame_Contrasts.csv",
+    "table_3_primary_distal_blame_contrasts": "table_3_Primary_Distal_Blame_Contrasts.csv",
+    "table_4_story_specific_distal_blame_contrasts": "table_4_Story_Specific_Distal_Blame_Contrasts.csv",
     "table_5_two_alternative_forced_choice_distribution": "table_5_Two_Alternative_Forced_Choice_Distribution.csv",
     "table_6_within_subject_pairwise_blame_matrix": "table_6_Within_Subject_Pairwise_Blame_Matrix.csv",
     "table_6_within_subject_pairwise_blame_long": "table_6_Within_Subject_Pairwise_Blame_Long.csv",
@@ -11378,7 +12262,7 @@ force_rebuild = True
 one_tailed = False
 
 default_marker_size = 7
-create_figures = True
+create_figures = False
 export_figure = True
 dark_mode = False
 base_hue = 220
@@ -11441,7 +12325,7 @@ general_settings: GeneralSettings = {
         "base_hue": base_hue
     },
     "punish": {
-        "analysis_mode": "raw_nonparametric", # Alt: "log1p_parametric"
+        "analysis_mode": "log1p_parametric", # Alt: "log1p_parametric", "raw_nonparametric", "raw_parametric"
         "bootstrap_iterations": 5000,
         "random_seed": 2026
     },
@@ -11490,6 +12374,9 @@ def main() -> None:
         force_rebuild=None
     )
 
+    "Code book for preprocessed data"
+    generate_processed_data_codebook(general_settings=general_settings, force_rebuild=None)
+
     "Integrated models"
     compute_integrated_distal_blame_results(
         general_settings=general_settings,
@@ -11522,7 +12409,7 @@ def main() -> None:
 
         plot_response_distribution_histogram_by_condition(general_settings=general_settings, dv="blame")
         plot_response_distribution_histogram_by_condition(general_settings=general_settings, dv="wrong")
-        plot_response_distribution_histogram_by_condition(general_settings=general_settings, dv="punishment")
+        plot_response_distribution_histogram_by_condition(general_settings=general_settings, dv="punish")
 
 
     "Tables in the order they appear in the paper"

@@ -1,7 +1,7 @@
 ﻿DV,Comparison,Estimate,95% CI,p-value,p_value_raw,source_file,source_row_note
-Blame,CH rating when CH first vs CC first,-0.35,"[-0.82, 0.12]",0.1410,0.14104645752392964,consistency_effects.csv,clark_blame: CH rating when CH-first vs when CC-first
-Blame,CC rating when CH first vs CC first,0.31,"[-0.22, 0.83]",0.2476,0.24756286204614109,consistency_effects.csv,clark_blame: CC rating when CH-first vs when CC-first
-Wrongness,CH rating when CH first vs CC first,-0.55,"[-1.08, -0.02]",0.0418,0.041813909130372376,consistency_effects.csv,clark_wrong: CH rating when CH-first vs when CC-first
-Wrongness,CC rating when CH first vs CC first,-0.15,"[-0.73, 0.42]",0.6015,0.6014726476452883,consistency_effects.csv,clark_wrong: CC rating when CH-first vs when CC-first
-Punishment,CH rating when CH first vs CC first,-0.59,"[-3.79, 2.60]",0.7141,0.7140919746062486,consistency_effects.csv,clark_punish: CH rating when CH-first vs when CC-first
-Punishment,CC rating when CH first vs CC first,0.37,"[-2.50, 3.25]",0.7986,0.7985634987715369,consistency_effects.csv,clark_punish: CC rating when CH-first vs when CC-first
+Blame,CH rating when CH first vs CC first,-0.35,"[-0.82, 0.12]",0.1410,0.14104645752392964,consistency_effects.csv,distal_blame: CH rating when CH-first vs when CC-first
+Blame,CC rating when CH first vs CC first,0.31,"[-0.22, 0.83]",0.2476,0.24756286204614109,consistency_effects.csv,distal_blame: CC rating when CH-first vs when CC-first
+Wrongness,CH rating when CH first vs CC first,-0.55,"[-1.08, -0.02]",0.0418,0.041813909130372376,consistency_effects.csv,distal_wrong: CH rating when CH-first vs when CC-first
+Punishment,CH rating when CH first vs CC first,-0.59,"[-3.79, 2.60]",0.7141,0.7140919746062486,consistency_effects.csv,distal_punish: CH rating when CH-first vs when CC-first
+Wrongness,CC rating when CH first vs CC first,-0.15,"[-0.73, 0.42]",0.6015,0.6014726476452883,consistency_effects.csv,distal_wrong: CC rating when CH-first vs when CC-first
+Punishment,CC rating when CH first vs CC first,0.37,"[-2.50, 3.25]",0.7986,0.7985634987715369,consistency_effects.csv,distal_punish: CC rating when CH-first vs when CC-first

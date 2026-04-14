@@ -93,21 +93,29 @@ By default, most analysis functions **reuse existing CSV outputs** if they alrea
 
 ---
 
+## Code Book
+- [`processed/responsibility_shielding_processed_codebook.csv`](processed/responsibility_shielding_processed_codebook.csv)
+  - Explains how to interpret the main preprocessed CSV files: cleaned, group_summaries, and tests
+  - Maps all column names to example values and the meanings of those fields 
+
+---
+
 ## How the repo maps onto the manuscript
 
 The repository is organized so that the paper’s outputs can be matched directly to files in the repo.
 
 ### Main text tables
 - **Table 1** → [`tables/Table_1_Participant_Counts.csv`](tables/Table_1_Participant_Counts.csv) → participant counts by condition
-- **Table 2** → [`tables/Table_2_Primary_Clark_Blame_Contrasts.csv`](tables/Table_2_Primary_Clark_Blame_Contrasts.csv) → primary Clark-blame contrasts
-- **Table 3** → [`tables/Table_3_Story_Specific_Clark_Blame_Contrasts.csv`](tables/Table_3_Story_Specific_Clark_Blame_Contrasts.csv) → story-specific Clark-blame contrasts
-- **Table 4** → [`tables/Table_4_Two_Alternative_Forced_Choice_Distribution.csv`](tables/Table_4_Two_Alternative_Forced_Choice_Distribution.csv) → 2AFC response distribution
+- **Table 2** → [`tables/Table_2_Means_by_DV_and_Condition.csv`](tables/Table_2_Means_by_DV_and_Condition.csv) → participant counts by condition
+- **Table 3** → [`tables/Table_2_Primary_Distal_Blame_Contrasts.csv`](tables/Table_2_Primary_Distal_Blame_Contrasts.csv) → primary Clark-blame contrasts
+- **Table 4** → [`tables/Table_3_Story_Specific_Distal_Blame_Contrasts.csv`](tables/Table_3_Story_Specific_Distal_Blame_Contrasts.csv) → story-specific Clark-blame contrasts
+- **Table 5** → [`tables/Table_4_Two_Alternative_Forced_Choice_Distribution.csv`](tables/Table_4_Two_Alternative_Forced_Choice_Distribution.csv) → 2AFC response distribution
 
 ### Supplementary tables
-- **Table 5** → [`tables/Table_5_Within_Subject_Pairwise_Blame_Matrix.csv`](tables/Table_5_Within_Subject_Pairwise_Blame_Matrix.csv) → within-subject pairwise blame matrix
-- **Table 6** → [`tables/Table_6_Cognitive_Load_Blame_Contrasts.csv`](tables/Table_6_Cognitive_Load_Blame_Contrasts.csv) → cognitive-load contrasts
-- **Table 7** → [`tables/Table_7_Secondary_DV_Contrasts.csv`](tables/Table_7_Secondary_DV_Contrasts.csv) → secondary dependent variables
-- **Table 8** → [`tables/Table_8_Order_Effects_Summary.csv`](tables/Table_8_Order_Effects_Summary.csv) → vignette-position / order effects
+- **Table 6** → [`tables/Table_5_Within_Subject_Pairwise_Blame_Matrix.csv`](tables/Table_5_Within_Subject_Pairwise_Blame_Matrix.csv) → within-subject pairwise blame matrix
+- **Table 7** → [`tables/Table_6_Cognitive_Load_Blame_Contrasts.csv`](tables/Table_6_Cognitive_Load_Blame_Contrasts.csv) → cognitive-load contrasts
+- **Table 8** → [`tables/Table_7_Secondary_DV_Contrasts.csv`](tables/Table_7_Secondary_DV_Contrasts.csv) → secondary dependent variables
+- **Table 9** → [`tables/Table_8_Order_Effects_Summary.csv`](tables/Table_8_Order_Effects_Summary.csv) → vignette-position / order effects
 
 ### Main text figures
 - **Figure 1** → [`images/figures/figure_1.png`](images/figures/figure_1.png) → Schematic of three main conditions
@@ -162,7 +170,8 @@ This object stores:
 - file names and file paths,
 - plotting styles and Plotly layout defaults,
 - manuscript-relevant default analysis settings,
-- rebuild behavior,
+- whether existing dataframes should be rebuilt,
+- settings for analyzing punishment data,
 - and data-freeze timestamps.
 
 The philosophy is simple:
@@ -196,13 +205,13 @@ Other common patterns:
   - `included_only`
   - `all_finishers`
 - Many also iterate over:
-  - story family
+  - story condition
   - cognitive load
   - first-vignette condition
 - Plotly figure functions rely on the shared `figure_layout` settings
 - Most visualization functions can be filtered by:
   - inclusion status
-  - story family
+  - story condition
   - cognitive load
   - dependent variable
   - figure type (e.g., violin vs. boxplot)
@@ -293,21 +302,24 @@ Many of these files include a column that explains, in plain language, what the 
   Usually `included_only` or `all_finishers`
 
 - `story_condition`  
-  Usually `all`, `firework`, or `trolley`
+  Usually `pooled`, `firework`, or `trolley`
 
 - `load_condition`  
-  Usually `all`, `high`, or `low`
+  Usually `pooled`, `high`, or `low`
 
-- `analysis_scope`  
-  Indicates the level of analysis, e.g. direct between-subject test vs. repeated-measures model
+- `design` 
+  Indicates if the contrast is between-subjects (first vignettes) or within-subjects (all vignettes) 
 
-- `row_type`  
-  Often `contrast`, `coefficient`, `observed_descriptive`, or `omnibus_test`
+- `agent_role`  
+  Indicates if the row analyzes contrasts for the `distal` agent Clark or the `proximate` agent Bill
 
-- `contrast_label`  
+- `dv`
+  Indicates if the dependent variable is `blame`, `wrong`, or `punish`
+
+- `contrast_type`  
   Labels like `CH - CC`, `DIV - CC`, or `CH - DIV`
 
-- `analysis_meaning` / similar explanation columns  
+- `meaning` / `notes`  
   Plain-language descriptions of what the row represents
 
 </details>
@@ -334,7 +346,7 @@ The main direct-test engine. Produces the core test CSV used by many manuscript 
 ### Core analysis functions
 These compute descriptive summaries, triangulation results, cognitive-load breakdowns, correlations, regressions, and other direct-test outputs.
 
-### Functions contributing to `compute_integrated_clark_blame_results(...)`
+### Functions contributing to `compute_integrated_distal_blame_results(...)`
 These build the integrated first-vignette and within-subject blame model outputs used for story-specific and model-based summaries.
 
 ### `plot_ratings_by_vignette_condition(...)`

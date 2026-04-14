@@ -1,17 +1,17 @@
 ﻿inclusion_filter,comparison,analysis_type,correlation_type,n,statistic,p_value,notes
-included_only,CH_vs_CC,correlation,pearson_r,282,0.2751640050147288,2.7169423041088458e-06,Correlation between clark_blame_ch_minus_cc and 2AFC 0-3 code
-included_only,CH_vs_CC,correlation,spearman_r,282,0.26965319610513966,4.3586359395302715e-06,Spearman correlation between clark_blame_ch_minus_cc and 2AFC 0-3 code
+included_only,CH_vs_CC,correlation,pearson_r,282,0.2751640050147288,2.7169423041088458e-06,Correlation between distal_blame_ch_minus_cc and 2AFC 0-3 code
+included_only,CH_vs_CC,correlation,spearman_r,282,0.26965319610513966,4.3586359395302715e-06,Spearman correlation between distal_blame_ch_minus_cc and 2AFC 0-3 code
 included_only,CH_vs_CC,concordance,directional_match_rate,282,0.6879432624113475,,Directional concordance between sign(delta) and 2AFC direction (≥ treated as pro-left)
 included_only,CH_vs_CC,logistic_regression,logit_pro_left,282,0.3841163556554215,0.00042701902796175807,"Logit coefficient for delta predicting pro-left (>,≥) vs pro-right (<,≤)"
-included_only,DIV_vs_CC,correlation,pearson_r,282,0.27859098464678356,2.0144553754785647e-06,Correlation between clark_blame_div_minus_cc and 2AFC 0-3 code
-included_only,DIV_vs_CC,correlation,spearman_r,282,0.2907244309292696,6.760162048156697e-07,Spearman correlation between clark_blame_div_minus_cc and 2AFC 0-3 code
+included_only,DIV_vs_CC,correlation,pearson_r,282,0.27859098464678356,2.0144553754785647e-06,Correlation between distal_blame_div_minus_cc and 2AFC 0-3 code
+included_only,DIV_vs_CC,correlation,spearman_r,282,0.2907244309292696,6.760162048156697e-07,Spearman correlation between distal_blame_div_minus_cc and 2AFC 0-3 code
 included_only,DIV_vs_CC,concordance,directional_match_rate,282,0.599290780141844,,Directional concordance between sign(delta) and 2AFC direction (≥ treated as pro-left)
 included_only,DIV_vs_CC,logistic_regression,logit_pro_left,282,0.24917757298001295,0.0009398392393756518,"Logit coefficient for delta predicting pro-left (>,≥) vs pro-right (<,≤)"
-all_finishers,CH_vs_CC,correlation,pearson_r,432,0.2548117351241368,7.886433402751644e-08,Correlation between clark_blame_ch_minus_cc and 2AFC 0-3 code
-all_finishers,CH_vs_CC,correlation,spearman_r,432,0.26289300493689705,2.9202870006832557e-08,Spearman correlation between clark_blame_ch_minus_cc and 2AFC 0-3 code
+all_finishers,CH_vs_CC,correlation,pearson_r,432,0.2548117351241368,7.886433402751644e-08,Correlation between distal_blame_ch_minus_cc and 2AFC 0-3 code
+all_finishers,CH_vs_CC,correlation,spearman_r,432,0.26289300493689705,2.9202870006832557e-08,Spearman correlation between distal_blame_ch_minus_cc and 2AFC 0-3 code
 all_finishers,CH_vs_CC,concordance,directional_match_rate,432,0.6527777777777778,,Directional concordance between sign(delta) and 2AFC direction (≥ treated as pro-left)
 all_finishers,CH_vs_CC,logistic_regression,logit_pro_left,432,0.3304989775772775,1.9941730554658615e-05,"Logit coefficient for delta predicting pro-left (>,≥) vs pro-right (<,≤)"
-all_finishers,DIV_vs_CC,correlation,pearson_r,431,0.2233144656091283,2.8420040018378774e-06,Correlation between clark_blame_div_minus_cc and 2AFC 0-3 code
-all_finishers,DIV_vs_CC,correlation,spearman_r,431,0.22841457786325717,1.6534977644011091e-06,Spearman correlation between clark_blame_div_minus_cc and 2AFC 0-3 code
+all_finishers,DIV_vs_CC,correlation,pearson_r,431,0.2233144656091283,2.8420040018378774e-06,Correlation between distal_blame_div_minus_cc and 2AFC 0-3 code
+all_finishers,DIV_vs_CC,correlation,spearman_r,431,0.22841457786325717,1.6534977644011091e-06,Spearman correlation between distal_blame_div_minus_cc and 2AFC 0-3 code
 all_finishers,DIV_vs_CC,concordance,directional_match_rate,431,0.5730858468677494,,Directional concordance between sign(delta) and 2AFC direction (≥ treated as pro-left)
 all_finishers,DIV_vs_CC,logistic_regression,logit_pro_left,432,0.1849788776587916,0.0007344775719063127,"Logit coefficient for delta predicting pro-left (>,≥) vs pro-right (<,≤)"
