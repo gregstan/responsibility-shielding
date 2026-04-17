@@ -4487,7 +4487,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
 
     confirmatory_p_values_to_correct = dataframe_tests.loc[
         confirmatory_row_mask,
-        "p_value_one_tailed" if one_tailed_results_are_primary else "p_value_two_tailed",
+        "p_value_two_tailed",
     ].tolist()
 
     if len(confirmatory_p_values_to_correct) == 2:
@@ -4495,9 +4495,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         dataframe_tests.loc[confirmatory_row_mask, "p_value_holm"] = holm_adjusted_p_values
 
         holm_note_suffix = (
-            "Holm correction in p_value_holm is based on one-tailed confirmatory p-values."
-            if one_tailed_results_are_primary
-            else "Holm correction in p_value_holm is based on two-tailed confirmatory p-values."
+            "Holm correction in p_value_holm is always based on the preregistered two-tailed confirmatory p-values."
         )
         dataframe_tests.loc[confirmatory_row_mask, "notes"] = (
             dataframe_tests.loc[confirmatory_row_mask, "notes"].astype(str)
@@ -10221,10 +10219,15 @@ def _pretty_print_table_to_terminal(
         • dataframe_table: pd.DataFrame
             - Table dataframe to print.
     """
+    "Create a view/copy with specific columns dropped without affecting the original"
+    excluded_columns = {'p_value_two_tailed', 'p_value_one_tailed', 'p_value_holm', 
+                        'p_value_displayed', 'p_value_correction', 'source_file', 'meaning'}
+    printable_table = dataframe_table.drop(columns=excluded_columns, errors='ignore')    
+
     print("\n" + "=" * 110)
     print(table_title)
     print("=" * 110)
-    print(dataframe_table.to_string(index=False))
+    print(printable_table.to_string(index=False))
 
 
 def _extract_exact_test_row_from_test_csv(
@@ -10382,8 +10385,8 @@ def _extract_reported_p_value_from_test_row(
 
     Returns:
         • float
-            - Holm-corrected p-value if requested and available, otherwise the one- or two-tailed
-              p-value depending on general_settings["misc"]["one_tailed"].
+            - Confirmatory rows: p_value_holm when requested and available
+            - All other rows: one-tailed or two-tailed p depending on general_settings["misc"]["one_tailed"]
     """
     if use_holm_if_available and "p_value_holm" in row_series.index and pd.notna(row_series["p_value_holm"]):
         return float(row_series["p_value_holm"])
@@ -11107,7 +11110,7 @@ def compute_manuscript_table_3_primary_distal_blame_contrasts(
                         else "Unadjusted"
                     ),
                     "source_file": "tests.csv",
-                    "source_row_note": between_row["notes"],
+                    "meaning": between_row["notes"],
                 }
             )
 
@@ -11146,7 +11149,7 @@ def compute_manuscript_table_3_primary_distal_blame_contrasts(
                     "p_value_displayed": float(displayed_within_subject_p_value),
                     "p_value_correction": "Unadjusted",
                     "source_file": "tests.csv",
-                    "source_row_note": within_row["notes"],
+                    "meaning": within_row["notes"],
                 }
             )
 
@@ -11270,7 +11273,7 @@ def compute_manuscript_table_4_story_specific_distal_blame_contrasts(
                     "p_value_one_tailed": float(between_row["p_value_one_tailed"]),
                     "p_value_displayed": float(displayed_between_subject_p_value),
                     "source_file": "tests.csv",
-                    "source_row_note": between_row["notes"],
+                    "meaning": between_row["notes"],
                 }
             )
 
@@ -11307,7 +11310,7 @@ def compute_manuscript_table_4_story_specific_distal_blame_contrasts(
                     "p_value_one_tailed": float(within_row["p_value_one_tailed"]),
                     "p_value_displayed": float(displayed_within_subject_p_value),
                     "source_file": "tests.csv",
-                    "source_row_note": within_row["notes"],
+                    "meaning": within_row["notes"],
                 }
             )
 
@@ -11594,7 +11597,7 @@ def compute_supplementary_table_7_cognitive_load_blame_contrasts(
                     "p_value_one_tailed": float(row_series["p_value_one_tailed"]),
                     "p_value_displayed": float(displayed_p_value),
                     "source_file": "tests.csv",
-                    "source_row_note": row_series["notes"],
+                    "meaning": row_series["notes"],
                 }
             )
 
@@ -11702,7 +11705,7 @@ def compute_supplementary_table_8_order_effects_summary(
                     "p-value": _format_p_value_for_manuscript_table(coefficient_row["p_value"]),
                     "p_value_raw": float(coefficient_row["p_value"]),
                     "source_file": "integrated_blame_models.csv",
-                    "source_row_note": coefficient_row["analysis_meaning"],
+                    "meaning": coefficient_row["analysis_meaning"],
                 }
             )
 
@@ -11724,7 +11727,7 @@ def compute_supplementary_table_8_order_effects_summary(
                     "p-value": _format_p_value_for_manuscript_table(omnibus_row["p_value"]),
                     "p_value_raw": float(omnibus_row["p_value"]),
                     "source_file": "integrated_blame_models.csv",
-                    "source_row_note": omnibus_row["analysis_meaning"],
+                    "meaning": omnibus_row["analysis_meaning"],
                 }
             )
 
@@ -11777,7 +11780,7 @@ def compute_supplementary_table_8_order_effects_summary(
                         "p-value": _format_p_value_for_manuscript_table(row_series["p_value"]),
                         "p_value_raw": float(row_series["p_value"]),
                         "source_file": "consistency_effects.csv",
-                        "source_row_note": row_series["comparison"],
+                        "meaning": row_series["comparison"],
                     }
                 )
 
@@ -11810,9 +11813,10 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
+    story_condition: bool = True,
 ) -> pd.DataFrame:
     """
-    Compute supplementary Table 9: secondary dependent-variable contrasts.
+    Compute supplementary Table 9: included-only contrasts across blame, wrongness, and punishment.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -11821,23 +11825,37 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
 
     Returns:
         • pd.DataFrame
-            - Manuscript-facing secondary-DV table.
+            - Manuscript-facing secondary-DV contrast table.
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
 
     table_names = general_settings["filing"]["table_names"]
+    table_file_name = table_names["table_9_secondary_dv_contrasts"]
 
+    "Load existing table if it already matches the requested shape."
     table_extraction = _load_table_dataframe_from_tables_folder(
         general_settings=general_settings,
-        table_file_name=table_names["table_9_secondary_dv_contrasts"],
+        table_file_name=table_file_name,
         force_rebuild=force_rebuild,
     )
+
     if table_extraction["success"]:
-        return table_extraction["dataframe"]
-    if table_extraction["error"]:
+        cached_table_dataframe = table_extraction["dataframe"].copy()
+        expected_row_count = 36 if story_condition else 12
+        expected_story_values = {"Pooled", "Firework", "Trolley"} if story_condition else {"Pooled"}
+
+        if (
+            "Story Family" in cached_table_dataframe.columns
+            and cached_table_dataframe.shape[0] == expected_row_count
+            and set(cached_table_dataframe["Story Family"].dropna().unique()).issubset(expected_story_values)
+        ):
+            return cached_table_dataframe
+
+    if table_extraction["error"] and "PathError" not in str(table_extraction["message"]):
         raise Exception(table_extraction["message"])
 
+    "Load or rebuild preprocessed dataframe."
     if cleaned_dataframe is None:
         cleaned_dataframe = load_or_build_cleaned_dataframe(
             general_settings=general_settings,
@@ -11853,88 +11871,125 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
 
     dv_display_map = {
         "blame": "Blame",
-        "wrong": "Wrongness",
-        "punish": "Punishment",
+        "wrong": "Wrong",
+        "punish": "Punish",
+    }
+    story_family_display_map = {
+        "pooled": "Pooled",
+        "firework": "Firework",
+        "trolley": "Trolley",
     }
     design_display_map = {
         "between_subjects": "Between-subj",
         "within_subjects": "Within-subj",
     }
     contrast_display_map = {
-        "CH - CC": "BCH - BCC",
-        "DIV - CC": "BDIV - BCC",
+        "CH - CC": "CH - CC",
+        "DIV - CC": "DIV - CC",
     }
 
-    table_rows: list[dict[str, Any]] = []
+    story_family_values = ["pooled", "firework", "trolley"] if story_condition else ["pooled"]
+
+    table_rows = []
 
     for dv_value, dv_display_label in dv_display_map.items():
-        for design_value, design_display_label in design_display_map.items():
-            for contrast_type_value, contrast_display_label in contrast_display_map.items():
-                row_series = _extract_exact_test_row_from_test_csv(
-                    dataframe_tests=dataframe_tests,
-                    inclusion_filter="included_only",
-                    story_family="pooled",
-                    load_condition="pooled",
-                    design=design_value,
-                    dv=dv_value,
-                    agent_role="distal",
-                    contrast_type=contrast_type_value,
-                    analysis_family=(
-                        "confirmatory"
-                        if dv_value == "blame" and design_value == "between_subjects"
-                        else "exploratory"
-                    ),
-                )
+        for story_family_value in story_family_values:
+            story_family_display_label = story_family_display_map[story_family_value]
 
-                displayed_p_value = _extract_reported_p_value_from_test_row(
-                    row_series=row_series,
-                    general_settings=general_settings,
-                    use_holm_if_available=(dv_value == "blame" and design_value == "between_subjects"),
-                )
+            for design_value, design_display_label in design_display_map.items():
+                for contrast_type_value, contrast_display_label in contrast_display_map.items():
+                    row_series = _extract_exact_test_row_from_test_csv(
+                        dataframe_tests=dataframe_tests,
+                        inclusion_filter="included_only",
+                        story_family=story_family_value,
+                        load_condition="pooled",
+                        design=design_value,
+                        dv=dv_value,
+                        agent_role="distal",
+                        contrast_type=contrast_type_value,
+                        analysis_family=(
+                            "confirmatory"
+                            if (
+                                dv_value == "blame"
+                                and design_value == "between_subjects"
+                                and story_family_value == "pooled"
+                            )
+                            else "exploratory"
+                        ),
+                    )
 
-                table_rows.append(
-                    {
-                        "DV": dv_display_label,
-                        "Design": design_display_label,
-                        "Contrast": contrast_display_label,
-                        "Estimate": round(_extract_estimate_from_test_row(row_series), 2),
-                        "95% CI": _format_ci_for_manuscript_table(
-                            row_series["ci95_lower"],
-                            row_series["ci95_upper"],
+                    displayed_p_value = _extract_reported_p_value_from_test_row(
+                        row_series=row_series,
+                        general_settings=general_settings,
+                        use_holm_if_available=(
+                            dv_value == "blame"
+                            and design_value == "between_subjects"
+                            and story_family_value == "pooled"
                         ),
-                        "p-value": _format_p_value_for_manuscript_table(displayed_p_value),
-                        "p_value_two_tailed": float(row_series["p_value_two_tailed"]),
-                        "p_value_one_tailed": float(row_series["p_value_one_tailed"]),
-                        "p_value_holm": (
-                            float(row_series["p_value_holm"])
-                            if "p_value_holm" in row_series.index and pd.notna(row_series["p_value_holm"])
-                            else np.nan
-                        ),
-                        "p_value_displayed": float(displayed_p_value),
-                        "source_file": "tests.csv",
-                        "source_row_note": row_series["notes"],
-                    }
-                )
+                    )
+
+                    table_rows.append(
+                        {
+                            "DV": dv_display_label,
+                            "Story Family": story_family_display_label,
+                            "Design": design_display_label,
+                            "Contrast": contrast_display_label,
+                            "Estimate": round(_extract_estimate_from_test_row(row_series), 2),
+                            "95% CI": _format_ci_for_manuscript_table(
+                                row_series["ci95_lower"],
+                                row_series["ci95_upper"],
+                            ),
+                            "p_value_one_tailed": float(row_series["p_value_one_tailed"]),
+                            "p_value_two_tailed": float(row_series["p_value_two_tailed"]),
+                            "p-value": _format_p_value_for_manuscript_table(displayed_p_value),
+                            "p_value_holm": (
+                                float(row_series["p_value_holm"])
+                                if "p_value_holm" in row_series.index and pd.notna(row_series["p_value_holm"])
+                                else np.nan
+                            ),
+                            "p_value_displayed": float(displayed_p_value),
+                            "source_file": "tests.csv",
+                            "meaning": row_series["notes"],
+                        }
+                    )
 
     dataframe_table_9 = pd.DataFrame(table_rows)
 
-    dv_sort_order = {"Blame": 0, "Wrong": 1, "Punish": 2}
-    design_sort_order = {"Between-subj": 0, "Within-subj": 1}
-    contrast_sort_order = {"BCH - BCC": 0, "BDIV - BCC": 1}
+    dv_sort_order = {
+        "Blame": 0,
+        "Wrong": 1,
+        "Punish": 2,
+    }
+    story_family_sort_order = {
+        "Pooled": 0,
+        "Firework": 1,
+        "Trolley": 2,
+    }
+    design_sort_order = {
+        "Between-subj": 0,
+        "Within-subj": 1,
+    }
+    contrast_sort_order = {
+        "CH - CC": 0,
+        "DIV - CC": 1,
+    }
 
     dataframe_table_9["dv_sort_order"] = dataframe_table_9["DV"].map(dv_sort_order)
+    dataframe_table_9["story_family_sort_order"] = dataframe_table_9["Story Family"].map(story_family_sort_order)
     dataframe_table_9["design_sort_order"] = dataframe_table_9["Design"].map(design_sort_order)
     dataframe_table_9["contrast_sort_order"] = dataframe_table_9["Contrast"].map(contrast_sort_order)
 
     dataframe_table_9 = dataframe_table_9.sort_values(
-        by=["dv_sort_order", "design_sort_order", "contrast_sort_order"],
+        by=["dv_sort_order", "story_family_sort_order", "design_sort_order", "contrast_sort_order"],
         kind="stable",
-    ).drop(columns=["dv_sort_order", "design_sort_order", "contrast_sort_order"])
+    ).drop(
+        columns=["dv_sort_order", "story_family_sort_order", "design_sort_order", "contrast_sort_order"]
+    )
 
     _save_table_dataframe_to_tables_folder(
         dataframe_table=dataframe_table_9,
         general_settings=general_settings,
-        table_file_name=table_names["table_9_secondary_dv_contrasts"],
+        table_file_name=table_file_name,
     )
 
     return dataframe_table_9
@@ -11943,9 +11998,23 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
 def _compute_extra_terminal_statistics_for_manuscript(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame,
+    print_: bool = True
 ) -> dict[str, Any]:
     """
     Compute a few one-line statistics that are useful to print to the terminal but do not need their own tables.
+
+    Correlations are reported in three pairs: blame–wrong, wrong–punish, and
+    punish–blame.  Each pair is computed two ways:
+        1. Between-subjects first-vignette (one row per participant).
+        2. Within-subjects participant means pooled across the three vignette
+           conditions (CC, CH, DIV).
+
+    Punishment is log1p-transformed before computing any punishment-involved
+    correlation when ``general_settings > punish > analysis_mode`` is
+    ``"log1p_parametric"``.  For the participant-means variants the
+    transformation is applied to the per-participant mean of the three raw
+    condition values (mean first, then log1p), which mirrors the approach used
+    in ``compute_group_summaries``.
 
     Arguments:
         • general_settings: GeneralSettings
@@ -11957,6 +12026,29 @@ def _compute_extra_terminal_statistics_for_manuscript(
     """
     included_dataframe = cleaned_dataframe.loc[cleaned_dataframe["included"] == True].copy()  # noqa: E712
 
+    "Determine whether punishment should be log1p-transformed for correlations."
+    punishment_analysis_mode = (
+        str(general_settings.get("punish", {}).get("analysis_mode", "raw_nonparametric"))
+        .strip()
+        .lower()
+    )
+    punishment_is_log1p_transformed = punishment_analysis_mode == "log1p_parametric"
+
+    "-------------------------------------------------------------------------"
+    "---- Helper: apply log1p to a punishment Series when requested. ---------" 
+    "---- For blame and wrong the raw values are always returned unchanged. --"
+    "-------------------------------------------------------------------------"
+    def _apply_punishment_transformation_if_requested(raw_punish_series: pd.Series) -> pd.Series:
+        """Return log1p-transformed punishment values if analysis_mode is log1p_parametric, else raw."""
+        if punishment_is_log1p_transformed:
+            return np.log1p(raw_punish_series)
+        return raw_punish_series
+
+    "========================================================================="
+    " FIRST-VIGNETTE CORRELATIONS  (between-subjects; one row per participant)"
+    "========================================================================="
+
+    "blame × wrong (first vignette)"
     first_vignette_blame_wrong_dataframe = included_dataframe[
         ["first_vignette_distal_blame", "first_vignette_distal_wrong"]
     ].dropna().copy()
@@ -11965,35 +12057,178 @@ def _compute_extra_terminal_statistics_for_manuscript(
         first_vignette_blame_wrong_dataframe["first_vignette_distal_wrong"],
     )
 
-    participant_means_dataframe = pd.DataFrame(
+    "wrong × punish (first vignette)"
+    "Punishment values are transformed before correlating when log1p_parametric."
+    first_vignette_wrong_punish_dataframe = included_dataframe[
+        ["first_vignette_distal_wrong", "first_vignette_distal_punish"]
+    ].dropna().copy()
+    first_vignette_wrong_punish_dataframe = first_vignette_wrong_punish_dataframe.assign(
+        first_vignette_distal_punish_analysis=_apply_punishment_transformation_if_requested(
+            first_vignette_wrong_punish_dataframe["first_vignette_distal_punish"]
+        )
+    )
+    first_vignette_wrong_punish_correlation = stats.pearsonr(
+        first_vignette_wrong_punish_dataframe["first_vignette_distal_wrong"],
+        first_vignette_wrong_punish_dataframe["first_vignette_distal_punish_analysis"],
+    )
+
+    "punish × blame (first vignette)"
+    first_vignette_punish_blame_dataframe = included_dataframe[
+        ["first_vignette_distal_punish", "first_vignette_distal_blame"]
+    ].dropna().copy()
+    first_vignette_punish_blame_dataframe = first_vignette_punish_blame_dataframe.assign(
+        first_vignette_distal_punish_analysis=_apply_punishment_transformation_if_requested(
+            first_vignette_punish_blame_dataframe["first_vignette_distal_punish"]
+        )
+    )
+    first_vignette_punish_blame_correlation = stats.pearsonr(
+        first_vignette_punish_blame_dataframe["first_vignette_distal_punish_analysis"],
+        first_vignette_punish_blame_dataframe["first_vignette_distal_blame"],
+    )
+
+    "========================================================================="
+    "PARTICIPANT-MEANS CORRELATIONS  (within-subjects; pooled across vignettes)"
+    "========================================================================="
+    participant_means_raw_blame_series = included_dataframe[
+        ["distal_blame_cc", "distal_blame_ch", "distal_blame_div"]
+    ].mean(axis=1)
+    participant_means_raw_wrong_series = included_dataframe[
+        ["distal_wrong_cc", "distal_wrong_ch", "distal_wrong_div"]
+    ].mean(axis=1)
+    participant_means_raw_punish_series = included_dataframe[
+        ["distal_punish_cc", "distal_punish_ch", "distal_punish_div"]
+    ].mean(axis=1)
+
+    "Apply punishment transformation to the participant-level mean punish values."
+    participant_means_punish_analysis_series = _apply_punishment_transformation_if_requested(
+        participant_means_raw_punish_series
+    )
+
+    "blame × wrong (participant means)"
+    participant_means_blame_wrong_dataframe = pd.DataFrame(
         {
-            "mean_distal_blame": included_dataframe[["distal_blame_cc", "distal_blame_ch", "distal_blame_div"]].mean(axis=1),
-            "mean_distal_wrong": included_dataframe[["distal_wrong_cc", "distal_wrong_ch", "distal_wrong_div"]].mean(axis=1),
+            "mean_distal_blame": participant_means_raw_blame_series,
+            "mean_distal_wrong": participant_means_raw_wrong_series,
         }
     ).dropna()
     participant_means_blame_wrong_correlation = stats.pearsonr(
-        participant_means_dataframe["mean_distal_blame"],
-        participant_means_dataframe["mean_distal_wrong"],
+        participant_means_blame_wrong_dataframe["mean_distal_blame"],
+        participant_means_blame_wrong_dataframe["mean_distal_wrong"],
     )
 
-    cognitive_load_blame_difference_row = run_welch_t_test_between_groups(
+    "wrong × punish (participant means)"
+    participant_means_wrong_punish_dataframe = pd.DataFrame(
+        {
+            "mean_distal_wrong": participant_means_raw_wrong_series,
+            "mean_distal_punish_analysis": participant_means_punish_analysis_series,
+        }
+    ).dropna()
+    participant_means_wrong_punish_correlation = stats.pearsonr(
+        participant_means_wrong_punish_dataframe["mean_distal_wrong"],
+        participant_means_wrong_punish_dataframe["mean_distal_punish_analysis"],
+    )
+
+    "punish × blame (participant means)" 
+    participant_means_punish_blame_dataframe = pd.DataFrame(
+        {
+            "mean_distal_punish_analysis": participant_means_punish_analysis_series,
+            "mean_distal_blame": participant_means_raw_blame_series,
+        }
+    ).dropna()
+    participant_means_punish_blame_correlation = stats.pearsonr(
+        participant_means_punish_blame_dataframe["mean_distal_punish_analysis"],
+        participant_means_punish_blame_dataframe["mean_distal_blame"],
+    )
+
+    "========================================================================="
+    "==================== COGNITIVE-LOAD BLAME DIFFERENCE ===================="
+    "========================================================================="
+    cognitive_load_blame_difference_ch_minus_cc = run_welch_t_test_between_groups(
         dataframe=included_dataframe,
         dv_column_name="distal_blame_ch_minus_cc",
         group_column_name="load_condition",
         group_a_value="high",
         group_b_value="low",
     )
+    cognitive_load_blame_difference_div_minus_cc = run_welch_t_test_between_groups(
+        dataframe=included_dataframe,
+        dv_column_name="distal_blame_div_minus_cc",
+        group_column_name="load_condition",
+        group_a_value="high",
+        group_b_value="low",
+    )
 
-    return {
+    extra_statistics = {
         "first_vignette_blame_wrong_r": float(first_vignette_blame_wrong_correlation.statistic),
         "first_vignette_blame_wrong_p": float(first_vignette_blame_wrong_correlation.pvalue),
+        "first_vignette_wrong_punish_r": float(first_vignette_wrong_punish_correlation.statistic),
+        "first_vignette_wrong_punish_p": float(first_vignette_wrong_punish_correlation.pvalue),
+        "first_vignette_punish_blame_r": float(first_vignette_punish_blame_correlation.statistic),
+        "first_vignette_punish_blame_p": float(first_vignette_punish_blame_correlation.pvalue),
         "participant_means_blame_wrong_r": float(participant_means_blame_wrong_correlation.statistic),
         "participant_means_blame_wrong_p": float(participant_means_blame_wrong_correlation.pvalue),
-        "high_minus_low_ch_cc_delta_difference": float(cognitive_load_blame_difference_row["mean_difference_a_minus_b"]),
-        "high_minus_low_ch_cc_delta_ci95_lower": float(cognitive_load_blame_difference_row["ci95_lower"]),
-        "high_minus_low_ch_cc_delta_ci95_upper": float(cognitive_load_blame_difference_row["ci95_upper"]),
-        "high_minus_low_ch_cc_delta_p": float(cognitive_load_blame_difference_row["p_value"]),
+        "participant_means_wrong_punish_r": float(participant_means_wrong_punish_correlation.statistic),
+        "participant_means_wrong_punish_p": float(participant_means_wrong_punish_correlation.pvalue),
+        "participant_means_punish_blame_r": float(participant_means_punish_blame_correlation.statistic),
+        "participant_means_punish_blame_p": float(participant_means_punish_blame_correlation.pvalue),
+        "high_minus_low_ch_cc_delta_difference": float(cognitive_load_blame_difference_ch_minus_cc["mean_difference_a_minus_b"]),
+        "high_minus_low_ch_cc_delta_ci95_lower": float(cognitive_load_blame_difference_ch_minus_cc["ci95_lower"]),
+        "high_minus_low_ch_cc_delta_ci95_upper": float(cognitive_load_blame_difference_ch_minus_cc["ci95_upper"]),
+        "high_minus_low_ch_cc_delta_p": float(cognitive_load_blame_difference_ch_minus_cc["p_value"]),
+        "high_minus_low_div_cc_delta_difference": float(cognitive_load_blame_difference_div_minus_cc["mean_difference_a_minus_b"]),
+        "high_minus_low_div_cc_delta_ci95_lower": float(cognitive_load_blame_difference_div_minus_cc["ci95_lower"]),
+        "high_minus_low_div_cc_delta_ci95_upper": float(cognitive_load_blame_difference_div_minus_cc["ci95_upper"]),
+        "high_minus_low_div_cc_delta_p": float(cognitive_load_blame_difference_div_minus_cc["p_value"]),
     }
+
+    if print_:
+        print("\n" + "-" * 110)
+        print("EXTRA ONE-LINE STATISTICS")
+        print("-" * 110)
+        print(
+            "First-vignette blame-wrongness correlation: "
+            f"r = {extra_statistics['first_vignette_blame_wrong_r']:.2f}, "
+            f"p = {_format_p_value_for_manuscript_table(extra_statistics['first_vignette_blame_wrong_p'])}"
+        )
+        print(
+            "First-vignette wrong-punishment correlation: "
+            f"r = {extra_statistics['first_vignette_wrong_punish_r']:.2f}, "
+            f"p = {_format_p_value_for_manuscript_table(extra_statistics['first_vignette_wrong_punish_p'])}"
+        )
+        print(
+            "First-vignette punishment-blame correlation: "
+            f"r = {extra_statistics['first_vignette_punish_blame_r']:.2f}, "
+            f"p = {_format_p_value_for_manuscript_table(extra_statistics['first_vignette_punish_blame_p'])}"
+        )
+        print(
+            "Participant-means blame-wrongness correlation: "
+            f"r = {extra_statistics['participant_means_blame_wrong_r']:.2f}, "
+            f"p = {_format_p_value_for_manuscript_table(extra_statistics['participant_means_blame_wrong_p'])}"
+        )
+        print(
+            "Participant-means wrong-punishment correlation: "
+            f"r = {extra_statistics['participant_means_wrong_punish_r']:.2f}, "
+            f"p = {_format_p_value_for_manuscript_table(extra_statistics['participant_means_wrong_punish_p'])}"
+        )
+        print(
+            "Participant-means punishment-blame correlation: "
+            f"r = {extra_statistics['participant_means_punish_blame_r']:.2f}, "
+            f"p = {_format_p_value_for_manuscript_table(extra_statistics['participant_means_punish_blame_p'])}"
+        )
+        print(
+            "Cognitive-load difference in CH - CC shielding (High - Low): "
+            f"Δ = {extra_statistics['high_minus_low_ch_cc_delta_difference']:+.2f}, "
+            f"95% CI = {_format_ci_for_manuscript_table(extra_statistics['high_minus_low_ch_cc_delta_ci95_lower'], extra_statistics['high_minus_low_ch_cc_delta_ci95_upper'])}, "
+            f"p = {_format_p_value_for_manuscript_table(extra_statistics['high_minus_low_ch_cc_delta_p'])}"
+        )
+        print(
+            "Cognitive-load difference in DIV - CC shielding (High - Low): "
+            f"Δ = {extra_statistics['high_minus_low_div_cc_delta_difference']:+.2f}, "
+            f"95% CI = {_format_ci_for_manuscript_table(extra_statistics['high_minus_low_div_cc_delta_ci95_lower'], extra_statistics['high_minus_low_div_cc_delta_ci95_upper'])}, "
+            f"p = {_format_p_value_for_manuscript_table(extra_statistics['high_minus_low_div_cc_delta_p'])}"
+        )
+
+    return extra_statistics
 
 
 def generate_manuscript_and_supplementary_tables(
@@ -12166,29 +12401,10 @@ def generate_manuscript_and_supplementary_tables(
         _pretty_print_table_to_terminal("TABLE 8. Order-Effects Summary", dataframe_table_8)
         _pretty_print_table_to_terminal("TABLE 9. Secondary DV Contrasts", dataframe_table_9)
 
-        extra_statistics = _compute_extra_terminal_statistics_for_manuscript(
+        _compute_extra_terminal_statistics_for_manuscript(
             general_settings=general_settings,
             cleaned_dataframe=cleaned_dataframe,
-        )
-
-        print("\n" + "-" * 110)
-        print("EXTRA ONE-LINE STATISTICS")
-        print("-" * 110)
-        print(
-            "First-vignette blame-wrongness correlation: "
-            f"r = {extra_statistics['first_vignette_blame_wrong_r']:.2f}, "
-            f"p = {_format_p_value_for_manuscript_table(extra_statistics['first_vignette_blame_wrong_p'])}"
-        )
-        print(
-            "Participant-means blame-wrongness correlation: "
-            f"r = {extra_statistics['participant_means_blame_wrong_r']:.2f}, "
-            f"p = {_format_p_value_for_manuscript_table(extra_statistics['participant_means_blame_wrong_p'])}"
-        )
-        print(
-            "Cognitive-load difference in CH - CC shielding (High - Low): "
-            f"Δ = {extra_statistics['high_minus_low_ch_cc_delta_difference']:+.2f}, "
-            f"95% CI = {_format_ci_for_manuscript_table(extra_statistics['high_minus_low_ch_cc_delta_ci95_lower'], extra_statistics['high_minus_low_ch_cc_delta_ci95_upper'])}, "
-            f"p = {_format_p_value_for_manuscript_table(extra_statistics['high_minus_low_ch_cc_delta_p'])}"
+            print_=True
         )
 
     return {
@@ -12259,7 +12475,7 @@ rebuild_cleaned_dataframe = True
 print_tables_to_terminal = True
 use_integrated_models = False
 force_rebuild = True
-one_tailed = False
+one_tailed = True
 
 default_marker_size = 7
 create_figures = False
@@ -12394,7 +12610,7 @@ def main() -> None:
         plot_within_subject_pairwise_comparisons(dv="blame", base_hue=base_hue, general_settings=general_settings, include_proximate_agent=True)
 
         "Figure 6"
-        plot_shielding_effects_by_cognitive_load(dv="blame", base_hue=base_hue, general_settings=general_settings, delta_type="CH_CC", figure_type="violin")
+        plot_shielding_effects_by_cognitive_load(dv="blame", base_hue=base_hue, general_settings=general_settings, figure_type="violin", delta_type="CH_CC")
 
         "Figure 7"
         plot_trial_order_effects_line_graph(     dv="blame", base_hue=base_hue, general_settings=general_settings, order_analysis_mode="legacy")
