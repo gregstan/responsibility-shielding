@@ -55,7 +55,13 @@ Understanding these terms is necessary for reading the code and contributing cor
 ## 3. Key files and folders
 
 ```
-analysis.py                          ← main analysis script; single entry point
+analysis.py       ← entry point: general_settings dict + main(); run with python analysis.py
+config.py         ← TypedDicts (GeneralSettings, FileNames, FilePaths, etc.)
+preprocessing.py  ← Qualtrics cleaning, parsing, exclusion, file I/O helpers
+core.py           ← core analysis helpers/functions + integrated models
+visualization.py  ← Plotly visualization helpers + all figure-generating functions
+tables.py         ← manuscript table builders (Tables 1–9)
+
 shielding_starter_pack.md            ← compact conceptual + design overview (read this first)
 README.md                            ← full repo guide with table/figure map
 requirements.txt                     ← Python dependencies
@@ -74,6 +80,16 @@ images/stimuli/                      ← illustrated causal diagrams shown to pa
 The codebook lives at:
 `processed/responsibility_shielding_processed_codebook.csv`
 
+**Import flow (no circular dependencies):**
+```
+config.py      →  (nothing from this project)
+preprocessing  →  config
+core           →  config, preprocessing
+visualization  →  config, preprocessing
+tables         →  config, preprocessing, core
+analysis       →  config, preprocessing, core, visualization, tables
+```
+
 ---
 
 ## 4. How to run
@@ -88,20 +104,18 @@ settings. To force regeneration of all outputs from scratch, set `force_rebuild 
 
 ---
 
-## 5. Architecture of `analysis.py`
+## 5. Architecture
 
-The script has ten major sections in this order:
+The pipeline is split across six Python files. The original ten logical sections now map to files:
 
-1. **Type aliases** — TypedDicts (`GeneralSettings`, `Filing`, `Visuals`, `MiscSettings`, etc.)
-2. **Preprocessing** — raw Qualtrics cleaning, parsing, exclusion logic
-3. **Core analysis helpers** — shared utilities (statistical tests, formatters, loaders/savers)
-4. **Core analysis functions** — direct tests, descriptives, triangulation, correlations, regressions
-5. **Integrated models** — OLS/repeated-measures models; first-vignette condition × story; within-subject
-6. **Visualization helpers** — shared Plotly utilities
-7. **Data visualization** — figure-generating functions in paper order
-8. **Table generation** — manuscript table builders (draw from both analysis layers)
-9. **Common variables / settings** — `general_settings` dict
-10. **`main()`** — runs the pipeline in full
+| Original section | File |
+|---|---|
+| Type aliases | `config.py` |
+| Preprocessing + file I/O helpers | `preprocessing.py` |
+| Core analysis helpers + functions + integrated models | `core.py` |
+| Visualization helpers + data visualization | `visualization.py` |
+| Table generation | `tables.py` |
+| Common variables + `main()` | `analysis.py` |
 
 ### `general_settings`
 
