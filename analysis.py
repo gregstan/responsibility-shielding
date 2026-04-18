@@ -1237,6 +1237,8 @@ def generate_processed_data_codebook(general_settings: GeneralSettings, force_re
             return "True | False"
 
         if pd.api.types.is_numeric_dtype(nonmissing_values):
+            "Threshold of 8: 9-point Likert scales are treated as continuous numeric, so any numeric field"
+            "with 9 or more distinct values is summarized as 'numeric' rather than enumerated."
             if unique_count <= 8:
                 displayed_values = [str(value) for value in unique_values]
                 return " | ".join(displayed_values)
@@ -1647,29 +1649,17 @@ def generate_processed_data_codebook(general_settings: GeneralSettings, force_re
                 "allowed_values_or_pattern": "mean_difference | median_difference",
                 "notes": "Mean for parametric rows; median for nonparametric rows.",
             },
-            "participants": {
-                "logical_field": "inclusion filter",
-                "meaning": "Which participant set the row was computed on.",
-                "allowed_values_or_pattern": "included | all_finishers",
-                "notes": "The newer schema’s human-readable version of inclusion_filter.",
-            },
             "inclusion_filter": {
                 "logical_field": "inclusion filter",
                 "meaning": "Which participant set the row was computed on.",
                 "allowed_values_or_pattern": "included_only | all_finishers",
-                "notes": "Older name for the same logical field as participants.",
-            },
-            "story_family": {
-                "logical_field": "story family",
-                "meaning": "Whether the row pools stories or restricts to one story family.",
-                "allowed_values_or_pattern": "pooled | firework | trolley",
-                "notes": "Used in story-specific and pooled contrasts.",
+                "notes": "Whether the row was computed on preregistered included participants only, or all participants who finished.",
             },
             "story_condition": {
                 "logical_field": "story family",
                 "meaning": "Whether the row pools stories or restricts to one story family.",
                 "allowed_values_or_pattern": "pooled | firework | trolley | all",
-                "notes": "Older name for the same logical field as story_family.",
+                "notes": "Used in story-specific and pooled contrasts.",
             },
             "load_condition": {
                 "logical_field": "load condition slice",
@@ -1677,11 +1667,11 @@ def generate_processed_data_codebook(general_settings: GeneralSettings, force_re
                 "allowed_values_or_pattern": "pooled | high | low",
                 "notes": "Used in the cognitive-load breakdowns.",
             },
-            "design": {
+            "analysis_scope": {
                 "logical_field": "analysis design",
-                "meaning": "Whether the row compares different participant groups or paired ratings from the same participants.",
-                "allowed_values_or_pattern": "between_subjects | within_subjects",
-                "notes": "This is the key high-level design distinction for the direct tests.",
+                "meaning": "Whether the row compares different participant groups (first-vignette only) or paired ratings from the same participants (all vignettes).",
+                "allowed_values_or_pattern": "between_subjects_first_vignette | within_subjects_all_vignettes",
+                "notes": "Matches the analysis_scope column in group_summaries and integrated_blame_models, using the same fine-grained value names.",
             },
             "dv": {
                 "logical_field": "dependent variable",
@@ -1847,23 +1837,11 @@ def generate_processed_data_codebook(general_settings: GeneralSettings, force_re
                 "allowed_values_or_pattern": "included_only | all_finishers",
                 "notes": "Matches the preregistered inclusion split used throughout the analysis.",
             },
-            "participants": {
-                "logical_field": "inclusion filter",
-                "meaning": "Which participant set the summary row was computed on.",
-                "allowed_values_or_pattern": "included | all_finishers",
-                "notes": "Human-readable version of inclusion_filter if present.",
-            },
             "story_condition": {
                 "logical_field": "story family",
                 "meaning": "Whether the summary row pools stories or refers to one story family.",
                 "allowed_values_or_pattern": "pooled | firework | trolley | all",
-                "notes": "Older or transitional name for story_family.",
-            },
-            "story_family": {
-                "logical_field": "story family",
-                "meaning": "Whether the summary row pools stories or refers to one story family.",
-                "allowed_values_or_pattern": "pooled | firework | trolley",
-                "notes": "Preferred newer name for this field.",
+                "notes": "Used in story-specific and pooled contrasts.",
             },
             "load_condition": {
                 "logical_field": "load condition slice",
@@ -1875,13 +1853,7 @@ def generate_processed_data_codebook(general_settings: GeneralSettings, force_re
                 "logical_field": "summary design scope",
                 "meaning": "What kind of descriptive aggregation the row represents.",
                 "allowed_values_or_pattern": "between_subjects_first_vignette | within_subjects_all_vignettes | within_subjects_deltas",
-                "notes": "Older or transitional name for design in group_summaries.csv.",
-            },
-            "design": {
-                "logical_field": "summary design scope",
-                "meaning": "What kind of descriptive aggregation the row represents.",
-                "allowed_values_or_pattern": "between_subjects_first_vignette | within_subjects_all_vignettes | within_subjects_deltas",
-                "notes": "Preferred newer name for this field if present.",
+                "notes": "Used across tests.csv, group_summaries.csv, and integrated_blame_models.csv with consistent fine-grained value names.",
             },
             "agent_role": {
                 "logical_field": "judged agent role",
@@ -1899,7 +1871,7 @@ def generate_processed_data_codebook(general_settings: GeneralSettings, force_re
                 "logical_field": "condition or delta label",
                 "meaning": "Raw vignette condition for level summaries or contrast label for delta summaries.",
                 "allowed_values_or_pattern": "CC | CH | DIV | CH - CC | DIV - CC | MIN(CH, DIV) - CC | CC - CH",
-                "notes": "Interpret together with analysis_scope / design.",
+                "notes": "Interpret together with analysis_scope.",
             },
             "n": {
                 "logical_field": "sample size",
@@ -3277,7 +3249,16 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         • Holm correction across these two p-values.
 
     Returns:
-        • Long-format table of test results with metadata columns.
+        • pd.DataFrame
+            - Long-format table of test results. One row per test. Columns:
+                analysis_family, analysis_mode, test_type, transformation,
+                location_statistic_reported, inclusion_filter, story_condition,
+                load_condition, analysis_scope, dv, agent_role, contrast_type,
+                group_a, group_b, n_a, n_b, mean_a, mean_b, median_a, median_b,
+                mean_difference_a_minus_b, median_difference_a_minus_b,
+                ci95_lower, ci95_upper, t_statistic, df,
+                p_value_two_tailed, p_value_one_tailed,
+                effect_size_name, effect_size, p_value_holm, notes.
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
@@ -3354,8 +3335,8 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         "low": 2,
     }
     design_sort_map = {
-        "between_subjects": 0,
-        "within_subjects": 1,
+        "between_subjects_first_vignette": 0,
+        "within_subjects_all_vignettes": 1,
     }
     dv_sort_map = {
         "blame": 0,
@@ -3618,7 +3599,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
             "inclusion_filter": inclusion_filter,
             "story_condition": story_condition,
             "load_condition": load_condition,
-            "design": design,
+            "analysis_scope": design,
             "dv": dv,
             "agent_role": agent_role,
             "contrast_type": contrast_type,
@@ -4237,7 +4218,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                                 inclusion_filter=inclusion_filter_label,
                                 story_condition=story_condition_value,
                                 load_condition=load_condition_value,
-                                design="between_subjects",
+                                design="between_subjects_first_vignette",
                                 dv=dv_key,
                                 agent_role="distal",
                                 contrast_type=contrast_type,
@@ -4262,7 +4243,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                                 p_value_holm=np.nan,
                                 notes=build_plain_language_note(
                                     analysis_family="confirmatory",
-                                    design="between_subjects",
+                                    design="between_subjects_first_vignette",
                                     dv_key=dv_key,
                                     agent_role="distal",
                                     contrast_type=contrast_type,
@@ -4300,7 +4281,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                                 inclusion_filter=inclusion_filter_label,
                                 story_condition=story_condition_value,
                                 load_condition=load_condition_value,
-                                design="between_subjects",
+                                design="between_subjects_first_vignette",
                                 dv=dv_key,
                                 agent_role="distal",
                                 contrast_type=contrast_type,
@@ -4325,7 +4306,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                                 p_value_holm=np.nan,
                                 notes=build_plain_language_note(
                                     analysis_family=analysis_family_value,
-                                    design="between_subjects",
+                                    design="between_subjects_first_vignette",
                                     dv_key=dv_key,
                                     agent_role="distal",
                                     contrast_type=contrast_type,
@@ -4369,7 +4350,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                             inclusion_filter=inclusion_filter_label,
                             story_condition=story_condition_value,
                             load_condition=load_condition_value,
-                            design="within_subjects",
+                            design="within_subjects_all_vignettes",
                             dv=dv_key,
                             agent_role="distal",
                             contrast_type=contrast_type,
@@ -4394,7 +4375,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                             p_value_holm=np.nan,
                             notes=build_plain_language_note(
                                 analysis_family="exploratory",
-                                design="within_subjects",
+                                design="within_subjects_all_vignettes",
                                 dv_key=dv_key,
                                 agent_role="distal",
                                 contrast_type=contrast_type,
@@ -4430,7 +4411,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                             inclusion_filter=inclusion_filter_label,
                             story_condition=story_condition_value,
                             load_condition=load_condition_value,
-                            design="within_subjects",
+                            design="within_subjects_all_vignettes",
                             dv=dv_key,
                             agent_role="proximate",
                             contrast_type=contrast_type,
@@ -4455,7 +4436,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
                             p_value_holm=np.nan,
                             notes=build_plain_language_note(
                                 analysis_family="exploratory",
-                                design="within_subjects",
+                                design="within_subjects_all_vignettes",
                                 dv_key=dv_key,
                                 agent_role="proximate",
                                 contrast_type=contrast_type,
@@ -4479,7 +4460,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         & (dataframe_tests["inclusion_filter"] == "included_only")
         & (dataframe_tests["story_condition"] == "pooled")
         & (dataframe_tests["load_condition"] == "pooled")
-        & (dataframe_tests["design"] == "between_subjects")
+        & (dataframe_tests["analysis_scope"] == "between_subjects_first_vignette")
         & (dataframe_tests["dv"] == "blame")
         & (dataframe_tests["agent_role"] == "distal")
         & (dataframe_tests["contrast_type"].isin(["CH - CC", "DIV - CC"]))
@@ -4509,7 +4490,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
     dataframe_tests["inclusion_filter_sort_order"] = dataframe_tests["inclusion_filter"].map(participants_sort_map)
     dataframe_tests["story_condition_sort_order"] = dataframe_tests["story_condition"].map(story_condition_sort_map)
     dataframe_tests["load_condition_sort_order"] = dataframe_tests["load_condition"].map(load_condition_sort_map)
-    dataframe_tests["design_sort_order"] = dataframe_tests["design"].map(design_sort_map)
+    dataframe_tests["design_sort_order"] = dataframe_tests["analysis_scope"].map(design_sort_map)
     dataframe_tests["dv_sort_order"] = dataframe_tests["dv"].map(dv_sort_map)
     dataframe_tests["agent_role_sort_order"] = dataframe_tests["agent_role"].map(agent_role_sort_map)
     dataframe_tests["contrast_type_sort_order"] = dataframe_tests["contrast_type"].map(
@@ -4554,7 +4535,7 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         "inclusion_filter",
         "story_condition",
         "load_condition",
-        "design",
+        "analysis_scope",
         "dv",
         "agent_role",
         "contrast_type",
@@ -4813,6 +4794,7 @@ def compute_first_vignette_distal_blame_integrated_models(
         • pd.DataFrame
             - Tidy long-format dataframe containing observed descriptives, raw coefficients,
               model-based contrasts, and omnibus tests for both included_only and all_finishers.
+            - All rows carry analysis_scope = "between_subjects_first_vignette".
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
@@ -5131,6 +5113,7 @@ def compute_within_subject_distal_blame_integrated_models(
         • pd.DataFrame
             - Tidy long-format dataframe containing observed descriptives, raw coefficients,
               model-based contrasts, and omnibus tests for both included_only and all_finishers.
+            - All rows carry analysis_scope = "within_subjects_repeated_measures".
 
     Notes:
         • The primary repeated-measures model is:
@@ -5762,7 +5745,8 @@ def _normalize_dependent_variable_input(dependent_variable: str | Any = "blame")
         return "punish", "Punishment (years)", None
 
     raise ValueError(
-        "Unrecognized dependent_variable. Expected one of: 'blame', 'wrong', or 'punishment'. "
+        "Unrecognized dependent_variable. "
+        "Expected one of: 'blame' (or 'blameworthiness'), 'wrong' (or 'wrongness'), 'punish' (or 'punishment', 'years', 'prison'). "
         f"Got: {dependent_variable!r}"
     )
 
@@ -10254,7 +10238,7 @@ def _extract_exact_test_row_from_test_csv(
         • load_condition: str
             - "pooled", "high", or "low"
         • design: str
-            - "between_subjects" or "within_subjects"
+            - "between_subjects_first_vignette" or "within_subjects_all_vignettes"
         • dv: str
             - "blame", "wrong", or "punish"
         • agent_role: str
@@ -10318,7 +10302,7 @@ def _extract_exact_test_row_from_test_csv(
         tests_dataframe[participants_column_name].isin(valid_inclusion_filter_values)
         & tests_dataframe[story_family_column_name].isin(valid_story_family_values)
         & (tests_dataframe["load_condition"] == load_condition)
-        & (tests_dataframe["design"] == design)
+        & (tests_dataframe["analysis_scope"] == design)
         & tests_dataframe["dv"].isin(valid_dv_values)
         & tests_dataframe["agent_role"].isin(valid_agent_role_values)
         & (tests_dataframe[contrast_type_column_name] == contrast_type)
@@ -10335,7 +10319,7 @@ def _extract_exact_test_row_from_test_csv(
             f"inclusion_filter={inclusion_filter!r}, "
             f"story_family={story_family!r}, "
             f"load_condition={load_condition!r}, "
-            f"design={design!r}, "
+            f"analysis_scope={design!r}, "
             f"dv={dv!r}, "
             f"agent_role={agent_role!r}, "
             f"contrast_type={contrast_type!r}, "
@@ -10733,9 +10717,7 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
     story_condition_column_name = (
         "story_family" if "story_family" in group_summaries_dataframe.columns else "story_condition"
     )
-    analysis_scope_column_name = (
-        "design" if "design" in group_summaries_dataframe.columns else "analysis_scope"
-    )
+    analysis_scope_column_name = "analysis_scope"
 
     def normalize_inclusion_filter_for_group_summaries(value: str) -> set[str]:
         if value in {"included_only", "included"}:
@@ -11072,7 +11054,7 @@ def compute_manuscript_table_3_primary_distal_blame_contrasts(
                 inclusion_filter=inclusion_filter_value,
                 story_family="pooled",
                 load_condition="pooled",
-                design="between_subjects",
+                design="between_subjects_first_vignette",
                 dv="blame",
                 agent_role="distal",
                 contrast_type=contrast_type_value,
@@ -11119,7 +11101,7 @@ def compute_manuscript_table_3_primary_distal_blame_contrasts(
                 inclusion_filter=inclusion_filter_value,
                 story_family="pooled",
                 load_condition="pooled",
-                design="within_subjects",
+                design="within_subjects_all_vignettes",
                 dv="blame",
                 agent_role="distal",
                 contrast_type=contrast_type_value,
@@ -11245,7 +11227,7 @@ def compute_manuscript_table_4_story_specific_distal_blame_contrasts(
                 inclusion_filter="included_only",
                 story_family=story_family_value,
                 load_condition="pooled",
-                design="between_subjects",
+                design="between_subjects_first_vignette",
                 dv="blame",
                 agent_role="distal",
                 contrast_type=contrast_type_value,
@@ -11282,7 +11264,7 @@ def compute_manuscript_table_4_story_specific_distal_blame_contrasts(
                 inclusion_filter="included_only",
                 story_family=story_family_value,
                 load_condition="pooled",
-                design="within_subjects",
+                design="within_subjects_all_vignettes",
                 dv="blame",
                 agent_role="distal",
                 contrast_type=contrast_type_value,
@@ -11570,7 +11552,7 @@ def compute_supplementary_table_7_cognitive_load_blame_contrasts(
                 inclusion_filter="included_only",
                 story_family="pooled",
                 load_condition=load_condition_value,
-                design="within_subjects",
+                design="within_subjects_all_vignettes",
                 dv="blame",
                 agent_role="distal",
                 contrast_type=contrast_type_value,
@@ -11880,8 +11862,8 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
         "trolley": "Trolley",
     }
     design_display_map = {
-        "between_subjects": "Between-subj",
-        "within_subjects": "Within-subj",
+        "between_subjects_first_vignette": "Between-subj",
+        "within_subjects_all_vignettes": "Within-subj",
     }
     contrast_display_map = {
         "CH - CC": "CH - CC",
@@ -11911,7 +11893,7 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
                             "confirmatory"
                             if (
                                 dv_value == "blame"
-                                and design_value == "between_subjects"
+                                and design_value == "between_subjects_first_vignette"
                                 and story_family_value == "pooled"
                             )
                             else "exploratory"
@@ -11923,7 +11905,7 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
                         general_settings=general_settings,
                         use_holm_if_available=(
                             dv_value == "blame"
-                            and design_value == "between_subjects"
+                            and design_value == "between_subjects_first_vignette"
                             and story_family_value == "pooled"
                         ),
                     )
@@ -12249,7 +12231,18 @@ def generate_manuscript_and_supplementary_tables(
 
     Returns:
         • dict[str, Any]
-            - Dictionary containing the saved table dataframes and their manifest.
+            - Dictionary with keys:
+                "table_1"     — participant counts by condition
+                "table_2"     — mean scale values by DV and condition
+                "table_3"     — primary distal-blame contrasts
+                "table_4"     — story-specific distal-blame contrasts
+                "table_5"     — 2AFC response distribution
+                "table_6"     — within-subject pairwise blame matrix (wide format)
+                "table_6_long"— within-subject pairwise blame matrix (long format)
+                "table_7"     — cognitive-load blame contrasts
+                "table_8"     — order-effects summary
+                "table_9"     — secondary DV contrasts
+                "table_manifest" — one-row-per-table manifest of all saved files
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
@@ -12478,7 +12471,7 @@ force_rebuild = True
 one_tailed = True
 
 default_marker_size = 7
-create_figures = False
+create_figures = True
 export_figure = True
 dark_mode = False
 base_hue = 220

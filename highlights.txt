@@ -1,0 +1,6 @@
+Responsibility Shielding Highlights:
+• Blame concentrates on the last responsible actor, shielding whoever made the harm possible.
+• Causally proximate actors only deflect blame if they can be attributed moral responsibility.
+• The effect cannot be explained merely by diffusing responsibility across multiple actors.
+• Shielding replicates across two story types and extends to punishment decisions.
+• Those who set harm in motion may routinely hide behind those who carried it out.
