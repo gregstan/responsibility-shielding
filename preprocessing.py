@@ -139,6 +139,11 @@ def coalesce_series(primary_series: pd.Series, secondary_series: pd.Series) -> p
     Returns:
         Combined series.
     """
+    "Robot data lacks timing columns, so .get() returns None → pd.to_numeric(None) → scalar NaN"
+    if not isinstance(primary_series, pd.Series):
+        return secondary_series if isinstance(secondary_series, pd.Series) else pd.Series(dtype=float)
+    if not isinstance(secondary_series, pd.Series):
+        return primary_series
     return primary_series.combine_first(secondary_series)
 
 
@@ -845,10 +850,11 @@ def preprocess_raw_qualtrics_export(general_settings: GeneralSettings) -> pd.Dat
     cleaned_dataframe = raw_dataframe.drop(columns=[column_name for column_name in columns_to_drop if column_name in raw_dataframe.columns])
 
     "Restrict rows to the frozen manuscript collection window."
-    cleaned_dataframe = apply_collection_window_freeze(
-        raw_dataframe=cleaned_dataframe,
-        general_settings=general_settings,
-    )
+    if not general_settings["misc"].get("skip_freeze_filter", False):
+        cleaned_dataframe = apply_collection_window_freeze(
+            raw_dataframe=cleaned_dataframe,
+            general_settings=general_settings,
+        )
 
     "Remove unnecessary identifying Qualtrics columns before saving."
     cleaned_dataframe = drop_identifying_columns_from_cleaned_dataframe(

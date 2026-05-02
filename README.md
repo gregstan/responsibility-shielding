@@ -423,6 +423,23 @@ The repository is intended so that a fresh rerun of the pipeline reproduces the 
 
 ---
 
+## Robot participant experiment
+
+The `robot_experiment/` directory runs AI models through the same experimental protocol human participants received. Each robot instance reads the vignettes, provides blame/wrongness/punishment ratings, and completes the full Qualtrics page sequence (cognitive load, comprehension checks, 2AFC, CRT, INDCOL). Output goes to `robot_raw_data/` in the same CSV format as the human raw data, so `preprocessing.py` processes it without modification. After data collection, the runner automatically prints Tables 2/3/4/9 using the same analysis functions as `analysis.py`.
+
+**Supported models:** Claude, GPT-4o, Gemini, Grok, DeepSeek, and Ollama (local/free). List multiple models in `ROBOT_EXPERIMENT_CONFIG["models"]` to run them all in one call.
+
+**Quick start:**
+```bash
+pip install anthropic openai google-generativeai aiohttp python-dotenv
+cp .env.example .env          # then paste API keys into .env
+python robot_experiment/run_robot_participants.py   # beta_mode=True by default (3 participants)
+```
+
+See [AGENTS.md](AGENTS.md) §10 for full documentation of the design, protocol fidelity choices, config options, and instructions for adding new providers.
+
+---
+
 ## Citation, license, and contact
 
 If you use this repository, please cite the paper and/or repository once the public citation information is finalized.

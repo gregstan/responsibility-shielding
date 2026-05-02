@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import TypedDict, Dict, Any
+from typing import TypedDict, Dict, Any, Literal
 
 
 "=========================================================================================="
@@ -57,7 +57,7 @@ class Visuals(TypedDict):
     dark_mode: bool
     base_hue: int
 
-class MiscSettings(TypedDict):
+class MiscSettings(TypedDict, total=False):
     confirmatory_between_subjects_method: str
     rebuild_cleaned_dataframe: bool
     print_tables_to_terminal: bool
@@ -66,16 +66,51 @@ class MiscSettings(TypedDict):
     use_integrated_models: bool
     force_rebuild: bool
     one_tailed: bool
+    skip_freeze_filter: bool
 
 class PunishSettings(TypedDict, total=False):
     analysis_mode: str
     bootstrap_iterations: int
     random_seed: int
 
+RobotModelName = Literal[
+    "claude-sonnet-4-6",
+    "claude-opus-4-7",
+    "claude-haiku-4-5-20251001",
+    "gpt-4o",
+    "gpt-4o-mini",
+    "o3-mini",
+    "gemini-2.0-flash",
+    "gemini-1.5-pro",
+    "grok-3",
+    "grok-3-mini",
+    "deepseek-chat",
+    "deepseek-reasoner",
+    "mistral",
+    "llama3.1:8b",
+    "qwen2.5:7b",
+]
+
+class RobotSettings(TypedDict, total=False):
+    models: list[RobotModelName]
+    n_participants_per_model: int
+    temperature: float
+    story_balance: str
+    output_file: str
+    max_concurrent_participants: int
+    beta_mode: bool
+    beta_n_participants: int
+    print_transcripts: bool
+    run_analysis_after_collection: bool
+    run_models_sequentially: bool
+    overwrite_raw_data: bool
+    generate_justification: bool
+
 class GeneralSettings(TypedDict):
     filing: Filing
     visuals: Visuals
     misc: MiscSettings
     punish: PunishSettings
+    robot: RobotSettings
 
 

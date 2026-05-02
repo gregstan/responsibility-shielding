@@ -1,0 +1,649 @@
+﻿inclusion_filter,story_condition,load_condition,analysis_scope,agent_role,dv,condition,n,mean,median,std
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,blame,CC,6,6.0,6.0,1.0954451150103321
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,blame,CH,6,7.166666666666667,7.0,1.1690451944500122
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,blame,DIV,6,6.5,6.0,1.378404875209022
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CC,6,5.833333333333333,5.5,1.1690451944500122
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CH,6,6.833333333333333,6.5,1.1690451944500122
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,wrong,DIV,6,6.0,5.5,1.5491933384829668
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,punish,CC,6,0.876249228671297,0.6931471805599453,0.627167733308013
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,punish,CH,6,1.1603739107110345,0.8958797346140275,0.9124722655805656
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,punish,DIV,6,1.1072982888579455,0.6931471805599453,0.998233665728403
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CC,6,7.5,7.0,1.224744871391589
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CH,6,1.5,1.0,0.8366600265340756
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CC,6,7.5,7.0,1.224744871391589
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CH,6,1.5,1.5,0.5477225575051661
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CC,6,1.3887982447363265,1.0986122886681098,1.12612665017371
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CH,6,0.0,0.0,0.0
+included_only,pooled,pooled,between_subjects_first_vignette,distal,blame,CC,2,7.0,7.0,1.4142135623730951
+included_only,pooled,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
+included_only,pooled,pooled,between_subjects_first_vignette,distal,blame,DIV,4,6.0,6.0,0.816496580927726
+included_only,pooled,pooled,between_subjects_first_vignette,distal,wrong,CC,2,7.0,7.0,1.4142135623730951
+included_only,pooled,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
+included_only,pooled,pooled,between_subjects_first_vignette,distal,wrong,DIV,4,5.25,5.0,0.5
+included_only,pooled,pooled,between_subjects_first_vignette,distal,punish,CC,2,1.2424533248940002,1.2424533248940002,0.7768361992120932
+included_only,pooled,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
+included_only,pooled,pooled,between_subjects_first_vignette,distal,punish,DIV,4,0.7945134575869863,0.6931471805599453,0.74078820325774
+included_only,pooled,pooled,within_subjects_deltas,distal,blame,CH - CC,6,1.1666666666666667,1.0,0.408248290463863
+included_only,pooled,pooled,within_subjects_deltas,distal,blame,DIV - CC,6,0.5,0.5,0.5477225575051661
+included_only,pooled,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",6,0.5,0.5,0.5477225575051661
+included_only,pooled,pooled,within_subjects_deltas,proximate,blame,CC - CH,6,6.0,6.0,0.6324555320336759
+included_only,pooled,pooled,within_subjects_deltas,distal,wrong,CH - CC,6,1.0,1.0,0.6324555320336759
+included_only,pooled,pooled,within_subjects_deltas,distal,wrong,DIV - CC,6,0.16666666666666666,0.0,0.7527726527090811
+included_only,pooled,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",6,0.16666666666666666,0.0,0.7527726527090811
+included_only,pooled,pooled,within_subjects_deltas,proximate,wrong,CC - CH,6,6.0,6.0,0.8944271909999159
+included_only,pooled,pooled,within_subjects_deltas,distal,punish,CH - CC,6,0.28412468203973756,0.20273255405408225,0.3249290908847982
+included_only,pooled,pooled,within_subjects_deltas,distal,punish,DIV - CC,6,0.23104906018664842,0.0,0.4015285713813913
+included_only,pooled,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",6,0.16860015194641334,0.0,0.26879229856708164
+included_only,pooled,pooled,within_subjects_deltas,proximate,punish,CC - CH,6,1.3887982447363265,1.0986122886681098,1.12612665017371
+included_only,pooled,high,within_subjects_all_vignettes,distal,blame,CC,2,6.0,6.0,0.0
+included_only,pooled,high,within_subjects_all_vignettes,distal,blame,CH,2,7.0,7.0,0.0
+included_only,pooled,high,within_subjects_all_vignettes,distal,blame,DIV,2,6.0,6.0,0.0
+included_only,pooled,high,within_subjects_all_vignettes,distal,wrong,CC,2,6.0,6.0,0.0
+included_only,pooled,high,within_subjects_all_vignettes,distal,wrong,CH,2,6.5,6.5,0.7071067811865476
+included_only,pooled,high,within_subjects_all_vignettes,distal,wrong,DIV,2,5.5,5.5,0.7071067811865476
+included_only,pooled,high,within_subjects_all_vignettes,distal,punish,CC,2,0.6931471805599453,0.6931471805599453,0.0
+included_only,pooled,high,within_subjects_all_vignettes,distal,punish,CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+included_only,pooled,high,within_subjects_all_vignettes,distal,punish,DIV,2,0.6931471805599453,0.6931471805599453,0.0
+included_only,pooled,high,within_subjects_all_vignettes,proximate,blame,CC,2,7.0,7.0,0.0
+included_only,pooled,high,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
+included_only,pooled,high,within_subjects_all_vignettes,proximate,wrong,CC,2,7.0,7.0,0.0
+included_only,pooled,high,within_subjects_all_vignettes,proximate,wrong,CH,2,1.5,1.5,0.7071067811865476
+included_only,pooled,high,within_subjects_all_vignettes,proximate,punish,CC,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+included_only,pooled,high,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
+included_only,pooled,high,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
+included_only,pooled,high,between_subjects_first_vignette,distal,blame,CH,0,,,
+included_only,pooled,high,between_subjects_first_vignette,distal,blame,DIV,1,6.0,6.0,
+included_only,pooled,high,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
+included_only,pooled,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
+included_only,pooled,high,between_subjects_first_vignette,distal,wrong,DIV,1,5.0,5.0,
+included_only,pooled,high,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
+included_only,pooled,high,between_subjects_first_vignette,distal,punish,CH,0,,,
+included_only,pooled,high,between_subjects_first_vignette,distal,punish,DIV,1,0.6931471805599453,0.6931471805599453,
+included_only,pooled,high,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
+included_only,pooled,high,within_subjects_deltas,distal,blame,DIV - CC,2,0.0,0.0,0.0
+included_only,pooled,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+included_only,pooled,high,within_subjects_deltas,proximate,blame,CC - CH,2,6.0,6.0,0.0
+included_only,pooled,high,within_subjects_deltas,distal,wrong,CH - CC,2,0.5,0.5,0.7071067811865476
+included_only,pooled,high,within_subjects_deltas,distal,wrong,DIV - CC,2,-0.5,-0.5,0.7071067811865476
+included_only,pooled,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,-0.5,-0.5,0.7071067811865476
+included_only,pooled,high,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
+included_only,pooled,high,within_subjects_deltas,distal,punish,CH - CC,2,0.20273255405408225,0.20273255405408225,0.28670712747781973
+included_only,pooled,high,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
+included_only,pooled,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+included_only,pooled,high,within_subjects_deltas,proximate,punish,CC - CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+included_only,pooled,low,within_subjects_all_vignettes,distal,blame,CC,4,6.0,5.5,1.4142135623730951
+included_only,pooled,low,within_subjects_all_vignettes,distal,blame,CH,4,7.25,7.0,1.5
+included_only,pooled,low,within_subjects_all_vignettes,distal,blame,DIV,4,6.75,6.5,1.707825127659933
+included_only,pooled,low,within_subjects_all_vignettes,distal,wrong,CC,4,5.75,5.0,1.5
+included_only,pooled,low,within_subjects_all_vignettes,distal,wrong,CH,4,7.0,6.5,1.4142135623730951
+included_only,pooled,low,within_subjects_all_vignettes,distal,wrong,DIV,4,6.25,5.5,1.8929694486000912
+included_only,pooled,low,within_subjects_all_vignettes,distal,punish,CC,4,0.9678002527269727,1.0397207708399179,0.7886946490765272
+included_only,pooled,low,within_subjects_all_vignettes,distal,punish,CH,4,1.292620998759538,1.3862943611198906,1.135921900595043
+included_only,pooled,low,within_subjects_all_vignettes,distal,punish,DIV,4,1.3143738430069454,1.2424533248940002,1.220353614798383
+included_only,pooled,low,within_subjects_all_vignettes,proximate,blame,CC,4,7.75,8.0,1.5
+included_only,pooled,low,within_subjects_all_vignettes,proximate,blame,CH,4,1.75,1.5,0.9574271077563381
+included_only,pooled,low,within_subjects_all_vignettes,proximate,wrong,CC,4,7.75,8.0,1.5
+included_only,pooled,low,within_subjects_all_vignettes,proximate,wrong,CH,4,1.5,1.5,0.5773502691896257
+included_only,pooled,low,within_subjects_all_vignettes,proximate,punish,CC,4,1.6352574997974758,1.7482537807332403,1.357657199166658
+included_only,pooled,low,within_subjects_all_vignettes,proximate,punish,CH,4,0.0,0.0,0.0
+included_only,pooled,low,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
+included_only,pooled,low,between_subjects_first_vignette,distal,blame,CH,0,,,
+included_only,pooled,low,between_subjects_first_vignette,distal,blame,DIV,3,6.0,6.0,1.0
+included_only,pooled,low,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
+included_only,pooled,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
+included_only,pooled,low,between_subjects_first_vignette,distal,wrong,DIV,3,5.333333333333333,5.0,0.5773502691896258
+included_only,pooled,low,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
+included_only,pooled,low,between_subjects_first_vignette,distal,punish,CH,0,,,
+included_only,pooled,low,between_subjects_first_vignette,distal,punish,DIV,3,0.8283022165960001,0.6931471805599453,0.9034935869814078
+included_only,pooled,low,within_subjects_deltas,distal,blame,CH - CC,4,1.25,1.0,0.5
+included_only,pooled,low,within_subjects_deltas,distal,blame,DIV - CC,4,0.75,1.0,0.5
+included_only,pooled,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",4,0.75,1.0,0.5
+included_only,pooled,low,within_subjects_deltas,proximate,blame,CC - CH,4,6.0,6.0,0.816496580927726
+included_only,pooled,low,within_subjects_deltas,distal,wrong,CH - CC,4,1.25,1.0,0.5
+included_only,pooled,low,within_subjects_deltas,distal,wrong,DIV - CC,4,0.5,0.5,0.5773502691896257
+included_only,pooled,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",4,0.5,0.5,0.5773502691896257
+included_only,pooled,low,within_subjects_deltas,proximate,wrong,CC - CH,4,6.25,6.5,0.9574271077563381
+included_only,pooled,low,within_subjects_deltas,distal,punish,CH - CC,4,0.3248207460325652,0.30306790178515786,0.37674905798396924
+included_only,pooled,low,within_subjects_deltas,distal,punish,DIV - CC,4,0.34657359027997264,0.2027325540540822,0.46403123585182093
+included_only,pooled,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",4,0.25290022791962,0.2027325540540822,0.30329768937234736
+included_only,pooled,low,within_subjects_deltas,proximate,punish,CC - CH,4,1.6352574997974758,1.7482537807332403,1.357657199166658
+included_only,firework,pooled,within_subjects_all_vignettes,distal,blame,CC,2,7.0,7.0,1.4142135623730951
+included_only,firework,pooled,within_subjects_all_vignettes,distal,blame,CH,2,8.5,8.5,0.7071067811865476
+included_only,firework,pooled,within_subjects_all_vignettes,distal,blame,DIV,2,8.0,8.0,1.4142135623730951
+included_only,firework,pooled,within_subjects_all_vignettes,distal,wrong,CC,2,6.5,6.5,2.1213203435596424
+included_only,firework,pooled,within_subjects_all_vignettes,distal,wrong,CH,2,8.0,8.0,1.4142135623730951
+included_only,firework,pooled,within_subjects_all_vignettes,distal,wrong,DIV,2,7.5,7.5,2.1213203435596424
+included_only,firework,pooled,within_subjects_all_vignettes,distal,punish,CC,2,1.5890269151739727,1.5890269151739727,0.2867071274778196
+included_only,firework,pooled,within_subjects_all_vignettes,distal,punish,CH,2,2.2386684072391034,2.2386684072391034,0.2251807927680735
+included_only,firework,pooled,within_subjects_all_vignettes,distal,punish,DIV,2,2.282174095733918,2.282174095733918,0.6935510159907275
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,blame,CC,2,9.0,9.0,0.0
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,blame,CH,2,2.5,2.5,0.7071067811865476
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CC,2,9.0,9.0,0.0
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CH,2,2.0,2.0,0.0
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,punish,CC,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
+included_only,firework,pooled,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
+included_only,firework,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
+included_only,firework,pooled,between_subjects_first_vignette,distal,blame,DIV,1,7.0,7.0,
+included_only,firework,pooled,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
+included_only,firework,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
+included_only,firework,pooled,between_subjects_first_vignette,distal,wrong,DIV,1,6.0,6.0,
+included_only,firework,pooled,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
+included_only,firework,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
+included_only,firework,pooled,between_subjects_first_vignette,distal,punish,DIV,1,1.791759469228055,1.791759469228055,
+included_only,firework,pooled,within_subjects_deltas,distal,blame,CH - CC,2,1.5,1.5,0.7071067811865476
+included_only,firework,pooled,within_subjects_deltas,distal,blame,DIV - CC,2,1.0,1.0,0.0
+included_only,firework,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
+included_only,firework,pooled,within_subjects_deltas,proximate,blame,CC - CH,2,6.5,6.5,0.7071067811865476
+included_only,firework,pooled,within_subjects_deltas,distal,wrong,CH - CC,2,1.5,1.5,0.7071067811865476
+included_only,firework,pooled,within_subjects_deltas,distal,wrong,DIV - CC,2,1.0,1.0,0.0
+included_only,firework,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
+included_only,firework,pooled,within_subjects_deltas,proximate,wrong,CC - CH,2,7.0,7.0,0.0
+included_only,firework,pooled,within_subjects_deltas,distal,punish,CH - CC,2,0.6496414920651304,0.6496414920651304,0.06152633470974612
+included_only,firework,pooled,within_subjects_deltas,distal,punish,DIV - CC,2,0.6931471805599453,0.6931471805599453,0.40684388851290787
+included_only,firework,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.50580045583924,0.50580045583924,0.14189560954670774
+included_only,firework,pooled,within_subjects_deltas,proximate,punish,CC - CH,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
+included_only,firework,high,within_subjects_all_vignettes,distal,blame,CC,0,,,
+included_only,firework,high,within_subjects_all_vignettes,distal,blame,CH,0,,,
+included_only,firework,high,within_subjects_all_vignettes,distal,blame,DIV,0,,,
+included_only,firework,high,within_subjects_all_vignettes,distal,wrong,CC,0,,,
+included_only,firework,high,within_subjects_all_vignettes,distal,wrong,CH,0,,,
+included_only,firework,high,within_subjects_all_vignettes,distal,wrong,DIV,0,,,
+included_only,firework,high,within_subjects_all_vignettes,distal,punish,CC,0,,,
+included_only,firework,high,within_subjects_all_vignettes,distal,punish,CH,0,,,
+included_only,firework,high,within_subjects_all_vignettes,distal,punish,DIV,0,,,
+included_only,firework,high,within_subjects_all_vignettes,proximate,blame,CC,0,,,
+included_only,firework,high,within_subjects_all_vignettes,proximate,blame,CH,0,,,
+included_only,firework,high,within_subjects_all_vignettes,proximate,wrong,CC,0,,,
+included_only,firework,high,within_subjects_all_vignettes,proximate,wrong,CH,0,,,
+included_only,firework,high,within_subjects_all_vignettes,proximate,punish,CC,0,,,
+included_only,firework,high,within_subjects_all_vignettes,proximate,punish,CH,0,,,
+included_only,firework,high,between_subjects_first_vignette,distal,blame,CC,0,,,
+included_only,firework,high,between_subjects_first_vignette,distal,blame,CH,0,,,
+included_only,firework,high,between_subjects_first_vignette,distal,blame,DIV,0,,,
+included_only,firework,high,between_subjects_first_vignette,distal,wrong,CC,0,,,
+included_only,firework,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
+included_only,firework,high,between_subjects_first_vignette,distal,wrong,DIV,0,,,
+included_only,firework,high,between_subjects_first_vignette,distal,punish,CC,0,,,
+included_only,firework,high,between_subjects_first_vignette,distal,punish,CH,0,,,
+included_only,firework,high,between_subjects_first_vignette,distal,punish,DIV,0,,,
+included_only,firework,high,within_subjects_deltas,distal,blame,CH - CC,0,,,
+included_only,firework,high,within_subjects_deltas,distal,blame,DIV - CC,0,,,
+included_only,firework,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",0,,,
+included_only,firework,high,within_subjects_deltas,proximate,blame,CC - CH,0,,,
+included_only,firework,high,within_subjects_deltas,distal,wrong,CH - CC,0,,,
+included_only,firework,high,within_subjects_deltas,distal,wrong,DIV - CC,0,,,
+included_only,firework,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",0,,,
+included_only,firework,high,within_subjects_deltas,proximate,wrong,CC - CH,0,,,
+included_only,firework,high,within_subjects_deltas,distal,punish,CH - CC,0,,,
+included_only,firework,high,within_subjects_deltas,distal,punish,DIV - CC,0,,,
+included_only,firework,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",0,,,
+included_only,firework,high,within_subjects_deltas,proximate,punish,CC - CH,0,,,
+included_only,firework,low,within_subjects_all_vignettes,distal,blame,CC,2,7.0,7.0,1.4142135623730951
+included_only,firework,low,within_subjects_all_vignettes,distal,blame,CH,2,8.5,8.5,0.7071067811865476
+included_only,firework,low,within_subjects_all_vignettes,distal,blame,DIV,2,8.0,8.0,1.4142135623730951
+included_only,firework,low,within_subjects_all_vignettes,distal,wrong,CC,2,6.5,6.5,2.1213203435596424
+included_only,firework,low,within_subjects_all_vignettes,distal,wrong,CH,2,8.0,8.0,1.4142135623730951
+included_only,firework,low,within_subjects_all_vignettes,distal,wrong,DIV,2,7.5,7.5,2.1213203435596424
+included_only,firework,low,within_subjects_all_vignettes,distal,punish,CC,2,1.5890269151739727,1.5890269151739727,0.2867071274778196
+included_only,firework,low,within_subjects_all_vignettes,distal,punish,CH,2,2.2386684072391034,2.2386684072391034,0.2251807927680735
+included_only,firework,low,within_subjects_all_vignettes,distal,punish,DIV,2,2.282174095733918,2.282174095733918,0.6935510159907275
+included_only,firework,low,within_subjects_all_vignettes,proximate,blame,CC,2,9.0,9.0,0.0
+included_only,firework,low,within_subjects_all_vignettes,proximate,blame,CH,2,2.5,2.5,0.7071067811865476
+included_only,firework,low,within_subjects_all_vignettes,proximate,wrong,CC,2,9.0,9.0,0.0
+included_only,firework,low,within_subjects_all_vignettes,proximate,wrong,CH,2,2.0,2.0,0.0
+included_only,firework,low,within_subjects_all_vignettes,proximate,punish,CC,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
+included_only,firework,low,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
+included_only,firework,low,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
+included_only,firework,low,between_subjects_first_vignette,distal,blame,CH,0,,,
+included_only,firework,low,between_subjects_first_vignette,distal,blame,DIV,1,7.0,7.0,
+included_only,firework,low,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
+included_only,firework,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
+included_only,firework,low,between_subjects_first_vignette,distal,wrong,DIV,1,6.0,6.0,
+included_only,firework,low,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
+included_only,firework,low,between_subjects_first_vignette,distal,punish,CH,0,,,
+included_only,firework,low,between_subjects_first_vignette,distal,punish,DIV,1,1.791759469228055,1.791759469228055,
+included_only,firework,low,within_subjects_deltas,distal,blame,CH - CC,2,1.5,1.5,0.7071067811865476
+included_only,firework,low,within_subjects_deltas,distal,blame,DIV - CC,2,1.0,1.0,0.0
+included_only,firework,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
+included_only,firework,low,within_subjects_deltas,proximate,blame,CC - CH,2,6.5,6.5,0.7071067811865476
+included_only,firework,low,within_subjects_deltas,distal,wrong,CH - CC,2,1.5,1.5,0.7071067811865476
+included_only,firework,low,within_subjects_deltas,distal,wrong,DIV - CC,2,1.0,1.0,0.0
+included_only,firework,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
+included_only,firework,low,within_subjects_deltas,proximate,wrong,CC - CH,2,7.0,7.0,0.0
+included_only,firework,low,within_subjects_deltas,distal,punish,CH - CC,2,0.6496414920651304,0.6496414920651304,0.06152633470974612
+included_only,firework,low,within_subjects_deltas,distal,punish,DIV - CC,2,0.6931471805599453,0.6931471805599453,0.40684388851290787
+included_only,firework,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.50580045583924,0.50580045583924,0.14189560954670774
+included_only,firework,low,within_subjects_deltas,proximate,punish,CC - CH,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,blame,CC,4,5.5,5.5,0.5773502691896257
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,blame,CH,4,6.5,6.5,0.5773502691896257
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,blame,DIV,4,5.75,6.0,0.5
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CC,4,5.5,5.5,0.5773502691896257
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CH,4,6.25,6.0,0.5
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,wrong,DIV,4,5.25,5.0,0.5
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,punish,CC,4,0.5198603854199589,0.6931471805599453,0.34657359027997264
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,punish,CH,4,0.6212266624470001,0.6931471805599453,0.45613036298439547
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,punish,DIV,4,0.5198603854199589,0.6931471805599453,0.34657359027997264
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CC,4,6.75,7.0,0.5
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CH,4,1.0,1.0,0.0
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CC,4,6.75,7.0,0.5
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CH,4,1.25,1.0,0.5
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CC,4,0.7225929394740412,0.8958797346140275,0.5182627103546438
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CH,4,0.0,0.0,0.0
+included_only,trolley,pooled,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
+included_only,trolley,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
+included_only,trolley,pooled,between_subjects_first_vignette,distal,blame,DIV,3,5.666666666666667,6.0,0.5773502691896258
+included_only,trolley,pooled,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
+included_only,trolley,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
+included_only,trolley,pooled,between_subjects_first_vignette,distal,wrong,DIV,3,5.0,5.0,0.0
+included_only,trolley,pooled,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
+included_only,trolley,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
+included_only,trolley,pooled,between_subjects_first_vignette,distal,punish,DIV,3,0.46209812037329684,0.6931471805599453,0.40018871128431455
+included_only,trolley,pooled,within_subjects_deltas,distal,blame,CH - CC,4,1.0,1.0,0.0
+included_only,trolley,pooled,within_subjects_deltas,distal,blame,DIV - CC,4,0.25,0.0,0.5
+included_only,trolley,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",4,0.25,0.0,0.5
+included_only,trolley,pooled,within_subjects_deltas,proximate,blame,CC - CH,4,5.75,6.0,0.5
+included_only,trolley,pooled,within_subjects_deltas,distal,wrong,CH - CC,4,0.75,1.0,0.5
+included_only,trolley,pooled,within_subjects_deltas,distal,wrong,DIV - CC,4,-0.25,0.0,0.5
+included_only,trolley,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",4,-0.25,0.0,0.5
+included_only,trolley,pooled,within_subjects_deltas,proximate,wrong,CC - CH,4,5.5,5.5,0.5773502691896257
+included_only,trolley,pooled,within_subjects_deltas,distal,punish,CH - CC,4,0.10136627702704112,0.0,0.20273255405408225
+included_only,trolley,pooled,within_subjects_deltas,distal,punish,DIV - CC,4,0.0,0.0,0.0
+included_only,trolley,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",4,0.0,0.0,0.0
+included_only,trolley,pooled,within_subjects_deltas,proximate,punish,CC - CH,4,0.7225929394740412,0.8958797346140275,0.5182627103546438
+included_only,trolley,high,within_subjects_all_vignettes,distal,blame,CC,2,6.0,6.0,0.0
+included_only,trolley,high,within_subjects_all_vignettes,distal,blame,CH,2,7.0,7.0,0.0
+included_only,trolley,high,within_subjects_all_vignettes,distal,blame,DIV,2,6.0,6.0,0.0
+included_only,trolley,high,within_subjects_all_vignettes,distal,wrong,CC,2,6.0,6.0,0.0
+included_only,trolley,high,within_subjects_all_vignettes,distal,wrong,CH,2,6.5,6.5,0.7071067811865476
+included_only,trolley,high,within_subjects_all_vignettes,distal,wrong,DIV,2,5.5,5.5,0.7071067811865476
+included_only,trolley,high,within_subjects_all_vignettes,distal,punish,CC,2,0.6931471805599453,0.6931471805599453,0.0
+included_only,trolley,high,within_subjects_all_vignettes,distal,punish,CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+included_only,trolley,high,within_subjects_all_vignettes,distal,punish,DIV,2,0.6931471805599453,0.6931471805599453,0.0
+included_only,trolley,high,within_subjects_all_vignettes,proximate,blame,CC,2,7.0,7.0,0.0
+included_only,trolley,high,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
+included_only,trolley,high,within_subjects_all_vignettes,proximate,wrong,CC,2,7.0,7.0,0.0
+included_only,trolley,high,within_subjects_all_vignettes,proximate,wrong,CH,2,1.5,1.5,0.7071067811865476
+included_only,trolley,high,within_subjects_all_vignettes,proximate,punish,CC,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+included_only,trolley,high,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
+included_only,trolley,high,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
+included_only,trolley,high,between_subjects_first_vignette,distal,blame,CH,0,,,
+included_only,trolley,high,between_subjects_first_vignette,distal,blame,DIV,1,6.0,6.0,
+included_only,trolley,high,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
+included_only,trolley,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
+included_only,trolley,high,between_subjects_first_vignette,distal,wrong,DIV,1,5.0,5.0,
+included_only,trolley,high,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
+included_only,trolley,high,between_subjects_first_vignette,distal,punish,CH,0,,,
+included_only,trolley,high,between_subjects_first_vignette,distal,punish,DIV,1,0.6931471805599453,0.6931471805599453,
+included_only,trolley,high,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
+included_only,trolley,high,within_subjects_deltas,distal,blame,DIV - CC,2,0.0,0.0,0.0
+included_only,trolley,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+included_only,trolley,high,within_subjects_deltas,proximate,blame,CC - CH,2,6.0,6.0,0.0
+included_only,trolley,high,within_subjects_deltas,distal,wrong,CH - CC,2,0.5,0.5,0.7071067811865476
+included_only,trolley,high,within_subjects_deltas,distal,wrong,DIV - CC,2,-0.5,-0.5,0.7071067811865476
+included_only,trolley,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,-0.5,-0.5,0.7071067811865476
+included_only,trolley,high,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
+included_only,trolley,high,within_subjects_deltas,distal,punish,CH - CC,2,0.20273255405408225,0.20273255405408225,0.28670712747781973
+included_only,trolley,high,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
+included_only,trolley,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+included_only,trolley,high,within_subjects_deltas,proximate,punish,CC - CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+included_only,trolley,low,within_subjects_all_vignettes,distal,blame,CC,2,5.0,5.0,0.0
+included_only,trolley,low,within_subjects_all_vignettes,distal,blame,CH,2,6.0,6.0,0.0
+included_only,trolley,low,within_subjects_all_vignettes,distal,blame,DIV,2,5.5,5.5,0.7071067811865476
+included_only,trolley,low,within_subjects_all_vignettes,distal,wrong,CC,2,5.0,5.0,0.0
+included_only,trolley,low,within_subjects_all_vignettes,distal,wrong,CH,2,6.0,6.0,0.0
+included_only,trolley,low,within_subjects_all_vignettes,distal,wrong,DIV,2,5.0,5.0,0.0
+included_only,trolley,low,within_subjects_all_vignettes,distal,punish,CC,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
+included_only,trolley,low,within_subjects_all_vignettes,distal,punish,CH,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
+included_only,trolley,low,within_subjects_all_vignettes,distal,punish,DIV,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
+included_only,trolley,low,within_subjects_all_vignettes,proximate,blame,CC,2,6.5,6.5,0.7071067811865476
+included_only,trolley,low,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
+included_only,trolley,low,within_subjects_all_vignettes,proximate,wrong,CC,2,6.5,6.5,0.7071067811865476
+included_only,trolley,low,within_subjects_all_vignettes,proximate,wrong,CH,2,1.0,1.0,0.0
+included_only,trolley,low,within_subjects_all_vignettes,proximate,punish,CC,2,0.5493061443340549,0.5493061443340549,0.7768361992120932
+included_only,trolley,low,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
+included_only,trolley,low,between_subjects_first_vignette,distal,blame,CC,0,,,
+included_only,trolley,low,between_subjects_first_vignette,distal,blame,CH,0,,,
+included_only,trolley,low,between_subjects_first_vignette,distal,blame,DIV,2,5.5,5.5,0.7071067811865476
+included_only,trolley,low,between_subjects_first_vignette,distal,wrong,CC,0,,,
+included_only,trolley,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
+included_only,trolley,low,between_subjects_first_vignette,distal,wrong,DIV,2,5.0,5.0,0.0
+included_only,trolley,low,between_subjects_first_vignette,distal,punish,CC,0,,,
+included_only,trolley,low,between_subjects_first_vignette,distal,punish,CH,0,,,
+included_only,trolley,low,between_subjects_first_vignette,distal,punish,DIV,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
+included_only,trolley,low,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
+included_only,trolley,low,within_subjects_deltas,distal,blame,DIV - CC,2,0.5,0.5,0.7071067811865476
+included_only,trolley,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.5,0.5,0.7071067811865476
+included_only,trolley,low,within_subjects_deltas,proximate,blame,CC - CH,2,5.5,5.5,0.7071067811865476
+included_only,trolley,low,within_subjects_deltas,distal,wrong,CH - CC,2,1.0,1.0,0.0
+included_only,trolley,low,within_subjects_deltas,distal,wrong,DIV - CC,2,0.0,0.0,0.0
+included_only,trolley,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+included_only,trolley,low,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
+included_only,trolley,low,within_subjects_deltas,distal,punish,CH - CC,2,0.0,0.0,0.0
+included_only,trolley,low,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
+included_only,trolley,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+included_only,trolley,low,within_subjects_deltas,proximate,punish,CC - CH,2,0.5493061443340549,0.5493061443340549,0.7768361992120932
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,blame,CC,6,6.0,6.0,1.0954451150103321
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,blame,CH,6,7.166666666666667,7.0,1.1690451944500122
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,blame,DIV,6,6.5,6.0,1.378404875209022
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CC,6,5.833333333333333,5.5,1.1690451944500122
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CH,6,6.833333333333333,6.5,1.1690451944500122
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,wrong,DIV,6,6.0,5.5,1.5491933384829668
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,punish,CC,6,0.876249228671297,0.6931471805599453,0.627167733308013
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,punish,CH,6,1.1603739107110345,0.8958797346140275,0.9124722655805656
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,punish,DIV,6,1.1072982888579455,0.6931471805599453,0.998233665728403
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CC,6,7.5,7.0,1.224744871391589
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CH,6,1.5,1.0,0.8366600265340756
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CC,6,7.5,7.0,1.224744871391589
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CH,6,1.5,1.5,0.5477225575051661
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CC,6,1.3887982447363265,1.0986122886681098,1.12612665017371
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CH,6,0.0,0.0,0.0
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,blame,CC,2,7.0,7.0,1.4142135623730951
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,blame,DIV,4,6.0,6.0,0.816496580927726
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,wrong,CC,2,7.0,7.0,1.4142135623730951
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,wrong,DIV,4,5.25,5.0,0.5
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,punish,CC,2,1.2424533248940002,1.2424533248940002,0.7768361992120932
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,punish,DIV,4,0.7945134575869863,0.6931471805599453,0.74078820325774
+all_finishers,pooled,pooled,within_subjects_deltas,distal,blame,CH - CC,6,1.1666666666666667,1.0,0.408248290463863
+all_finishers,pooled,pooled,within_subjects_deltas,distal,blame,DIV - CC,6,0.5,0.5,0.5477225575051661
+all_finishers,pooled,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",6,0.5,0.5,0.5477225575051661
+all_finishers,pooled,pooled,within_subjects_deltas,proximate,blame,CC - CH,6,6.0,6.0,0.6324555320336759
+all_finishers,pooled,pooled,within_subjects_deltas,distal,wrong,CH - CC,6,1.0,1.0,0.6324555320336759
+all_finishers,pooled,pooled,within_subjects_deltas,distal,wrong,DIV - CC,6,0.16666666666666666,0.0,0.7527726527090811
+all_finishers,pooled,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",6,0.16666666666666666,0.0,0.7527726527090811
+all_finishers,pooled,pooled,within_subjects_deltas,proximate,wrong,CC - CH,6,6.0,6.0,0.8944271909999159
+all_finishers,pooled,pooled,within_subjects_deltas,distal,punish,CH - CC,6,0.28412468203973756,0.20273255405408225,0.3249290908847982
+all_finishers,pooled,pooled,within_subjects_deltas,distal,punish,DIV - CC,6,0.23104906018664842,0.0,0.4015285713813913
+all_finishers,pooled,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",6,0.16860015194641334,0.0,0.26879229856708164
+all_finishers,pooled,pooled,within_subjects_deltas,proximate,punish,CC - CH,6,1.3887982447363265,1.0986122886681098,1.12612665017371
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,blame,CC,2,6.0,6.0,0.0
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,blame,CH,2,7.0,7.0,0.0
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,blame,DIV,2,6.0,6.0,0.0
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,wrong,CC,2,6.0,6.0,0.0
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,wrong,CH,2,6.5,6.5,0.7071067811865476
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,wrong,DIV,2,5.5,5.5,0.7071067811865476
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,punish,CC,2,0.6931471805599453,0.6931471805599453,0.0
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,punish,CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,punish,DIV,2,0.6931471805599453,0.6931471805599453,0.0
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,blame,CC,2,7.0,7.0,0.0
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,wrong,CC,2,7.0,7.0,0.0
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,wrong,CH,2,1.5,1.5,0.7071067811865476
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,punish,CC,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
+all_finishers,pooled,high,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
+all_finishers,pooled,high,between_subjects_first_vignette,distal,blame,CH,0,,,
+all_finishers,pooled,high,between_subjects_first_vignette,distal,blame,DIV,1,6.0,6.0,
+all_finishers,pooled,high,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
+all_finishers,pooled,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
+all_finishers,pooled,high,between_subjects_first_vignette,distal,wrong,DIV,1,5.0,5.0,
+all_finishers,pooled,high,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
+all_finishers,pooled,high,between_subjects_first_vignette,distal,punish,CH,0,,,
+all_finishers,pooled,high,between_subjects_first_vignette,distal,punish,DIV,1,0.6931471805599453,0.6931471805599453,
+all_finishers,pooled,high,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
+all_finishers,pooled,high,within_subjects_deltas,distal,blame,DIV - CC,2,0.0,0.0,0.0
+all_finishers,pooled,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+all_finishers,pooled,high,within_subjects_deltas,proximate,blame,CC - CH,2,6.0,6.0,0.0
+all_finishers,pooled,high,within_subjects_deltas,distal,wrong,CH - CC,2,0.5,0.5,0.7071067811865476
+all_finishers,pooled,high,within_subjects_deltas,distal,wrong,DIV - CC,2,-0.5,-0.5,0.7071067811865476
+all_finishers,pooled,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,-0.5,-0.5,0.7071067811865476
+all_finishers,pooled,high,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
+all_finishers,pooled,high,within_subjects_deltas,distal,punish,CH - CC,2,0.20273255405408225,0.20273255405408225,0.28670712747781973
+all_finishers,pooled,high,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
+all_finishers,pooled,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+all_finishers,pooled,high,within_subjects_deltas,proximate,punish,CC - CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,blame,CC,4,6.0,5.5,1.4142135623730951
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,blame,CH,4,7.25,7.0,1.5
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,blame,DIV,4,6.75,6.5,1.707825127659933
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,wrong,CC,4,5.75,5.0,1.5
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,wrong,CH,4,7.0,6.5,1.4142135623730951
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,wrong,DIV,4,6.25,5.5,1.8929694486000912
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,punish,CC,4,0.9678002527269727,1.0397207708399179,0.7886946490765272
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,punish,CH,4,1.292620998759538,1.3862943611198906,1.135921900595043
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,punish,DIV,4,1.3143738430069454,1.2424533248940002,1.220353614798383
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,blame,CC,4,7.75,8.0,1.5
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,blame,CH,4,1.75,1.5,0.9574271077563381
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,wrong,CC,4,7.75,8.0,1.5
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,wrong,CH,4,1.5,1.5,0.5773502691896257
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,punish,CC,4,1.6352574997974758,1.7482537807332403,1.357657199166658
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,punish,CH,4,0.0,0.0,0.0
+all_finishers,pooled,low,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
+all_finishers,pooled,low,between_subjects_first_vignette,distal,blame,CH,0,,,
+all_finishers,pooled,low,between_subjects_first_vignette,distal,blame,DIV,3,6.0,6.0,1.0
+all_finishers,pooled,low,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
+all_finishers,pooled,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
+all_finishers,pooled,low,between_subjects_first_vignette,distal,wrong,DIV,3,5.333333333333333,5.0,0.5773502691896258
+all_finishers,pooled,low,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
+all_finishers,pooled,low,between_subjects_first_vignette,distal,punish,CH,0,,,
+all_finishers,pooled,low,between_subjects_first_vignette,distal,punish,DIV,3,0.8283022165960001,0.6931471805599453,0.9034935869814078
+all_finishers,pooled,low,within_subjects_deltas,distal,blame,CH - CC,4,1.25,1.0,0.5
+all_finishers,pooled,low,within_subjects_deltas,distal,blame,DIV - CC,4,0.75,1.0,0.5
+all_finishers,pooled,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",4,0.75,1.0,0.5
+all_finishers,pooled,low,within_subjects_deltas,proximate,blame,CC - CH,4,6.0,6.0,0.816496580927726
+all_finishers,pooled,low,within_subjects_deltas,distal,wrong,CH - CC,4,1.25,1.0,0.5
+all_finishers,pooled,low,within_subjects_deltas,distal,wrong,DIV - CC,4,0.5,0.5,0.5773502691896257
+all_finishers,pooled,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",4,0.5,0.5,0.5773502691896257
+all_finishers,pooled,low,within_subjects_deltas,proximate,wrong,CC - CH,4,6.25,6.5,0.9574271077563381
+all_finishers,pooled,low,within_subjects_deltas,distal,punish,CH - CC,4,0.3248207460325652,0.30306790178515786,0.37674905798396924
+all_finishers,pooled,low,within_subjects_deltas,distal,punish,DIV - CC,4,0.34657359027997264,0.2027325540540822,0.46403123585182093
+all_finishers,pooled,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",4,0.25290022791962,0.2027325540540822,0.30329768937234736
+all_finishers,pooled,low,within_subjects_deltas,proximate,punish,CC - CH,4,1.6352574997974758,1.7482537807332403,1.357657199166658
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,blame,CC,2,7.0,7.0,1.4142135623730951
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,blame,CH,2,8.5,8.5,0.7071067811865476
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,blame,DIV,2,8.0,8.0,1.4142135623730951
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,wrong,CC,2,6.5,6.5,2.1213203435596424
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,wrong,CH,2,8.0,8.0,1.4142135623730951
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,wrong,DIV,2,7.5,7.5,2.1213203435596424
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,punish,CC,2,1.5890269151739727,1.5890269151739727,0.2867071274778196
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,punish,CH,2,2.2386684072391034,2.2386684072391034,0.2251807927680735
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,punish,DIV,2,2.282174095733918,2.282174095733918,0.6935510159907275
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,blame,CC,2,9.0,9.0,0.0
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,blame,CH,2,2.5,2.5,0.7071067811865476
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CC,2,9.0,9.0,0.0
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CH,2,2.0,2.0,0.0
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,punish,CC,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,blame,DIV,1,7.0,7.0,
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,wrong,DIV,1,6.0,6.0,
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,punish,DIV,1,1.791759469228055,1.791759469228055,
+all_finishers,firework,pooled,within_subjects_deltas,distal,blame,CH - CC,2,1.5,1.5,0.7071067811865476
+all_finishers,firework,pooled,within_subjects_deltas,distal,blame,DIV - CC,2,1.0,1.0,0.0
+all_finishers,firework,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
+all_finishers,firework,pooled,within_subjects_deltas,proximate,blame,CC - CH,2,6.5,6.5,0.7071067811865476
+all_finishers,firework,pooled,within_subjects_deltas,distal,wrong,CH - CC,2,1.5,1.5,0.7071067811865476
+all_finishers,firework,pooled,within_subjects_deltas,distal,wrong,DIV - CC,2,1.0,1.0,0.0
+all_finishers,firework,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
+all_finishers,firework,pooled,within_subjects_deltas,proximate,wrong,CC - CH,2,7.0,7.0,0.0
+all_finishers,firework,pooled,within_subjects_deltas,distal,punish,CH - CC,2,0.6496414920651304,0.6496414920651304,0.06152633470974612
+all_finishers,firework,pooled,within_subjects_deltas,distal,punish,DIV - CC,2,0.6931471805599453,0.6931471805599453,0.40684388851290787
+all_finishers,firework,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.50580045583924,0.50580045583924,0.14189560954670774
+all_finishers,firework,pooled,within_subjects_deltas,proximate,punish,CC - CH,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
+all_finishers,firework,high,within_subjects_all_vignettes,distal,blame,CC,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,distal,blame,CH,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,distal,blame,DIV,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,distal,wrong,CC,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,distal,wrong,CH,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,distal,wrong,DIV,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,distal,punish,CC,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,distal,punish,CH,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,distal,punish,DIV,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,blame,CC,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,blame,CH,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,wrong,CC,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,wrong,CH,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,punish,CC,0,,,
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,punish,CH,0,,,
+all_finishers,firework,high,between_subjects_first_vignette,distal,blame,CC,0,,,
+all_finishers,firework,high,between_subjects_first_vignette,distal,blame,CH,0,,,
+all_finishers,firework,high,between_subjects_first_vignette,distal,blame,DIV,0,,,
+all_finishers,firework,high,between_subjects_first_vignette,distal,wrong,CC,0,,,
+all_finishers,firework,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
+all_finishers,firework,high,between_subjects_first_vignette,distal,wrong,DIV,0,,,
+all_finishers,firework,high,between_subjects_first_vignette,distal,punish,CC,0,,,
+all_finishers,firework,high,between_subjects_first_vignette,distal,punish,CH,0,,,
+all_finishers,firework,high,between_subjects_first_vignette,distal,punish,DIV,0,,,
+all_finishers,firework,high,within_subjects_deltas,distal,blame,CH - CC,0,,,
+all_finishers,firework,high,within_subjects_deltas,distal,blame,DIV - CC,0,,,
+all_finishers,firework,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",0,,,
+all_finishers,firework,high,within_subjects_deltas,proximate,blame,CC - CH,0,,,
+all_finishers,firework,high,within_subjects_deltas,distal,wrong,CH - CC,0,,,
+all_finishers,firework,high,within_subjects_deltas,distal,wrong,DIV - CC,0,,,
+all_finishers,firework,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",0,,,
+all_finishers,firework,high,within_subjects_deltas,proximate,wrong,CC - CH,0,,,
+all_finishers,firework,high,within_subjects_deltas,distal,punish,CH - CC,0,,,
+all_finishers,firework,high,within_subjects_deltas,distal,punish,DIV - CC,0,,,
+all_finishers,firework,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",0,,,
+all_finishers,firework,high,within_subjects_deltas,proximate,punish,CC - CH,0,,,
+all_finishers,firework,low,within_subjects_all_vignettes,distal,blame,CC,2,7.0,7.0,1.4142135623730951
+all_finishers,firework,low,within_subjects_all_vignettes,distal,blame,CH,2,8.5,8.5,0.7071067811865476
+all_finishers,firework,low,within_subjects_all_vignettes,distal,blame,DIV,2,8.0,8.0,1.4142135623730951
+all_finishers,firework,low,within_subjects_all_vignettes,distal,wrong,CC,2,6.5,6.5,2.1213203435596424
+all_finishers,firework,low,within_subjects_all_vignettes,distal,wrong,CH,2,8.0,8.0,1.4142135623730951
+all_finishers,firework,low,within_subjects_all_vignettes,distal,wrong,DIV,2,7.5,7.5,2.1213203435596424
+all_finishers,firework,low,within_subjects_all_vignettes,distal,punish,CC,2,1.5890269151739727,1.5890269151739727,0.2867071274778196
+all_finishers,firework,low,within_subjects_all_vignettes,distal,punish,CH,2,2.2386684072391034,2.2386684072391034,0.2251807927680735
+all_finishers,firework,low,within_subjects_all_vignettes,distal,punish,DIV,2,2.282174095733918,2.282174095733918,0.6935510159907275
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,blame,CC,2,9.0,9.0,0.0
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,blame,CH,2,2.5,2.5,0.7071067811865476
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,wrong,CC,2,9.0,9.0,0.0
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,wrong,CH,2,2.0,2.0,0.0
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,punish,CC,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
+all_finishers,firework,low,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
+all_finishers,firework,low,between_subjects_first_vignette,distal,blame,CH,0,,,
+all_finishers,firework,low,between_subjects_first_vignette,distal,blame,DIV,1,7.0,7.0,
+all_finishers,firework,low,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
+all_finishers,firework,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
+all_finishers,firework,low,between_subjects_first_vignette,distal,wrong,DIV,1,6.0,6.0,
+all_finishers,firework,low,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
+all_finishers,firework,low,between_subjects_first_vignette,distal,punish,CH,0,,,
+all_finishers,firework,low,between_subjects_first_vignette,distal,punish,DIV,1,1.791759469228055,1.791759469228055,
+all_finishers,firework,low,within_subjects_deltas,distal,blame,CH - CC,2,1.5,1.5,0.7071067811865476
+all_finishers,firework,low,within_subjects_deltas,distal,blame,DIV - CC,2,1.0,1.0,0.0
+all_finishers,firework,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
+all_finishers,firework,low,within_subjects_deltas,proximate,blame,CC - CH,2,6.5,6.5,0.7071067811865476
+all_finishers,firework,low,within_subjects_deltas,distal,wrong,CH - CC,2,1.5,1.5,0.7071067811865476
+all_finishers,firework,low,within_subjects_deltas,distal,wrong,DIV - CC,2,1.0,1.0,0.0
+all_finishers,firework,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
+all_finishers,firework,low,within_subjects_deltas,proximate,wrong,CC - CH,2,7.0,7.0,0.0
+all_finishers,firework,low,within_subjects_deltas,distal,punish,CH - CC,2,0.6496414920651304,0.6496414920651304,0.06152633470974612
+all_finishers,firework,low,within_subjects_deltas,distal,punish,DIV - CC,2,0.6931471805599453,0.6931471805599453,0.40684388851290787
+all_finishers,firework,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.50580045583924,0.50580045583924,0.14189560954670774
+all_finishers,firework,low,within_subjects_deltas,proximate,punish,CC - CH,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,blame,CC,4,5.5,5.5,0.5773502691896257
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,blame,CH,4,6.5,6.5,0.5773502691896257
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,blame,DIV,4,5.75,6.0,0.5
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CC,4,5.5,5.5,0.5773502691896257
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CH,4,6.25,6.0,0.5
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,wrong,DIV,4,5.25,5.0,0.5
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,punish,CC,4,0.5198603854199589,0.6931471805599453,0.34657359027997264
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,punish,CH,4,0.6212266624470001,0.6931471805599453,0.45613036298439547
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,punish,DIV,4,0.5198603854199589,0.6931471805599453,0.34657359027997264
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CC,4,6.75,7.0,0.5
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CH,4,1.0,1.0,0.0
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CC,4,6.75,7.0,0.5
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CH,4,1.25,1.0,0.5
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CC,4,0.7225929394740412,0.8958797346140275,0.5182627103546438
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CH,4,0.0,0.0,0.0
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,blame,DIV,3,5.666666666666667,6.0,0.5773502691896258
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,wrong,DIV,3,5.0,5.0,0.0
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,punish,DIV,3,0.46209812037329684,0.6931471805599453,0.40018871128431455
+all_finishers,trolley,pooled,within_subjects_deltas,distal,blame,CH - CC,4,1.0,1.0,0.0
+all_finishers,trolley,pooled,within_subjects_deltas,distal,blame,DIV - CC,4,0.25,0.0,0.5
+all_finishers,trolley,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",4,0.25,0.0,0.5
+all_finishers,trolley,pooled,within_subjects_deltas,proximate,blame,CC - CH,4,5.75,6.0,0.5
+all_finishers,trolley,pooled,within_subjects_deltas,distal,wrong,CH - CC,4,0.75,1.0,0.5
+all_finishers,trolley,pooled,within_subjects_deltas,distal,wrong,DIV - CC,4,-0.25,0.0,0.5
+all_finishers,trolley,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",4,-0.25,0.0,0.5
+all_finishers,trolley,pooled,within_subjects_deltas,proximate,wrong,CC - CH,4,5.5,5.5,0.5773502691896257
+all_finishers,trolley,pooled,within_subjects_deltas,distal,punish,CH - CC,4,0.10136627702704112,0.0,0.20273255405408225
+all_finishers,trolley,pooled,within_subjects_deltas,distal,punish,DIV - CC,4,0.0,0.0,0.0
+all_finishers,trolley,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",4,0.0,0.0,0.0
+all_finishers,trolley,pooled,within_subjects_deltas,proximate,punish,CC - CH,4,0.7225929394740412,0.8958797346140275,0.5182627103546438
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,blame,CC,2,6.0,6.0,0.0
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,blame,CH,2,7.0,7.0,0.0
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,blame,DIV,2,6.0,6.0,0.0
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,wrong,CC,2,6.0,6.0,0.0
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,wrong,CH,2,6.5,6.5,0.7071067811865476
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,wrong,DIV,2,5.5,5.5,0.7071067811865476
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,punish,CC,2,0.6931471805599453,0.6931471805599453,0.0
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,punish,CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,punish,DIV,2,0.6931471805599453,0.6931471805599453,0.0
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,blame,CC,2,7.0,7.0,0.0
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,wrong,CC,2,7.0,7.0,0.0
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,wrong,CH,2,1.5,1.5,0.7071067811865476
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,punish,CC,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
+all_finishers,trolley,high,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
+all_finishers,trolley,high,between_subjects_first_vignette,distal,blame,CH,0,,,
+all_finishers,trolley,high,between_subjects_first_vignette,distal,blame,DIV,1,6.0,6.0,
+all_finishers,trolley,high,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
+all_finishers,trolley,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
+all_finishers,trolley,high,between_subjects_first_vignette,distal,wrong,DIV,1,5.0,5.0,
+all_finishers,trolley,high,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
+all_finishers,trolley,high,between_subjects_first_vignette,distal,punish,CH,0,,,
+all_finishers,trolley,high,between_subjects_first_vignette,distal,punish,DIV,1,0.6931471805599453,0.6931471805599453,
+all_finishers,trolley,high,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
+all_finishers,trolley,high,within_subjects_deltas,distal,blame,DIV - CC,2,0.0,0.0,0.0
+all_finishers,trolley,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+all_finishers,trolley,high,within_subjects_deltas,proximate,blame,CC - CH,2,6.0,6.0,0.0
+all_finishers,trolley,high,within_subjects_deltas,distal,wrong,CH - CC,2,0.5,0.5,0.7071067811865476
+all_finishers,trolley,high,within_subjects_deltas,distal,wrong,DIV - CC,2,-0.5,-0.5,0.7071067811865476
+all_finishers,trolley,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,-0.5,-0.5,0.7071067811865476
+all_finishers,trolley,high,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
+all_finishers,trolley,high,within_subjects_deltas,distal,punish,CH - CC,2,0.20273255405408225,0.20273255405408225,0.28670712747781973
+all_finishers,trolley,high,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
+all_finishers,trolley,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+all_finishers,trolley,high,within_subjects_deltas,proximate,punish,CC - CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,blame,CC,2,5.0,5.0,0.0
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,blame,CH,2,6.0,6.0,0.0
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,blame,DIV,2,5.5,5.5,0.7071067811865476
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,wrong,CC,2,5.0,5.0,0.0
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,wrong,CH,2,6.0,6.0,0.0
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,wrong,DIV,2,5.0,5.0,0.0
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,punish,CC,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,punish,CH,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,punish,DIV,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,blame,CC,2,6.5,6.5,0.7071067811865476
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,wrong,CC,2,6.5,6.5,0.7071067811865476
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,wrong,CH,2,1.0,1.0,0.0
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,punish,CC,2,0.5493061443340549,0.5493061443340549,0.7768361992120932
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
+all_finishers,trolley,low,between_subjects_first_vignette,distal,blame,CC,0,,,
+all_finishers,trolley,low,between_subjects_first_vignette,distal,blame,CH,0,,,
+all_finishers,trolley,low,between_subjects_first_vignette,distal,blame,DIV,2,5.5,5.5,0.7071067811865476
+all_finishers,trolley,low,between_subjects_first_vignette,distal,wrong,CC,0,,,
+all_finishers,trolley,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
+all_finishers,trolley,low,between_subjects_first_vignette,distal,wrong,DIV,2,5.0,5.0,0.0
+all_finishers,trolley,low,between_subjects_first_vignette,distal,punish,CC,0,,,
+all_finishers,trolley,low,between_subjects_first_vignette,distal,punish,CH,0,,,
+all_finishers,trolley,low,between_subjects_first_vignette,distal,punish,DIV,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
+all_finishers,trolley,low,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
+all_finishers,trolley,low,within_subjects_deltas,distal,blame,DIV - CC,2,0.5,0.5,0.7071067811865476
+all_finishers,trolley,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.5,0.5,0.7071067811865476
+all_finishers,trolley,low,within_subjects_deltas,proximate,blame,CC - CH,2,5.5,5.5,0.7071067811865476
+all_finishers,trolley,low,within_subjects_deltas,distal,wrong,CH - CC,2,1.0,1.0,0.0
+all_finishers,trolley,low,within_subjects_deltas,distal,wrong,DIV - CC,2,0.0,0.0,0.0
+all_finishers,trolley,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+all_finishers,trolley,low,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
+all_finishers,trolley,low,within_subjects_deltas,distal,punish,CH - CC,2,0.0,0.0,0.0
+all_finishers,trolley,low,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
+all_finishers,trolley,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
+all_finishers,trolley,low,within_subjects_deltas,proximate,punish,CC - CH,2,0.5493061443340549,0.5493061443340549,0.7768361992120932

@@ -1,4 +1,4 @@
-# CLAUDE.md — Responsibility Shielding
+# AGENTS.md — Responsibility Shielding
 
 This file orients an AI collaborator to the project, codebase, and collaboration style.
 Read this before writing or suggesting any code changes.
@@ -249,3 +249,99 @@ A follow-up study is planned that validates and models responsibility shielding 
 games**. That study is in early planning and may eventually be connected to this repo. When working
 on extensions or new analyses, keep this downstream use case in mind: the core constructs, naming
 conventions, and file patterns established here will likely carry forward.
+
+---
+
+## 10. Robot participant experiment
+
+The `robot_experiment/` directory contains a pipeline for running AI models as participants in the
+responsibility shielding experiment. Each robot instance is exposed to the same vignettes, questions,
+and protocol flow that human participants received in Qualtrics, then provides structured numerical
+ratings. The output is written in a format that `preprocessing.py` can process with zero
+modification.
+
+After data collection, the runner automatically executes the same core analysis functions used for
+human data (Tables 2, 3, 4, 9) and prints results to the terminal. All robot analysis outputs go to
+`robot_raw_data/processed/` and `robot_raw_data/tables/` — the human `processed/` folder is never
+touched. Raw data is appended to (never overwritten) unless `overwrite_raw_data=True` is set
+explicitly in `ROBOT_EXPERIMENT_CONFIG`.
+
+### Files
+
+```
+robot_experiment/
+├── stimuli.py                  ← all vignette text, question text, and column mappings (from QSF)
+├── model_clients.py            ← provider abstraction: Claude, OpenAI, Gemini, Grok, DeepSeek, Ollama
+└── run_robot_participants.py   ← experiment runner; edit ROBOT_EXPERIMENT_CONFIG to configure a run
+
+robot_raw_data/                 ← output CSVs (parallel to raw_data/)
+robot_raw_data/processed/       ← robot analysis outputs (parallel to processed/)
+robot_raw_data/tables/          ← robot tables (parallel to tables/)
+.env                            ← API keys (gitignored; copy from .env.example)
+.env.example                    ← template showing which keys are needed
+```
+
+### Supported models
+
+Add any of these to the `"models"` list in `ROBOT_EXPERIMENT_CONFIG`. Provider is auto-detected
+from the model name via `MODEL_TO_PROVIDER` in `model_clients.py`.
+
+| Model name | Provider | Cost per 50 participants |
+|---|---|---|
+| `"claude-sonnet-4-6"` | Anthropic | ~$3–8 |
+| `"claude-opus-4-7"` | Anthropic | ~$15–30 |
+| `"gpt-4o"` | OpenAI | ~$5–12 |
+| `"gpt-4o-mini"` | OpenAI | ~$0.50–1 |
+| `"gemini-2.0-flash"` | Google | ~$0–1 |
+| `"grok-3"` | xAI | ~$2–5 |
+| `"deepseek-chat"` | DeepSeek | ~$0.50 |
+| `"mistral"` | Ollama (local) | free |
+
+### How to run
+
+```bash
+# beta test (3 participants per model, prints full transcripts)
+python robot_experiment/run_robot_participants.py
+
+# full run — edit ROBOT_EXPERIMENT_CONFIG first:
+#   set beta_mode=False, n_participants_per_model=50
+#   add more models to the "models" list as needed
+python robot_experiment/run_robot_participants.py
+```
+
+### Key config options
+
+| Option | Default | Meaning |
+|---|---|---|
+| `models` | `["claude-sonnet-4-6"]` | List of models to run in one call |
+| `n_participants_per_model` | `10` | Participants per model (full run) |
+| `beta_n_participants` | `3` | Participants per model (beta) |
+| `overwrite_raw_data` | `False` | If False (default), appends to existing CSV |
+| `run_analysis_after_collection` | `True` | Prints Tables 2/3/4/9 after data collection |
+| `run_models_sequentially` | `True` | Finishes one model before starting the next |
+
+### Design notes
+
+- **Protocol fidelity**: the robot sees the exact participant-facing text from `qualtrics_file.qsf`
+  in the same page sequence (welcome → cognitive load → vignettes → proximate ratings → comprehension
+  → 2AFC → CRT → INDCOL). Each Qualtrics page = one conversation turn; the robot cannot revise
+  earlier answers.
+- **Blinding**: the system prompt assigns the robot a participant role without mentioning the
+  experimental hypothesis. Each API call is stateless by default.
+- **Variance**: use `temperature=1.0` (default). At temperature 0, all runs would give identical
+  responses, making N > 1 meaningless.
+- **Comprehension checks**: robot instances should pass all three. The `included` flag in the cleaned
+  dataframe will be True for any instance that answers all three correctly.
+- **Individual differences**: CRT, INDCOL, and cognitive load are included as-is (not persona
+  manipulations). Run robots as themselves; persona injection is a separate extension.
+- **Column compatibility**: the output CSV uses the same column names as the human raw data export,
+  plus a `model_name` column (robot-only; NaN for human participants). The only other intentional
+  difference is `indcol_hi_1_1` (correct spelling) vs. `incdol_hi_1_1` (typo in the original
+  Qualtrics export).
+
+### Adding a new provider
+
+Subclass `ModelClient` in `model_clients.py`, implement `async chat(messages) -> str`, add the
+new class to `get_client()`, and add the model-to-provider mapping to `MODEL_TO_PROVIDER`. Any
+provider with an OpenAI-compatible API (Grok, DeepSeek, and most others) can reuse `OpenAIClient`
+with a custom `base_url`.

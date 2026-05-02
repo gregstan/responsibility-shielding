@@ -7,7 +7,32 @@
       "Bash(python _split_analysis.py)",
       "Bash(python -c \"import config; import preprocessing; import core; import visualization; import tables; import analysis; print\\('All imports OK'\\)\")",
       "Bash(python -)",
-      "Bash(python3 -)"
+      "Bash(python3 -)",
+      "Bash(python -c \"import config; print\\('config OK'\\)\")",
+      "Bash(python -c \"import model; print\\('model OK'\\)\")",
+      "Bash(python -c \"import optimization; print\\('optimization OK'\\)\")",
+      "Bash(python -c \"import bayesian; print\\('bayesian OK'\\)\")",
+      "Bash(python -c \"import simulation; print\\('simulation OK'\\)\")",
+      "Bash(python -c \"import visualization; print\\('visualization OK'\\)\")",
+      "Bash(python -c \"import analysis; print\\('analysis OK'\\)\")",
+      "Bash(python -c \"import main; print\\('main OK'\\)\")",
+      "Bash(python -c \"from main import create_simulated_data, run_simulation_recovery_analysis, visualize_bayesian_updates_3d, build_utility_equation, model_nesting_adjacency_matrices, run_child_parent_embedding_sanity_checks, run_child_parent_probability_equivalence_smoketest; print\\('quick_demo imports OK'\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(python3)",
+      "Bash(python3 -c \"import json; f = open\\(r'c:\\\\Users\\\\Gregory Stanley\\\\Desktop\\\\U of M\\\\Research Archive\\\\Multiplayer\\\\responsibility-shielding\\\\qualtrics_file.qsf'\\); d = json.load\\(f\\); print\\('Keys in data:', list\\(d.keys\\(\\)\\)\\)\")",
+      "Bash(sed 's/\"QuestionText\":\"//')",
+      "Bash(sed 's/\"$//')",
+      "Bash(python3 -c ' *)",
+      "Bash(pip install *)",
+      "Bash(python3 -c \"import dotenv; print\\('dotenv installed OK'\\)\")",
+      "PowerShell(Get-ChildItem \"$env:LOCALAPPDATA\\\\Programs\\\\Ollama\" -ErrorAction SilentlyContinue | Select-Object Name, FullName; Get-ChildItem \"C:\\\\Program Files\\\\Ollama\" -ErrorAction SilentlyContinue | Select-Object Name, FullName; where.exe ollama 2>&1)",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Programs\\\\Ollama\\\\ollama.exe\" --version)",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Programs\\\\Ollama\\\\ollama.exe\" list)",
+      "PowerShell(Start-Process -FilePath \"$env:LOCALAPPDATA\\\\Programs\\\\Ollama\\\\ollama.exe\" -ArgumentList \"pull mistral\" -NoNewWindow -Wait)",
+      "Bash(git mv *)",
+      "Bash(python3 ai_experiment/run_ai_participants.py --help)",
+      "Bash(python -c \"from config import RobotSettings, RobotModelName, GeneralSettings; print\\('config OK'\\)\")",
+      "Bash(python -c \"from robot_experiment.run_robot_participants import ROBOT_EXPERIMENT_CONFIG, run_single_participant, get_all_output_columns; import inspect; sig = inspect.signature\\(run_single_participant\\); print\\('params:', list\\(sig.parameters.keys\\(\\)\\)\\); cols = get_all_output_columns\\(\\); print\\('columns:', len\\(cols\\)\\)\")"
     ]
   }
 }
