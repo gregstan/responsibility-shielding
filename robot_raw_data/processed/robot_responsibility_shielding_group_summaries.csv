@@ -1,649 +1,649 @@
 ﻿inclusion_filter,story_condition,load_condition,analysis_scope,agent_role,dv,condition,n,mean,median,std
-included_only,pooled,pooled,within_subjects_all_vignettes,distal,blame,CC,6,6.0,6.0,1.0954451150103321
-included_only,pooled,pooled,within_subjects_all_vignettes,distal,blame,CH,6,7.166666666666667,7.0,1.1690451944500122
-included_only,pooled,pooled,within_subjects_all_vignettes,distal,blame,DIV,6,6.5,6.0,1.378404875209022
-included_only,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CC,6,5.833333333333333,5.5,1.1690451944500122
-included_only,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CH,6,6.833333333333333,6.5,1.1690451944500122
-included_only,pooled,pooled,within_subjects_all_vignettes,distal,wrong,DIV,6,6.0,5.5,1.5491933384829668
-included_only,pooled,pooled,within_subjects_all_vignettes,distal,punish,CC,6,0.876249228671297,0.6931471805599453,0.627167733308013
-included_only,pooled,pooled,within_subjects_all_vignettes,distal,punish,CH,6,1.1603739107110345,0.8958797346140275,0.9124722655805656
-included_only,pooled,pooled,within_subjects_all_vignettes,distal,punish,DIV,6,1.1072982888579455,0.6931471805599453,0.998233665728403
-included_only,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CC,6,7.5,7.0,1.224744871391589
-included_only,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CH,6,1.5,1.0,0.8366600265340756
-included_only,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CC,6,7.5,7.0,1.224744871391589
-included_only,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CH,6,1.5,1.5,0.5477225575051661
-included_only,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CC,6,1.3887982447363265,1.0986122886681098,1.12612665017371
-included_only,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CH,6,0.0,0.0,0.0
-included_only,pooled,pooled,between_subjects_first_vignette,distal,blame,CC,2,7.0,7.0,1.4142135623730951
-included_only,pooled,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
-included_only,pooled,pooled,between_subjects_first_vignette,distal,blame,DIV,4,6.0,6.0,0.816496580927726
-included_only,pooled,pooled,between_subjects_first_vignette,distal,wrong,CC,2,7.0,7.0,1.4142135623730951
-included_only,pooled,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
-included_only,pooled,pooled,between_subjects_first_vignette,distal,wrong,DIV,4,5.25,5.0,0.5
-included_only,pooled,pooled,between_subjects_first_vignette,distal,punish,CC,2,1.2424533248940002,1.2424533248940002,0.7768361992120932
-included_only,pooled,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
-included_only,pooled,pooled,between_subjects_first_vignette,distal,punish,DIV,4,0.7945134575869863,0.6931471805599453,0.74078820325774
-included_only,pooled,pooled,within_subjects_deltas,distal,blame,CH - CC,6,1.1666666666666667,1.0,0.408248290463863
-included_only,pooled,pooled,within_subjects_deltas,distal,blame,DIV - CC,6,0.5,0.5,0.5477225575051661
-included_only,pooled,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",6,0.5,0.5,0.5477225575051661
-included_only,pooled,pooled,within_subjects_deltas,proximate,blame,CC - CH,6,6.0,6.0,0.6324555320336759
-included_only,pooled,pooled,within_subjects_deltas,distal,wrong,CH - CC,6,1.0,1.0,0.6324555320336759
-included_only,pooled,pooled,within_subjects_deltas,distal,wrong,DIV - CC,6,0.16666666666666666,0.0,0.7527726527090811
-included_only,pooled,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",6,0.16666666666666666,0.0,0.7527726527090811
-included_only,pooled,pooled,within_subjects_deltas,proximate,wrong,CC - CH,6,6.0,6.0,0.8944271909999159
-included_only,pooled,pooled,within_subjects_deltas,distal,punish,CH - CC,6,0.28412468203973756,0.20273255405408225,0.3249290908847982
-included_only,pooled,pooled,within_subjects_deltas,distal,punish,DIV - CC,6,0.23104906018664842,0.0,0.4015285713813913
-included_only,pooled,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",6,0.16860015194641334,0.0,0.26879229856708164
-included_only,pooled,pooled,within_subjects_deltas,proximate,punish,CC - CH,6,1.3887982447363265,1.0986122886681098,1.12612665017371
-included_only,pooled,high,within_subjects_all_vignettes,distal,blame,CC,2,6.0,6.0,0.0
-included_only,pooled,high,within_subjects_all_vignettes,distal,blame,CH,2,7.0,7.0,0.0
-included_only,pooled,high,within_subjects_all_vignettes,distal,blame,DIV,2,6.0,6.0,0.0
-included_only,pooled,high,within_subjects_all_vignettes,distal,wrong,CC,2,6.0,6.0,0.0
-included_only,pooled,high,within_subjects_all_vignettes,distal,wrong,CH,2,6.5,6.5,0.7071067811865476
-included_only,pooled,high,within_subjects_all_vignettes,distal,wrong,DIV,2,5.5,5.5,0.7071067811865476
-included_only,pooled,high,within_subjects_all_vignettes,distal,punish,CC,2,0.6931471805599453,0.6931471805599453,0.0
-included_only,pooled,high,within_subjects_all_vignettes,distal,punish,CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-included_only,pooled,high,within_subjects_all_vignettes,distal,punish,DIV,2,0.6931471805599453,0.6931471805599453,0.0
-included_only,pooled,high,within_subjects_all_vignettes,proximate,blame,CC,2,7.0,7.0,0.0
-included_only,pooled,high,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
-included_only,pooled,high,within_subjects_all_vignettes,proximate,wrong,CC,2,7.0,7.0,0.0
-included_only,pooled,high,within_subjects_all_vignettes,proximate,wrong,CH,2,1.5,1.5,0.7071067811865476
-included_only,pooled,high,within_subjects_all_vignettes,proximate,punish,CC,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-included_only,pooled,high,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
-included_only,pooled,high,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
-included_only,pooled,high,between_subjects_first_vignette,distal,blame,CH,0,,,
-included_only,pooled,high,between_subjects_first_vignette,distal,blame,DIV,1,6.0,6.0,
-included_only,pooled,high,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
-included_only,pooled,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
-included_only,pooled,high,between_subjects_first_vignette,distal,wrong,DIV,1,5.0,5.0,
-included_only,pooled,high,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
-included_only,pooled,high,between_subjects_first_vignette,distal,punish,CH,0,,,
-included_only,pooled,high,between_subjects_first_vignette,distal,punish,DIV,1,0.6931471805599453,0.6931471805599453,
-included_only,pooled,high,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
-included_only,pooled,high,within_subjects_deltas,distal,blame,DIV - CC,2,0.0,0.0,0.0
-included_only,pooled,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-included_only,pooled,high,within_subjects_deltas,proximate,blame,CC - CH,2,6.0,6.0,0.0
-included_only,pooled,high,within_subjects_deltas,distal,wrong,CH - CC,2,0.5,0.5,0.7071067811865476
-included_only,pooled,high,within_subjects_deltas,distal,wrong,DIV - CC,2,-0.5,-0.5,0.7071067811865476
-included_only,pooled,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,-0.5,-0.5,0.7071067811865476
-included_only,pooled,high,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
-included_only,pooled,high,within_subjects_deltas,distal,punish,CH - CC,2,0.20273255405408225,0.20273255405408225,0.28670712747781973
-included_only,pooled,high,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
-included_only,pooled,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-included_only,pooled,high,within_subjects_deltas,proximate,punish,CC - CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-included_only,pooled,low,within_subjects_all_vignettes,distal,blame,CC,4,6.0,5.5,1.4142135623730951
-included_only,pooled,low,within_subjects_all_vignettes,distal,blame,CH,4,7.25,7.0,1.5
-included_only,pooled,low,within_subjects_all_vignettes,distal,blame,DIV,4,6.75,6.5,1.707825127659933
-included_only,pooled,low,within_subjects_all_vignettes,distal,wrong,CC,4,5.75,5.0,1.5
-included_only,pooled,low,within_subjects_all_vignettes,distal,wrong,CH,4,7.0,6.5,1.4142135623730951
-included_only,pooled,low,within_subjects_all_vignettes,distal,wrong,DIV,4,6.25,5.5,1.8929694486000912
-included_only,pooled,low,within_subjects_all_vignettes,distal,punish,CC,4,0.9678002527269727,1.0397207708399179,0.7886946490765272
-included_only,pooled,low,within_subjects_all_vignettes,distal,punish,CH,4,1.292620998759538,1.3862943611198906,1.135921900595043
-included_only,pooled,low,within_subjects_all_vignettes,distal,punish,DIV,4,1.3143738430069454,1.2424533248940002,1.220353614798383
-included_only,pooled,low,within_subjects_all_vignettes,proximate,blame,CC,4,7.75,8.0,1.5
-included_only,pooled,low,within_subjects_all_vignettes,proximate,blame,CH,4,1.75,1.5,0.9574271077563381
-included_only,pooled,low,within_subjects_all_vignettes,proximate,wrong,CC,4,7.75,8.0,1.5
-included_only,pooled,low,within_subjects_all_vignettes,proximate,wrong,CH,4,1.5,1.5,0.5773502691896257
-included_only,pooled,low,within_subjects_all_vignettes,proximate,punish,CC,4,1.6352574997974758,1.7482537807332403,1.357657199166658
-included_only,pooled,low,within_subjects_all_vignettes,proximate,punish,CH,4,0.0,0.0,0.0
-included_only,pooled,low,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
-included_only,pooled,low,between_subjects_first_vignette,distal,blame,CH,0,,,
-included_only,pooled,low,between_subjects_first_vignette,distal,blame,DIV,3,6.0,6.0,1.0
-included_only,pooled,low,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
-included_only,pooled,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
-included_only,pooled,low,between_subjects_first_vignette,distal,wrong,DIV,3,5.333333333333333,5.0,0.5773502691896258
-included_only,pooled,low,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
-included_only,pooled,low,between_subjects_first_vignette,distal,punish,CH,0,,,
-included_only,pooled,low,between_subjects_first_vignette,distal,punish,DIV,3,0.8283022165960001,0.6931471805599453,0.9034935869814078
-included_only,pooled,low,within_subjects_deltas,distal,blame,CH - CC,4,1.25,1.0,0.5
-included_only,pooled,low,within_subjects_deltas,distal,blame,DIV - CC,4,0.75,1.0,0.5
-included_only,pooled,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",4,0.75,1.0,0.5
-included_only,pooled,low,within_subjects_deltas,proximate,blame,CC - CH,4,6.0,6.0,0.816496580927726
-included_only,pooled,low,within_subjects_deltas,distal,wrong,CH - CC,4,1.25,1.0,0.5
-included_only,pooled,low,within_subjects_deltas,distal,wrong,DIV - CC,4,0.5,0.5,0.5773502691896257
-included_only,pooled,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",4,0.5,0.5,0.5773502691896257
-included_only,pooled,low,within_subjects_deltas,proximate,wrong,CC - CH,4,6.25,6.5,0.9574271077563381
-included_only,pooled,low,within_subjects_deltas,distal,punish,CH - CC,4,0.3248207460325652,0.30306790178515786,0.37674905798396924
-included_only,pooled,low,within_subjects_deltas,distal,punish,DIV - CC,4,0.34657359027997264,0.2027325540540822,0.46403123585182093
-included_only,pooled,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",4,0.25290022791962,0.2027325540540822,0.30329768937234736
-included_only,pooled,low,within_subjects_deltas,proximate,punish,CC - CH,4,1.6352574997974758,1.7482537807332403,1.357657199166658
-included_only,firework,pooled,within_subjects_all_vignettes,distal,blame,CC,2,7.0,7.0,1.4142135623730951
-included_only,firework,pooled,within_subjects_all_vignettes,distal,blame,CH,2,8.5,8.5,0.7071067811865476
-included_only,firework,pooled,within_subjects_all_vignettes,distal,blame,DIV,2,8.0,8.0,1.4142135623730951
-included_only,firework,pooled,within_subjects_all_vignettes,distal,wrong,CC,2,6.5,6.5,2.1213203435596424
-included_only,firework,pooled,within_subjects_all_vignettes,distal,wrong,CH,2,8.0,8.0,1.4142135623730951
-included_only,firework,pooled,within_subjects_all_vignettes,distal,wrong,DIV,2,7.5,7.5,2.1213203435596424
-included_only,firework,pooled,within_subjects_all_vignettes,distal,punish,CC,2,1.5890269151739727,1.5890269151739727,0.2867071274778196
-included_only,firework,pooled,within_subjects_all_vignettes,distal,punish,CH,2,2.2386684072391034,2.2386684072391034,0.2251807927680735
-included_only,firework,pooled,within_subjects_all_vignettes,distal,punish,DIV,2,2.282174095733918,2.282174095733918,0.6935510159907275
-included_only,firework,pooled,within_subjects_all_vignettes,proximate,blame,CC,2,9.0,9.0,0.0
-included_only,firework,pooled,within_subjects_all_vignettes,proximate,blame,CH,2,2.5,2.5,0.7071067811865476
-included_only,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CC,2,9.0,9.0,0.0
-included_only,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CH,2,2.0,2.0,0.0
-included_only,firework,pooled,within_subjects_all_vignettes,proximate,punish,CC,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
-included_only,firework,pooled,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
-included_only,firework,pooled,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
-included_only,firework,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
-included_only,firework,pooled,between_subjects_first_vignette,distal,blame,DIV,1,7.0,7.0,
-included_only,firework,pooled,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
-included_only,firework,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
-included_only,firework,pooled,between_subjects_first_vignette,distal,wrong,DIV,1,6.0,6.0,
-included_only,firework,pooled,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
-included_only,firework,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
-included_only,firework,pooled,between_subjects_first_vignette,distal,punish,DIV,1,1.791759469228055,1.791759469228055,
-included_only,firework,pooled,within_subjects_deltas,distal,blame,CH - CC,2,1.5,1.5,0.7071067811865476
-included_only,firework,pooled,within_subjects_deltas,distal,blame,DIV - CC,2,1.0,1.0,0.0
-included_only,firework,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
-included_only,firework,pooled,within_subjects_deltas,proximate,blame,CC - CH,2,6.5,6.5,0.7071067811865476
-included_only,firework,pooled,within_subjects_deltas,distal,wrong,CH - CC,2,1.5,1.5,0.7071067811865476
-included_only,firework,pooled,within_subjects_deltas,distal,wrong,DIV - CC,2,1.0,1.0,0.0
-included_only,firework,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
-included_only,firework,pooled,within_subjects_deltas,proximate,wrong,CC - CH,2,7.0,7.0,0.0
-included_only,firework,pooled,within_subjects_deltas,distal,punish,CH - CC,2,0.6496414920651304,0.6496414920651304,0.06152633470974612
-included_only,firework,pooled,within_subjects_deltas,distal,punish,DIV - CC,2,0.6931471805599453,0.6931471805599453,0.40684388851290787
-included_only,firework,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.50580045583924,0.50580045583924,0.14189560954670774
-included_only,firework,pooled,within_subjects_deltas,proximate,punish,CC - CH,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
-included_only,firework,high,within_subjects_all_vignettes,distal,blame,CC,0,,,
-included_only,firework,high,within_subjects_all_vignettes,distal,blame,CH,0,,,
-included_only,firework,high,within_subjects_all_vignettes,distal,blame,DIV,0,,,
-included_only,firework,high,within_subjects_all_vignettes,distal,wrong,CC,0,,,
-included_only,firework,high,within_subjects_all_vignettes,distal,wrong,CH,0,,,
-included_only,firework,high,within_subjects_all_vignettes,distal,wrong,DIV,0,,,
-included_only,firework,high,within_subjects_all_vignettes,distal,punish,CC,0,,,
-included_only,firework,high,within_subjects_all_vignettes,distal,punish,CH,0,,,
-included_only,firework,high,within_subjects_all_vignettes,distal,punish,DIV,0,,,
-included_only,firework,high,within_subjects_all_vignettes,proximate,blame,CC,0,,,
-included_only,firework,high,within_subjects_all_vignettes,proximate,blame,CH,0,,,
-included_only,firework,high,within_subjects_all_vignettes,proximate,wrong,CC,0,,,
-included_only,firework,high,within_subjects_all_vignettes,proximate,wrong,CH,0,,,
-included_only,firework,high,within_subjects_all_vignettes,proximate,punish,CC,0,,,
-included_only,firework,high,within_subjects_all_vignettes,proximate,punish,CH,0,,,
-included_only,firework,high,between_subjects_first_vignette,distal,blame,CC,0,,,
-included_only,firework,high,between_subjects_first_vignette,distal,blame,CH,0,,,
-included_only,firework,high,between_subjects_first_vignette,distal,blame,DIV,0,,,
-included_only,firework,high,between_subjects_first_vignette,distal,wrong,CC,0,,,
-included_only,firework,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
-included_only,firework,high,between_subjects_first_vignette,distal,wrong,DIV,0,,,
-included_only,firework,high,between_subjects_first_vignette,distal,punish,CC,0,,,
-included_only,firework,high,between_subjects_first_vignette,distal,punish,CH,0,,,
-included_only,firework,high,between_subjects_first_vignette,distal,punish,DIV,0,,,
-included_only,firework,high,within_subjects_deltas,distal,blame,CH - CC,0,,,
-included_only,firework,high,within_subjects_deltas,distal,blame,DIV - CC,0,,,
-included_only,firework,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",0,,,
-included_only,firework,high,within_subjects_deltas,proximate,blame,CC - CH,0,,,
-included_only,firework,high,within_subjects_deltas,distal,wrong,CH - CC,0,,,
-included_only,firework,high,within_subjects_deltas,distal,wrong,DIV - CC,0,,,
-included_only,firework,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",0,,,
-included_only,firework,high,within_subjects_deltas,proximate,wrong,CC - CH,0,,,
-included_only,firework,high,within_subjects_deltas,distal,punish,CH - CC,0,,,
-included_only,firework,high,within_subjects_deltas,distal,punish,DIV - CC,0,,,
-included_only,firework,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",0,,,
-included_only,firework,high,within_subjects_deltas,proximate,punish,CC - CH,0,,,
-included_only,firework,low,within_subjects_all_vignettes,distal,blame,CC,2,7.0,7.0,1.4142135623730951
-included_only,firework,low,within_subjects_all_vignettes,distal,blame,CH,2,8.5,8.5,0.7071067811865476
-included_only,firework,low,within_subjects_all_vignettes,distal,blame,DIV,2,8.0,8.0,1.4142135623730951
-included_only,firework,low,within_subjects_all_vignettes,distal,wrong,CC,2,6.5,6.5,2.1213203435596424
-included_only,firework,low,within_subjects_all_vignettes,distal,wrong,CH,2,8.0,8.0,1.4142135623730951
-included_only,firework,low,within_subjects_all_vignettes,distal,wrong,DIV,2,7.5,7.5,2.1213203435596424
-included_only,firework,low,within_subjects_all_vignettes,distal,punish,CC,2,1.5890269151739727,1.5890269151739727,0.2867071274778196
-included_only,firework,low,within_subjects_all_vignettes,distal,punish,CH,2,2.2386684072391034,2.2386684072391034,0.2251807927680735
-included_only,firework,low,within_subjects_all_vignettes,distal,punish,DIV,2,2.282174095733918,2.282174095733918,0.6935510159907275
-included_only,firework,low,within_subjects_all_vignettes,proximate,blame,CC,2,9.0,9.0,0.0
-included_only,firework,low,within_subjects_all_vignettes,proximate,blame,CH,2,2.5,2.5,0.7071067811865476
-included_only,firework,low,within_subjects_all_vignettes,proximate,wrong,CC,2,9.0,9.0,0.0
-included_only,firework,low,within_subjects_all_vignettes,proximate,wrong,CH,2,2.0,2.0,0.0
-included_only,firework,low,within_subjects_all_vignettes,proximate,punish,CC,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
-included_only,firework,low,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
-included_only,firework,low,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
-included_only,firework,low,between_subjects_first_vignette,distal,blame,CH,0,,,
-included_only,firework,low,between_subjects_first_vignette,distal,blame,DIV,1,7.0,7.0,
-included_only,firework,low,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
-included_only,firework,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
-included_only,firework,low,between_subjects_first_vignette,distal,wrong,DIV,1,6.0,6.0,
-included_only,firework,low,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
-included_only,firework,low,between_subjects_first_vignette,distal,punish,CH,0,,,
-included_only,firework,low,between_subjects_first_vignette,distal,punish,DIV,1,1.791759469228055,1.791759469228055,
-included_only,firework,low,within_subjects_deltas,distal,blame,CH - CC,2,1.5,1.5,0.7071067811865476
-included_only,firework,low,within_subjects_deltas,distal,blame,DIV - CC,2,1.0,1.0,0.0
-included_only,firework,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
-included_only,firework,low,within_subjects_deltas,proximate,blame,CC - CH,2,6.5,6.5,0.7071067811865476
-included_only,firework,low,within_subjects_deltas,distal,wrong,CH - CC,2,1.5,1.5,0.7071067811865476
-included_only,firework,low,within_subjects_deltas,distal,wrong,DIV - CC,2,1.0,1.0,0.0
-included_only,firework,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
-included_only,firework,low,within_subjects_deltas,proximate,wrong,CC - CH,2,7.0,7.0,0.0
-included_only,firework,low,within_subjects_deltas,distal,punish,CH - CC,2,0.6496414920651304,0.6496414920651304,0.06152633470974612
-included_only,firework,low,within_subjects_deltas,distal,punish,DIV - CC,2,0.6931471805599453,0.6931471805599453,0.40684388851290787
-included_only,firework,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.50580045583924,0.50580045583924,0.14189560954670774
-included_only,firework,low,within_subjects_deltas,proximate,punish,CC - CH,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
-included_only,trolley,pooled,within_subjects_all_vignettes,distal,blame,CC,4,5.5,5.5,0.5773502691896257
-included_only,trolley,pooled,within_subjects_all_vignettes,distal,blame,CH,4,6.5,6.5,0.5773502691896257
-included_only,trolley,pooled,within_subjects_all_vignettes,distal,blame,DIV,4,5.75,6.0,0.5
-included_only,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CC,4,5.5,5.5,0.5773502691896257
-included_only,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CH,4,6.25,6.0,0.5
-included_only,trolley,pooled,within_subjects_all_vignettes,distal,wrong,DIV,4,5.25,5.0,0.5
-included_only,trolley,pooled,within_subjects_all_vignettes,distal,punish,CC,4,0.5198603854199589,0.6931471805599453,0.34657359027997264
-included_only,trolley,pooled,within_subjects_all_vignettes,distal,punish,CH,4,0.6212266624470001,0.6931471805599453,0.45613036298439547
-included_only,trolley,pooled,within_subjects_all_vignettes,distal,punish,DIV,4,0.5198603854199589,0.6931471805599453,0.34657359027997264
-included_only,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CC,4,6.75,7.0,0.5
-included_only,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CH,4,1.0,1.0,0.0
-included_only,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CC,4,6.75,7.0,0.5
-included_only,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CH,4,1.25,1.0,0.5
-included_only,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CC,4,0.7225929394740412,0.8958797346140275,0.5182627103546438
-included_only,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CH,4,0.0,0.0,0.0
-included_only,trolley,pooled,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
-included_only,trolley,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
-included_only,trolley,pooled,between_subjects_first_vignette,distal,blame,DIV,3,5.666666666666667,6.0,0.5773502691896258
-included_only,trolley,pooled,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
-included_only,trolley,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
-included_only,trolley,pooled,between_subjects_first_vignette,distal,wrong,DIV,3,5.0,5.0,0.0
-included_only,trolley,pooled,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
-included_only,trolley,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
-included_only,trolley,pooled,between_subjects_first_vignette,distal,punish,DIV,3,0.46209812037329684,0.6931471805599453,0.40018871128431455
-included_only,trolley,pooled,within_subjects_deltas,distal,blame,CH - CC,4,1.0,1.0,0.0
-included_only,trolley,pooled,within_subjects_deltas,distal,blame,DIV - CC,4,0.25,0.0,0.5
-included_only,trolley,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",4,0.25,0.0,0.5
-included_only,trolley,pooled,within_subjects_deltas,proximate,blame,CC - CH,4,5.75,6.0,0.5
-included_only,trolley,pooled,within_subjects_deltas,distal,wrong,CH - CC,4,0.75,1.0,0.5
-included_only,trolley,pooled,within_subjects_deltas,distal,wrong,DIV - CC,4,-0.25,0.0,0.5
-included_only,trolley,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",4,-0.25,0.0,0.5
-included_only,trolley,pooled,within_subjects_deltas,proximate,wrong,CC - CH,4,5.5,5.5,0.5773502691896257
-included_only,trolley,pooled,within_subjects_deltas,distal,punish,CH - CC,4,0.10136627702704112,0.0,0.20273255405408225
-included_only,trolley,pooled,within_subjects_deltas,distal,punish,DIV - CC,4,0.0,0.0,0.0
-included_only,trolley,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",4,0.0,0.0,0.0
-included_only,trolley,pooled,within_subjects_deltas,proximate,punish,CC - CH,4,0.7225929394740412,0.8958797346140275,0.5182627103546438
-included_only,trolley,high,within_subjects_all_vignettes,distal,blame,CC,2,6.0,6.0,0.0
-included_only,trolley,high,within_subjects_all_vignettes,distal,blame,CH,2,7.0,7.0,0.0
-included_only,trolley,high,within_subjects_all_vignettes,distal,blame,DIV,2,6.0,6.0,0.0
-included_only,trolley,high,within_subjects_all_vignettes,distal,wrong,CC,2,6.0,6.0,0.0
-included_only,trolley,high,within_subjects_all_vignettes,distal,wrong,CH,2,6.5,6.5,0.7071067811865476
-included_only,trolley,high,within_subjects_all_vignettes,distal,wrong,DIV,2,5.5,5.5,0.7071067811865476
-included_only,trolley,high,within_subjects_all_vignettes,distal,punish,CC,2,0.6931471805599453,0.6931471805599453,0.0
-included_only,trolley,high,within_subjects_all_vignettes,distal,punish,CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-included_only,trolley,high,within_subjects_all_vignettes,distal,punish,DIV,2,0.6931471805599453,0.6931471805599453,0.0
-included_only,trolley,high,within_subjects_all_vignettes,proximate,blame,CC,2,7.0,7.0,0.0
-included_only,trolley,high,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
-included_only,trolley,high,within_subjects_all_vignettes,proximate,wrong,CC,2,7.0,7.0,0.0
-included_only,trolley,high,within_subjects_all_vignettes,proximate,wrong,CH,2,1.5,1.5,0.7071067811865476
-included_only,trolley,high,within_subjects_all_vignettes,proximate,punish,CC,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-included_only,trolley,high,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
-included_only,trolley,high,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
-included_only,trolley,high,between_subjects_first_vignette,distal,blame,CH,0,,,
-included_only,trolley,high,between_subjects_first_vignette,distal,blame,DIV,1,6.0,6.0,
-included_only,trolley,high,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
-included_only,trolley,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
-included_only,trolley,high,between_subjects_first_vignette,distal,wrong,DIV,1,5.0,5.0,
-included_only,trolley,high,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
-included_only,trolley,high,between_subjects_first_vignette,distal,punish,CH,0,,,
-included_only,trolley,high,between_subjects_first_vignette,distal,punish,DIV,1,0.6931471805599453,0.6931471805599453,
-included_only,trolley,high,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
-included_only,trolley,high,within_subjects_deltas,distal,blame,DIV - CC,2,0.0,0.0,0.0
-included_only,trolley,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-included_only,trolley,high,within_subjects_deltas,proximate,blame,CC - CH,2,6.0,6.0,0.0
-included_only,trolley,high,within_subjects_deltas,distal,wrong,CH - CC,2,0.5,0.5,0.7071067811865476
-included_only,trolley,high,within_subjects_deltas,distal,wrong,DIV - CC,2,-0.5,-0.5,0.7071067811865476
-included_only,trolley,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,-0.5,-0.5,0.7071067811865476
-included_only,trolley,high,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
-included_only,trolley,high,within_subjects_deltas,distal,punish,CH - CC,2,0.20273255405408225,0.20273255405408225,0.28670712747781973
-included_only,trolley,high,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
-included_only,trolley,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-included_only,trolley,high,within_subjects_deltas,proximate,punish,CC - CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-included_only,trolley,low,within_subjects_all_vignettes,distal,blame,CC,2,5.0,5.0,0.0
-included_only,trolley,low,within_subjects_all_vignettes,distal,blame,CH,2,6.0,6.0,0.0
-included_only,trolley,low,within_subjects_all_vignettes,distal,blame,DIV,2,5.5,5.5,0.7071067811865476
-included_only,trolley,low,within_subjects_all_vignettes,distal,wrong,CC,2,5.0,5.0,0.0
-included_only,trolley,low,within_subjects_all_vignettes,distal,wrong,CH,2,6.0,6.0,0.0
-included_only,trolley,low,within_subjects_all_vignettes,distal,wrong,DIV,2,5.0,5.0,0.0
-included_only,trolley,low,within_subjects_all_vignettes,distal,punish,CC,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
-included_only,trolley,low,within_subjects_all_vignettes,distal,punish,CH,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
-included_only,trolley,low,within_subjects_all_vignettes,distal,punish,DIV,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
-included_only,trolley,low,within_subjects_all_vignettes,proximate,blame,CC,2,6.5,6.5,0.7071067811865476
-included_only,trolley,low,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
-included_only,trolley,low,within_subjects_all_vignettes,proximate,wrong,CC,2,6.5,6.5,0.7071067811865476
-included_only,trolley,low,within_subjects_all_vignettes,proximate,wrong,CH,2,1.0,1.0,0.0
-included_only,trolley,low,within_subjects_all_vignettes,proximate,punish,CC,2,0.5493061443340549,0.5493061443340549,0.7768361992120932
-included_only,trolley,low,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
-included_only,trolley,low,between_subjects_first_vignette,distal,blame,CC,0,,,
-included_only,trolley,low,between_subjects_first_vignette,distal,blame,CH,0,,,
-included_only,trolley,low,between_subjects_first_vignette,distal,blame,DIV,2,5.5,5.5,0.7071067811865476
-included_only,trolley,low,between_subjects_first_vignette,distal,wrong,CC,0,,,
-included_only,trolley,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
-included_only,trolley,low,between_subjects_first_vignette,distal,wrong,DIV,2,5.0,5.0,0.0
-included_only,trolley,low,between_subjects_first_vignette,distal,punish,CC,0,,,
-included_only,trolley,low,between_subjects_first_vignette,distal,punish,CH,0,,,
-included_only,trolley,low,between_subjects_first_vignette,distal,punish,DIV,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
-included_only,trolley,low,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
-included_only,trolley,low,within_subjects_deltas,distal,blame,DIV - CC,2,0.5,0.5,0.7071067811865476
-included_only,trolley,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.5,0.5,0.7071067811865476
-included_only,trolley,low,within_subjects_deltas,proximate,blame,CC - CH,2,5.5,5.5,0.7071067811865476
-included_only,trolley,low,within_subjects_deltas,distal,wrong,CH - CC,2,1.0,1.0,0.0
-included_only,trolley,low,within_subjects_deltas,distal,wrong,DIV - CC,2,0.0,0.0,0.0
-included_only,trolley,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-included_only,trolley,low,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
-included_only,trolley,low,within_subjects_deltas,distal,punish,CH - CC,2,0.0,0.0,0.0
-included_only,trolley,low,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
-included_only,trolley,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-included_only,trolley,low,within_subjects_deltas,proximate,punish,CC - CH,2,0.5493061443340549,0.5493061443340549,0.7768361992120932
-all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,blame,CC,6,6.0,6.0,1.0954451150103321
-all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,blame,CH,6,7.166666666666667,7.0,1.1690451944500122
-all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,blame,DIV,6,6.5,6.0,1.378404875209022
-all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CC,6,5.833333333333333,5.5,1.1690451944500122
-all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CH,6,6.833333333333333,6.5,1.1690451944500122
-all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,wrong,DIV,6,6.0,5.5,1.5491933384829668
-all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,punish,CC,6,0.876249228671297,0.6931471805599453,0.627167733308013
-all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,punish,CH,6,1.1603739107110345,0.8958797346140275,0.9124722655805656
-all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,punish,DIV,6,1.1072982888579455,0.6931471805599453,0.998233665728403
-all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CC,6,7.5,7.0,1.224744871391589
-all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CH,6,1.5,1.0,0.8366600265340756
-all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CC,6,7.5,7.0,1.224744871391589
-all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CH,6,1.5,1.5,0.5477225575051661
-all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CC,6,1.3887982447363265,1.0986122886681098,1.12612665017371
-all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CH,6,0.0,0.0,0.0
-all_finishers,pooled,pooled,between_subjects_first_vignette,distal,blame,CC,2,7.0,7.0,1.4142135623730951
-all_finishers,pooled,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
-all_finishers,pooled,pooled,between_subjects_first_vignette,distal,blame,DIV,4,6.0,6.0,0.816496580927726
-all_finishers,pooled,pooled,between_subjects_first_vignette,distal,wrong,CC,2,7.0,7.0,1.4142135623730951
-all_finishers,pooled,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
-all_finishers,pooled,pooled,between_subjects_first_vignette,distal,wrong,DIV,4,5.25,5.0,0.5
-all_finishers,pooled,pooled,between_subjects_first_vignette,distal,punish,CC,2,1.2424533248940002,1.2424533248940002,0.7768361992120932
-all_finishers,pooled,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
-all_finishers,pooled,pooled,between_subjects_first_vignette,distal,punish,DIV,4,0.7945134575869863,0.6931471805599453,0.74078820325774
-all_finishers,pooled,pooled,within_subjects_deltas,distal,blame,CH - CC,6,1.1666666666666667,1.0,0.408248290463863
-all_finishers,pooled,pooled,within_subjects_deltas,distal,blame,DIV - CC,6,0.5,0.5,0.5477225575051661
-all_finishers,pooled,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",6,0.5,0.5,0.5477225575051661
-all_finishers,pooled,pooled,within_subjects_deltas,proximate,blame,CC - CH,6,6.0,6.0,0.6324555320336759
-all_finishers,pooled,pooled,within_subjects_deltas,distal,wrong,CH - CC,6,1.0,1.0,0.6324555320336759
-all_finishers,pooled,pooled,within_subjects_deltas,distal,wrong,DIV - CC,6,0.16666666666666666,0.0,0.7527726527090811
-all_finishers,pooled,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",6,0.16666666666666666,0.0,0.7527726527090811
-all_finishers,pooled,pooled,within_subjects_deltas,proximate,wrong,CC - CH,6,6.0,6.0,0.8944271909999159
-all_finishers,pooled,pooled,within_subjects_deltas,distal,punish,CH - CC,6,0.28412468203973756,0.20273255405408225,0.3249290908847982
-all_finishers,pooled,pooled,within_subjects_deltas,distal,punish,DIV - CC,6,0.23104906018664842,0.0,0.4015285713813913
-all_finishers,pooled,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",6,0.16860015194641334,0.0,0.26879229856708164
-all_finishers,pooled,pooled,within_subjects_deltas,proximate,punish,CC - CH,6,1.3887982447363265,1.0986122886681098,1.12612665017371
-all_finishers,pooled,high,within_subjects_all_vignettes,distal,blame,CC,2,6.0,6.0,0.0
-all_finishers,pooled,high,within_subjects_all_vignettes,distal,blame,CH,2,7.0,7.0,0.0
-all_finishers,pooled,high,within_subjects_all_vignettes,distal,blame,DIV,2,6.0,6.0,0.0
-all_finishers,pooled,high,within_subjects_all_vignettes,distal,wrong,CC,2,6.0,6.0,0.0
-all_finishers,pooled,high,within_subjects_all_vignettes,distal,wrong,CH,2,6.5,6.5,0.7071067811865476
-all_finishers,pooled,high,within_subjects_all_vignettes,distal,wrong,DIV,2,5.5,5.5,0.7071067811865476
-all_finishers,pooled,high,within_subjects_all_vignettes,distal,punish,CC,2,0.6931471805599453,0.6931471805599453,0.0
-all_finishers,pooled,high,within_subjects_all_vignettes,distal,punish,CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-all_finishers,pooled,high,within_subjects_all_vignettes,distal,punish,DIV,2,0.6931471805599453,0.6931471805599453,0.0
-all_finishers,pooled,high,within_subjects_all_vignettes,proximate,blame,CC,2,7.0,7.0,0.0
-all_finishers,pooled,high,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
-all_finishers,pooled,high,within_subjects_all_vignettes,proximate,wrong,CC,2,7.0,7.0,0.0
-all_finishers,pooled,high,within_subjects_all_vignettes,proximate,wrong,CH,2,1.5,1.5,0.7071067811865476
-all_finishers,pooled,high,within_subjects_all_vignettes,proximate,punish,CC,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-all_finishers,pooled,high,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
-all_finishers,pooled,high,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
-all_finishers,pooled,high,between_subjects_first_vignette,distal,blame,CH,0,,,
-all_finishers,pooled,high,between_subjects_first_vignette,distal,blame,DIV,1,6.0,6.0,
-all_finishers,pooled,high,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
-all_finishers,pooled,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
-all_finishers,pooled,high,between_subjects_first_vignette,distal,wrong,DIV,1,5.0,5.0,
-all_finishers,pooled,high,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
-all_finishers,pooled,high,between_subjects_first_vignette,distal,punish,CH,0,,,
-all_finishers,pooled,high,between_subjects_first_vignette,distal,punish,DIV,1,0.6931471805599453,0.6931471805599453,
-all_finishers,pooled,high,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
-all_finishers,pooled,high,within_subjects_deltas,distal,blame,DIV - CC,2,0.0,0.0,0.0
-all_finishers,pooled,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-all_finishers,pooled,high,within_subjects_deltas,proximate,blame,CC - CH,2,6.0,6.0,0.0
-all_finishers,pooled,high,within_subjects_deltas,distal,wrong,CH - CC,2,0.5,0.5,0.7071067811865476
-all_finishers,pooled,high,within_subjects_deltas,distal,wrong,DIV - CC,2,-0.5,-0.5,0.7071067811865476
-all_finishers,pooled,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,-0.5,-0.5,0.7071067811865476
-all_finishers,pooled,high,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
-all_finishers,pooled,high,within_subjects_deltas,distal,punish,CH - CC,2,0.20273255405408225,0.20273255405408225,0.28670712747781973
-all_finishers,pooled,high,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
-all_finishers,pooled,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-all_finishers,pooled,high,within_subjects_deltas,proximate,punish,CC - CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-all_finishers,pooled,low,within_subjects_all_vignettes,distal,blame,CC,4,6.0,5.5,1.4142135623730951
-all_finishers,pooled,low,within_subjects_all_vignettes,distal,blame,CH,4,7.25,7.0,1.5
-all_finishers,pooled,low,within_subjects_all_vignettes,distal,blame,DIV,4,6.75,6.5,1.707825127659933
-all_finishers,pooled,low,within_subjects_all_vignettes,distal,wrong,CC,4,5.75,5.0,1.5
-all_finishers,pooled,low,within_subjects_all_vignettes,distal,wrong,CH,4,7.0,6.5,1.4142135623730951
-all_finishers,pooled,low,within_subjects_all_vignettes,distal,wrong,DIV,4,6.25,5.5,1.8929694486000912
-all_finishers,pooled,low,within_subjects_all_vignettes,distal,punish,CC,4,0.9678002527269727,1.0397207708399179,0.7886946490765272
-all_finishers,pooled,low,within_subjects_all_vignettes,distal,punish,CH,4,1.292620998759538,1.3862943611198906,1.135921900595043
-all_finishers,pooled,low,within_subjects_all_vignettes,distal,punish,DIV,4,1.3143738430069454,1.2424533248940002,1.220353614798383
-all_finishers,pooled,low,within_subjects_all_vignettes,proximate,blame,CC,4,7.75,8.0,1.5
-all_finishers,pooled,low,within_subjects_all_vignettes,proximate,blame,CH,4,1.75,1.5,0.9574271077563381
-all_finishers,pooled,low,within_subjects_all_vignettes,proximate,wrong,CC,4,7.75,8.0,1.5
-all_finishers,pooled,low,within_subjects_all_vignettes,proximate,wrong,CH,4,1.5,1.5,0.5773502691896257
-all_finishers,pooled,low,within_subjects_all_vignettes,proximate,punish,CC,4,1.6352574997974758,1.7482537807332403,1.357657199166658
-all_finishers,pooled,low,within_subjects_all_vignettes,proximate,punish,CH,4,0.0,0.0,0.0
-all_finishers,pooled,low,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
-all_finishers,pooled,low,between_subjects_first_vignette,distal,blame,CH,0,,,
-all_finishers,pooled,low,between_subjects_first_vignette,distal,blame,DIV,3,6.0,6.0,1.0
-all_finishers,pooled,low,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
-all_finishers,pooled,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
-all_finishers,pooled,low,between_subjects_first_vignette,distal,wrong,DIV,3,5.333333333333333,5.0,0.5773502691896258
-all_finishers,pooled,low,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
-all_finishers,pooled,low,between_subjects_first_vignette,distal,punish,CH,0,,,
-all_finishers,pooled,low,between_subjects_first_vignette,distal,punish,DIV,3,0.8283022165960001,0.6931471805599453,0.9034935869814078
-all_finishers,pooled,low,within_subjects_deltas,distal,blame,CH - CC,4,1.25,1.0,0.5
-all_finishers,pooled,low,within_subjects_deltas,distal,blame,DIV - CC,4,0.75,1.0,0.5
-all_finishers,pooled,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",4,0.75,1.0,0.5
-all_finishers,pooled,low,within_subjects_deltas,proximate,blame,CC - CH,4,6.0,6.0,0.816496580927726
-all_finishers,pooled,low,within_subjects_deltas,distal,wrong,CH - CC,4,1.25,1.0,0.5
-all_finishers,pooled,low,within_subjects_deltas,distal,wrong,DIV - CC,4,0.5,0.5,0.5773502691896257
-all_finishers,pooled,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",4,0.5,0.5,0.5773502691896257
-all_finishers,pooled,low,within_subjects_deltas,proximate,wrong,CC - CH,4,6.25,6.5,0.9574271077563381
-all_finishers,pooled,low,within_subjects_deltas,distal,punish,CH - CC,4,0.3248207460325652,0.30306790178515786,0.37674905798396924
-all_finishers,pooled,low,within_subjects_deltas,distal,punish,DIV - CC,4,0.34657359027997264,0.2027325540540822,0.46403123585182093
-all_finishers,pooled,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",4,0.25290022791962,0.2027325540540822,0.30329768937234736
-all_finishers,pooled,low,within_subjects_deltas,proximate,punish,CC - CH,4,1.6352574997974758,1.7482537807332403,1.357657199166658
-all_finishers,firework,pooled,within_subjects_all_vignettes,distal,blame,CC,2,7.0,7.0,1.4142135623730951
-all_finishers,firework,pooled,within_subjects_all_vignettes,distal,blame,CH,2,8.5,8.5,0.7071067811865476
-all_finishers,firework,pooled,within_subjects_all_vignettes,distal,blame,DIV,2,8.0,8.0,1.4142135623730951
-all_finishers,firework,pooled,within_subjects_all_vignettes,distal,wrong,CC,2,6.5,6.5,2.1213203435596424
-all_finishers,firework,pooled,within_subjects_all_vignettes,distal,wrong,CH,2,8.0,8.0,1.4142135623730951
-all_finishers,firework,pooled,within_subjects_all_vignettes,distal,wrong,DIV,2,7.5,7.5,2.1213203435596424
-all_finishers,firework,pooled,within_subjects_all_vignettes,distal,punish,CC,2,1.5890269151739727,1.5890269151739727,0.2867071274778196
-all_finishers,firework,pooled,within_subjects_all_vignettes,distal,punish,CH,2,2.2386684072391034,2.2386684072391034,0.2251807927680735
-all_finishers,firework,pooled,within_subjects_all_vignettes,distal,punish,DIV,2,2.282174095733918,2.282174095733918,0.6935510159907275
-all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,blame,CC,2,9.0,9.0,0.0
-all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,blame,CH,2,2.5,2.5,0.7071067811865476
-all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CC,2,9.0,9.0,0.0
-all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CH,2,2.0,2.0,0.0
-all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,punish,CC,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
-all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
-all_finishers,firework,pooled,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
-all_finishers,firework,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
-all_finishers,firework,pooled,between_subjects_first_vignette,distal,blame,DIV,1,7.0,7.0,
-all_finishers,firework,pooled,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
-all_finishers,firework,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
-all_finishers,firework,pooled,between_subjects_first_vignette,distal,wrong,DIV,1,6.0,6.0,
-all_finishers,firework,pooled,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
-all_finishers,firework,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
-all_finishers,firework,pooled,between_subjects_first_vignette,distal,punish,DIV,1,1.791759469228055,1.791759469228055,
-all_finishers,firework,pooled,within_subjects_deltas,distal,blame,CH - CC,2,1.5,1.5,0.7071067811865476
-all_finishers,firework,pooled,within_subjects_deltas,distal,blame,DIV - CC,2,1.0,1.0,0.0
-all_finishers,firework,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
-all_finishers,firework,pooled,within_subjects_deltas,proximate,blame,CC - CH,2,6.5,6.5,0.7071067811865476
-all_finishers,firework,pooled,within_subjects_deltas,distal,wrong,CH - CC,2,1.5,1.5,0.7071067811865476
-all_finishers,firework,pooled,within_subjects_deltas,distal,wrong,DIV - CC,2,1.0,1.0,0.0
-all_finishers,firework,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
-all_finishers,firework,pooled,within_subjects_deltas,proximate,wrong,CC - CH,2,7.0,7.0,0.0
-all_finishers,firework,pooled,within_subjects_deltas,distal,punish,CH - CC,2,0.6496414920651304,0.6496414920651304,0.06152633470974612
-all_finishers,firework,pooled,within_subjects_deltas,distal,punish,DIV - CC,2,0.6931471805599453,0.6931471805599453,0.40684388851290787
-all_finishers,firework,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.50580045583924,0.50580045583924,0.14189560954670774
-all_finishers,firework,pooled,within_subjects_deltas,proximate,punish,CC - CH,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
-all_finishers,firework,high,within_subjects_all_vignettes,distal,blame,CC,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,distal,blame,CH,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,distal,blame,DIV,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,distal,wrong,CC,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,distal,wrong,CH,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,distal,wrong,DIV,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,distal,punish,CC,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,distal,punish,CH,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,distal,punish,DIV,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,proximate,blame,CC,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,proximate,blame,CH,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,proximate,wrong,CC,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,proximate,wrong,CH,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,proximate,punish,CC,0,,,
-all_finishers,firework,high,within_subjects_all_vignettes,proximate,punish,CH,0,,,
-all_finishers,firework,high,between_subjects_first_vignette,distal,blame,CC,0,,,
-all_finishers,firework,high,between_subjects_first_vignette,distal,blame,CH,0,,,
-all_finishers,firework,high,between_subjects_first_vignette,distal,blame,DIV,0,,,
-all_finishers,firework,high,between_subjects_first_vignette,distal,wrong,CC,0,,,
-all_finishers,firework,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
-all_finishers,firework,high,between_subjects_first_vignette,distal,wrong,DIV,0,,,
-all_finishers,firework,high,between_subjects_first_vignette,distal,punish,CC,0,,,
-all_finishers,firework,high,between_subjects_first_vignette,distal,punish,CH,0,,,
-all_finishers,firework,high,between_subjects_first_vignette,distal,punish,DIV,0,,,
-all_finishers,firework,high,within_subjects_deltas,distal,blame,CH - CC,0,,,
-all_finishers,firework,high,within_subjects_deltas,distal,blame,DIV - CC,0,,,
-all_finishers,firework,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",0,,,
-all_finishers,firework,high,within_subjects_deltas,proximate,blame,CC - CH,0,,,
-all_finishers,firework,high,within_subjects_deltas,distal,wrong,CH - CC,0,,,
-all_finishers,firework,high,within_subjects_deltas,distal,wrong,DIV - CC,0,,,
-all_finishers,firework,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",0,,,
-all_finishers,firework,high,within_subjects_deltas,proximate,wrong,CC - CH,0,,,
-all_finishers,firework,high,within_subjects_deltas,distal,punish,CH - CC,0,,,
-all_finishers,firework,high,within_subjects_deltas,distal,punish,DIV - CC,0,,,
-all_finishers,firework,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",0,,,
-all_finishers,firework,high,within_subjects_deltas,proximate,punish,CC - CH,0,,,
-all_finishers,firework,low,within_subjects_all_vignettes,distal,blame,CC,2,7.0,7.0,1.4142135623730951
-all_finishers,firework,low,within_subjects_all_vignettes,distal,blame,CH,2,8.5,8.5,0.7071067811865476
-all_finishers,firework,low,within_subjects_all_vignettes,distal,blame,DIV,2,8.0,8.0,1.4142135623730951
-all_finishers,firework,low,within_subjects_all_vignettes,distal,wrong,CC,2,6.5,6.5,2.1213203435596424
-all_finishers,firework,low,within_subjects_all_vignettes,distal,wrong,CH,2,8.0,8.0,1.4142135623730951
-all_finishers,firework,low,within_subjects_all_vignettes,distal,wrong,DIV,2,7.5,7.5,2.1213203435596424
-all_finishers,firework,low,within_subjects_all_vignettes,distal,punish,CC,2,1.5890269151739727,1.5890269151739727,0.2867071274778196
-all_finishers,firework,low,within_subjects_all_vignettes,distal,punish,CH,2,2.2386684072391034,2.2386684072391034,0.2251807927680735
-all_finishers,firework,low,within_subjects_all_vignettes,distal,punish,DIV,2,2.282174095733918,2.282174095733918,0.6935510159907275
-all_finishers,firework,low,within_subjects_all_vignettes,proximate,blame,CC,2,9.0,9.0,0.0
-all_finishers,firework,low,within_subjects_all_vignettes,proximate,blame,CH,2,2.5,2.5,0.7071067811865476
-all_finishers,firework,low,within_subjects_all_vignettes,proximate,wrong,CC,2,9.0,9.0,0.0
-all_finishers,firework,low,within_subjects_all_vignettes,proximate,wrong,CH,2,2.0,2.0,0.0
-all_finishers,firework,low,within_subjects_all_vignettes,proximate,punish,CC,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
-all_finishers,firework,low,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
-all_finishers,firework,low,between_subjects_first_vignette,distal,blame,CC,1,8.0,8.0,
-all_finishers,firework,low,between_subjects_first_vignette,distal,blame,CH,0,,,
-all_finishers,firework,low,between_subjects_first_vignette,distal,blame,DIV,1,7.0,7.0,
-all_finishers,firework,low,between_subjects_first_vignette,distal,wrong,CC,1,8.0,8.0,
-all_finishers,firework,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
-all_finishers,firework,low,between_subjects_first_vignette,distal,wrong,DIV,1,6.0,6.0,
-all_finishers,firework,low,between_subjects_first_vignette,distal,punish,CC,1,1.791759469228055,1.791759469228055,
-all_finishers,firework,low,between_subjects_first_vignette,distal,punish,CH,0,,,
-all_finishers,firework,low,between_subjects_first_vignette,distal,punish,DIV,1,1.791759469228055,1.791759469228055,
-all_finishers,firework,low,within_subjects_deltas,distal,blame,CH - CC,2,1.5,1.5,0.7071067811865476
-all_finishers,firework,low,within_subjects_deltas,distal,blame,DIV - CC,2,1.0,1.0,0.0
-all_finishers,firework,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
-all_finishers,firework,low,within_subjects_deltas,proximate,blame,CC - CH,2,6.5,6.5,0.7071067811865476
-all_finishers,firework,low,within_subjects_deltas,distal,wrong,CH - CC,2,1.5,1.5,0.7071067811865476
-all_finishers,firework,low,within_subjects_deltas,distal,wrong,DIV - CC,2,1.0,1.0,0.0
-all_finishers,firework,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,1.0,1.0,0.0
-all_finishers,firework,low,within_subjects_deltas,proximate,wrong,CC - CH,2,7.0,7.0,0.0
-all_finishers,firework,low,within_subjects_deltas,distal,punish,CH - CC,2,0.6496414920651304,0.6496414920651304,0.06152633470974612
-all_finishers,firework,low,within_subjects_deltas,distal,punish,DIV - CC,2,0.6931471805599453,0.6931471805599453,0.40684388851290787
-all_finishers,firework,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.50580045583924,0.50580045583924,0.14189560954670774
-all_finishers,firework,low,within_subjects_deltas,proximate,punish,CC - CH,2,2.7212088552608966,2.7212088552608966,0.45723445321793654
-all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,blame,CC,4,5.5,5.5,0.5773502691896257
-all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,blame,CH,4,6.5,6.5,0.5773502691896257
-all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,blame,DIV,4,5.75,6.0,0.5
-all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CC,4,5.5,5.5,0.5773502691896257
-all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CH,4,6.25,6.0,0.5
-all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,wrong,DIV,4,5.25,5.0,0.5
-all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,punish,CC,4,0.5198603854199589,0.6931471805599453,0.34657359027997264
-all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,punish,CH,4,0.6212266624470001,0.6931471805599453,0.45613036298439547
-all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,punish,DIV,4,0.5198603854199589,0.6931471805599453,0.34657359027997264
-all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CC,4,6.75,7.0,0.5
-all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CH,4,1.0,1.0,0.0
-all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CC,4,6.75,7.0,0.5
-all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CH,4,1.25,1.0,0.5
-all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CC,4,0.7225929394740412,0.8958797346140275,0.5182627103546438
-all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CH,4,0.0,0.0,0.0
-all_finishers,trolley,pooled,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
-all_finishers,trolley,pooled,between_subjects_first_vignette,distal,blame,CH,0,,,
-all_finishers,trolley,pooled,between_subjects_first_vignette,distal,blame,DIV,3,5.666666666666667,6.0,0.5773502691896258
-all_finishers,trolley,pooled,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
-all_finishers,trolley,pooled,between_subjects_first_vignette,distal,wrong,CH,0,,,
-all_finishers,trolley,pooled,between_subjects_first_vignette,distal,wrong,DIV,3,5.0,5.0,0.0
-all_finishers,trolley,pooled,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
-all_finishers,trolley,pooled,between_subjects_first_vignette,distal,punish,CH,0,,,
-all_finishers,trolley,pooled,between_subjects_first_vignette,distal,punish,DIV,3,0.46209812037329684,0.6931471805599453,0.40018871128431455
-all_finishers,trolley,pooled,within_subjects_deltas,distal,blame,CH - CC,4,1.0,1.0,0.0
-all_finishers,trolley,pooled,within_subjects_deltas,distal,blame,DIV - CC,4,0.25,0.0,0.5
-all_finishers,trolley,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",4,0.25,0.0,0.5
-all_finishers,trolley,pooled,within_subjects_deltas,proximate,blame,CC - CH,4,5.75,6.0,0.5
-all_finishers,trolley,pooled,within_subjects_deltas,distal,wrong,CH - CC,4,0.75,1.0,0.5
-all_finishers,trolley,pooled,within_subjects_deltas,distal,wrong,DIV - CC,4,-0.25,0.0,0.5
-all_finishers,trolley,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",4,-0.25,0.0,0.5
-all_finishers,trolley,pooled,within_subjects_deltas,proximate,wrong,CC - CH,4,5.5,5.5,0.5773502691896257
-all_finishers,trolley,pooled,within_subjects_deltas,distal,punish,CH - CC,4,0.10136627702704112,0.0,0.20273255405408225
-all_finishers,trolley,pooled,within_subjects_deltas,distal,punish,DIV - CC,4,0.0,0.0,0.0
-all_finishers,trolley,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",4,0.0,0.0,0.0
-all_finishers,trolley,pooled,within_subjects_deltas,proximate,punish,CC - CH,4,0.7225929394740412,0.8958797346140275,0.5182627103546438
-all_finishers,trolley,high,within_subjects_all_vignettes,distal,blame,CC,2,6.0,6.0,0.0
-all_finishers,trolley,high,within_subjects_all_vignettes,distal,blame,CH,2,7.0,7.0,0.0
-all_finishers,trolley,high,within_subjects_all_vignettes,distal,blame,DIV,2,6.0,6.0,0.0
-all_finishers,trolley,high,within_subjects_all_vignettes,distal,wrong,CC,2,6.0,6.0,0.0
-all_finishers,trolley,high,within_subjects_all_vignettes,distal,wrong,CH,2,6.5,6.5,0.7071067811865476
-all_finishers,trolley,high,within_subjects_all_vignettes,distal,wrong,DIV,2,5.5,5.5,0.7071067811865476
-all_finishers,trolley,high,within_subjects_all_vignettes,distal,punish,CC,2,0.6931471805599453,0.6931471805599453,0.0
-all_finishers,trolley,high,within_subjects_all_vignettes,distal,punish,CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-all_finishers,trolley,high,within_subjects_all_vignettes,distal,punish,DIV,2,0.6931471805599453,0.6931471805599453,0.0
-all_finishers,trolley,high,within_subjects_all_vignettes,proximate,blame,CC,2,7.0,7.0,0.0
-all_finishers,trolley,high,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
-all_finishers,trolley,high,within_subjects_all_vignettes,proximate,wrong,CC,2,7.0,7.0,0.0
-all_finishers,trolley,high,within_subjects_all_vignettes,proximate,wrong,CH,2,1.5,1.5,0.7071067811865476
-all_finishers,trolley,high,within_subjects_all_vignettes,proximate,punish,CC,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-all_finishers,trolley,high,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
-all_finishers,trolley,high,between_subjects_first_vignette,distal,blame,CC,1,6.0,6.0,
-all_finishers,trolley,high,between_subjects_first_vignette,distal,blame,CH,0,,,
-all_finishers,trolley,high,between_subjects_first_vignette,distal,blame,DIV,1,6.0,6.0,
-all_finishers,trolley,high,between_subjects_first_vignette,distal,wrong,CC,1,6.0,6.0,
-all_finishers,trolley,high,between_subjects_first_vignette,distal,wrong,CH,0,,,
-all_finishers,trolley,high,between_subjects_first_vignette,distal,wrong,DIV,1,5.0,5.0,
-all_finishers,trolley,high,between_subjects_first_vignette,distal,punish,CC,1,0.6931471805599453,0.6931471805599453,
-all_finishers,trolley,high,between_subjects_first_vignette,distal,punish,CH,0,,,
-all_finishers,trolley,high,between_subjects_first_vignette,distal,punish,DIV,1,0.6931471805599453,0.6931471805599453,
-all_finishers,trolley,high,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
-all_finishers,trolley,high,within_subjects_deltas,distal,blame,DIV - CC,2,0.0,0.0,0.0
-all_finishers,trolley,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-all_finishers,trolley,high,within_subjects_deltas,proximate,blame,CC - CH,2,6.0,6.0,0.0
-all_finishers,trolley,high,within_subjects_deltas,distal,wrong,CH - CC,2,0.5,0.5,0.7071067811865476
-all_finishers,trolley,high,within_subjects_deltas,distal,wrong,DIV - CC,2,-0.5,-0.5,0.7071067811865476
-all_finishers,trolley,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,-0.5,-0.5,0.7071067811865476
-all_finishers,trolley,high,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
-all_finishers,trolley,high,within_subjects_deltas,distal,punish,CH - CC,2,0.20273255405408225,0.20273255405408225,0.28670712747781973
-all_finishers,trolley,high,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
-all_finishers,trolley,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-all_finishers,trolley,high,within_subjects_deltas,proximate,punish,CC - CH,2,0.8958797346140275,0.8958797346140275,0.28670712747781973
-all_finishers,trolley,low,within_subjects_all_vignettes,distal,blame,CC,2,5.0,5.0,0.0
-all_finishers,trolley,low,within_subjects_all_vignettes,distal,blame,CH,2,6.0,6.0,0.0
-all_finishers,trolley,low,within_subjects_all_vignettes,distal,blame,DIV,2,5.5,5.5,0.7071067811865476
-all_finishers,trolley,low,within_subjects_all_vignettes,distal,wrong,CC,2,5.0,5.0,0.0
-all_finishers,trolley,low,within_subjects_all_vignettes,distal,wrong,CH,2,6.0,6.0,0.0
-all_finishers,trolley,low,within_subjects_all_vignettes,distal,wrong,DIV,2,5.0,5.0,0.0
-all_finishers,trolley,low,within_subjects_all_vignettes,distal,punish,CC,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
-all_finishers,trolley,low,within_subjects_all_vignettes,distal,punish,CH,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
-all_finishers,trolley,low,within_subjects_all_vignettes,distal,punish,DIV,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
-all_finishers,trolley,low,within_subjects_all_vignettes,proximate,blame,CC,2,6.5,6.5,0.7071067811865476
-all_finishers,trolley,low,within_subjects_all_vignettes,proximate,blame,CH,2,1.0,1.0,0.0
-all_finishers,trolley,low,within_subjects_all_vignettes,proximate,wrong,CC,2,6.5,6.5,0.7071067811865476
-all_finishers,trolley,low,within_subjects_all_vignettes,proximate,wrong,CH,2,1.0,1.0,0.0
-all_finishers,trolley,low,within_subjects_all_vignettes,proximate,punish,CC,2,0.5493061443340549,0.5493061443340549,0.7768361992120932
-all_finishers,trolley,low,within_subjects_all_vignettes,proximate,punish,CH,2,0.0,0.0,0.0
-all_finishers,trolley,low,between_subjects_first_vignette,distal,blame,CC,0,,,
-all_finishers,trolley,low,between_subjects_first_vignette,distal,blame,CH,0,,,
-all_finishers,trolley,low,between_subjects_first_vignette,distal,blame,DIV,2,5.5,5.5,0.7071067811865476
-all_finishers,trolley,low,between_subjects_first_vignette,distal,wrong,CC,0,,,
-all_finishers,trolley,low,between_subjects_first_vignette,distal,wrong,CH,0,,,
-all_finishers,trolley,low,between_subjects_first_vignette,distal,wrong,DIV,2,5.0,5.0,0.0
-all_finishers,trolley,low,between_subjects_first_vignette,distal,punish,CC,0,,,
-all_finishers,trolley,low,between_subjects_first_vignette,distal,punish,CH,0,,,
-all_finishers,trolley,low,between_subjects_first_vignette,distal,punish,DIV,2,0.34657359027997264,0.34657359027997264,0.49012907173427356
-all_finishers,trolley,low,within_subjects_deltas,distal,blame,CH - CC,2,1.0,1.0,0.0
-all_finishers,trolley,low,within_subjects_deltas,distal,blame,DIV - CC,2,0.5,0.5,0.7071067811865476
-all_finishers,trolley,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",2,0.5,0.5,0.7071067811865476
-all_finishers,trolley,low,within_subjects_deltas,proximate,blame,CC - CH,2,5.5,5.5,0.7071067811865476
-all_finishers,trolley,low,within_subjects_deltas,distal,wrong,CH - CC,2,1.0,1.0,0.0
-all_finishers,trolley,low,within_subjects_deltas,distal,wrong,DIV - CC,2,0.0,0.0,0.0
-all_finishers,trolley,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-all_finishers,trolley,low,within_subjects_deltas,proximate,wrong,CC - CH,2,5.5,5.5,0.7071067811865476
-all_finishers,trolley,low,within_subjects_deltas,distal,punish,CH - CC,2,0.0,0.0,0.0
-all_finishers,trolley,low,within_subjects_deltas,distal,punish,DIV - CC,2,0.0,0.0,0.0
-all_finishers,trolley,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",2,0.0,0.0,0.0
-all_finishers,trolley,low,within_subjects_deltas,proximate,punish,CC - CH,2,0.5493061443340549,0.5493061443340549,0.7768361992120932
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,blame,CC,303,6.910891089108911,7.0,1.1829277566711818
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,blame,CH,303,7.508250825082508,8.0,1.060627973640079
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,blame,DIV,303,7.122112211221122,7.0,1.196686717545461
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CC,303,6.8316831683168315,7.0,1.3302589520156378
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CH,303,7.399339933993399,8.0,1.1969606487509412
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,wrong,DIV,303,6.897689768976898,7.0,1.402255022622896
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,punish,CC,303,1.478932048343015,1.3862943611198906,0.6756052020305986
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,punish,CH,303,1.6606664921343164,1.791759469228055,0.6583144323730856
+included_only,pooled,pooled,within_subjects_all_vignettes,distal,punish,DIV,303,1.5498367568924458,1.6094379124341003,0.7048647732929801
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CC,303,8.151815181518153,8.0,0.8783950250506086
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CH,303,1.7194719471947195,1.0,0.8824167512496186
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CC,303,8.066006600660065,8.0,1.0432372375117376
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CH,303,2.217821782178218,1.0,1.5775995706196582
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CC,303,1.9522510330804907,1.9459101490553132,0.7527222084363921
+included_only,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CH,303,0.3243442553147842,0.0,0.5928376291709961
+included_only,pooled,pooled,between_subjects_first_vignette,distal,blame,CC,116,6.844827586206897,7.0,0.8905635565617214
+included_only,pooled,pooled,between_subjects_first_vignette,distal,blame,CH,82,7.634146341463414,8.0,0.5986032120530903
+included_only,pooled,pooled,between_subjects_first_vignette,distal,blame,DIV,105,6.933333333333334,7.0,1.1030261405182866
+included_only,pooled,pooled,between_subjects_first_vignette,distal,wrong,CC,116,6.844827586206897,7.0,0.928799583154066
+included_only,pooled,pooled,between_subjects_first_vignette,distal,wrong,CH,82,7.646341463414634,8.0,0.9476670668634556
+included_only,pooled,pooled,between_subjects_first_vignette,distal,wrong,DIV,105,6.352380952380952,6.0,1.4072678957479738
+included_only,pooled,pooled,between_subjects_first_vignette,distal,punish,CC,116,1.4236638989805486,1.3862943611198906,0.5527173430979068
+included_only,pooled,pooled,between_subjects_first_vignette,distal,punish,CH,82,1.642882664112857,1.791759469228055,0.4766723578315261
+included_only,pooled,pooled,between_subjects_first_vignette,distal,punish,DIV,105,1.5065589815961364,1.791759469228055,0.6721352941682704
+included_only,pooled,pooled,within_subjects_deltas,distal,blame,CH - CC,303,0.5973597359735974,1.0,0.8115023427450624
+included_only,pooled,pooled,within_subjects_deltas,distal,blame,DIV - CC,303,0.21122112211221122,0.0,0.710567929243176
+included_only,pooled,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",303,0.006600660066006601,0.0,0.7186880953585909
+included_only,pooled,pooled,within_subjects_deltas,proximate,blame,CC - CH,303,6.432343234323432,6.0,0.9213491337006625
+included_only,pooled,pooled,within_subjects_deltas,distal,wrong,CH - CC,303,0.5676567656765676,1.0,0.77707857619946
+included_only,pooled,pooled,within_subjects_deltas,distal,wrong,DIV - CC,303,0.066006600660066,0.0,0.9147066768052197
+included_only,pooled,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",303,-0.0858085808580858,0.0,0.9202810125420008
+included_only,pooled,pooled,within_subjects_deltas,proximate,wrong,CC - CH,303,5.848184818481848,6.0,1.3774634785006807
+included_only,pooled,pooled,within_subjects_deltas,distal,punish,CH - CC,303,0.18173444379130163,0.27193371548364187,0.2842537650050772
+included_only,pooled,pooled,within_subjects_deltas,distal,punish,DIV - CC,303,0.07090470854943072,0.0,0.2787427539874659
+included_only,pooled,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",303,-0.016814421300472657,0.0,0.2601782631621632
+included_only,pooled,pooled,within_subjects_deltas,proximate,punish,CC - CH,303,1.6279067777657064,1.3862943611198906,0.7086080200416112
+included_only,pooled,high,within_subjects_all_vignettes,distal,blame,CC,166,6.855421686746988,7.0,1.1665284432800513
+included_only,pooled,high,within_subjects_all_vignettes,distal,blame,CH,166,7.4879518072289155,8.0,1.093994359340779
+included_only,pooled,high,within_subjects_all_vignettes,distal,blame,DIV,166,7.132530120481928,7.0,1.1782995898029
+included_only,pooled,high,within_subjects_all_vignettes,distal,wrong,CC,166,6.789156626506024,7.0,1.320285740256828
+included_only,pooled,high,within_subjects_all_vignettes,distal,wrong,CH,166,7.373493975903615,8.0,1.2181540269181168
+included_only,pooled,high,within_subjects_all_vignettes,distal,wrong,DIV,166,6.903614457831325,7.0,1.4322219045209805
+included_only,pooled,high,within_subjects_all_vignettes,distal,punish,CC,166,1.4708028606184003,1.3862943611198906,0.6796152137118475
+included_only,pooled,high,within_subjects_all_vignettes,distal,punish,CH,166,1.66859739086497,1.6094379124341003,0.6557072537311386
+included_only,pooled,high,within_subjects_all_vignettes,distal,punish,DIV,166,1.5655783324858141,1.6094379124341003,0.7177050073461956
+included_only,pooled,high,within_subjects_all_vignettes,proximate,blame,CC,166,8.144578313253012,8.0,0.8546844907206107
+included_only,pooled,high,within_subjects_all_vignettes,proximate,blame,CH,166,1.6566265060240963,1.0,0.7993471231531223
+included_only,pooled,high,within_subjects_all_vignettes,proximate,wrong,CC,166,8.048192771084338,8.0,1.0491394968383443
+included_only,pooled,high,within_subjects_all_vignettes,proximate,wrong,CH,166,2.0903614457831323,1.0,1.4305001844306344
+included_only,pooled,high,within_subjects_all_vignettes,proximate,punish,CC,166,1.9518279081110537,1.791759469228055,0.7484730161510968
+included_only,pooled,high,within_subjects_all_vignettes,proximate,punish,CH,166,0.3510978126051739,0.0,0.6454393947115284
+included_only,pooled,high,between_subjects_first_vignette,distal,blame,CC,66,6.757575757575758,7.0,0.9456069448626603
+included_only,pooled,high,between_subjects_first_vignette,distal,blame,CH,44,7.7727272727272725,8.0,0.6047731215432993
+included_only,pooled,high,between_subjects_first_vignette,distal,blame,DIV,56,6.982142857142857,7.0,1.0701074105574029
+included_only,pooled,high,between_subjects_first_vignette,distal,wrong,CC,66,6.803030303030303,6.0,0.9318252885055054
+included_only,pooled,high,between_subjects_first_vignette,distal,wrong,CH,44,7.7727272727272725,8.0,0.9611920013321724
+included_only,pooled,high,between_subjects_first_vignette,distal,wrong,DIV,56,6.321428571428571,6.0,1.4660663864063759
+included_only,pooled,high,between_subjects_first_vignette,distal,punish,CC,66,1.3724974399603729,1.3862943611198906,0.563434049767454
+included_only,pooled,high,between_subjects_first_vignette,distal,punish,CH,44,1.7158721177471201,1.7005986908310775,0.5299809209007176
+included_only,pooled,high,between_subjects_first_vignette,distal,punish,DIV,56,1.548224722978913,1.791759469228055,0.6400310800943545
+included_only,pooled,high,within_subjects_deltas,distal,blame,CH - CC,166,0.6325301204819277,1.0,0.8037199020214941
+included_only,pooled,high,within_subjects_deltas,distal,blame,DIV - CC,166,0.27710843373493976,0.0,0.7517777397536102
+included_only,pooled,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",166,0.06626506024096386,0.0,0.7314207193614414
+included_only,pooled,high,within_subjects_deltas,proximate,blame,CC - CH,166,6.4879518072289155,7.0,0.8858343220649273
+included_only,pooled,high,within_subjects_deltas,distal,wrong,CH - CC,166,0.5843373493975904,1.0,0.7398577959533383
+included_only,pooled,high,within_subjects_deltas,distal,wrong,DIV - CC,166,0.1144578313253012,0.0,0.9749135197228002
+included_only,pooled,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",166,-0.04216867469879518,0.0,0.9429316607426862
+included_only,pooled,high,within_subjects_deltas,proximate,wrong,CC - CH,166,5.957831325301205,6.0,1.2903013960267329
+included_only,pooled,high,within_subjects_deltas,distal,punish,CH - CC,166,0.19779453024656965,0.27980789396771133,0.29418055916586316
+included_only,pooled,high,within_subjects_deltas,distal,punish,DIV - CC,166,0.09477547186741417,0.0,0.2937625248169166
+included_only,pooled,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",166,0.0017503900918216567,0.0,0.2704860477417964
+included_only,pooled,high,within_subjects_deltas,proximate,punish,CC - CH,166,1.6007300955058799,1.3862943611198906,0.7383661971176946
+included_only,pooled,low,within_subjects_all_vignettes,distal,blame,CC,137,6.978102189781022,7.0,1.203347984513792
+included_only,pooled,low,within_subjects_all_vignettes,distal,blame,CH,137,7.532846715328467,8.0,1.022188359602825
+included_only,pooled,low,within_subjects_all_vignettes,distal,blame,DIV,137,7.109489051094891,7.0,1.2228151711906203
+included_only,pooled,low,within_subjects_all_vignettes,distal,wrong,CC,137,6.883211678832117,7.0,1.3452842113376513
+included_only,pooled,low,within_subjects_all_vignettes,distal,wrong,CH,137,7.430656934306569,7.0,1.17445619730227
+included_only,pooled,low,within_subjects_all_vignettes,distal,wrong,DIV,137,6.890510948905109,7.0,1.3702663551552363
+included_only,pooled,low,within_subjects_all_vignettes,distal,punish,CC,137,1.4887820130312341,1.6094379124341003,0.6730727454680537
+included_only,pooled,low,within_subjects_all_vignettes,distal,punish,CH,137,1.651056790022722,1.791759469228055,0.6637402386767836
+included_only,pooled,low,within_subjects_all_vignettes,distal,punish,DIV,137,1.5307630229617943,1.791759469228055,0.6911276939337764
+included_only,pooled,low,within_subjects_all_vignettes,proximate,blame,CC,137,8.16058394160584,8.0,0.9093758092160198
+included_only,pooled,low,within_subjects_all_vignettes,proximate,blame,CH,137,1.7956204379562044,1.0,0.9711930665528844
+included_only,pooled,low,within_subjects_all_vignettes,proximate,wrong,CC,137,8.087591240875913,8.0,1.0394742205638536
+included_only,pooled,low,within_subjects_all_vignettes,proximate,wrong,CH,137,2.372262773722628,1.0,1.7320817943177382
+included_only,pooled,low,within_subjects_all_vignettes,proximate,punish,CC,137,1.9527637246492977,2.0794415416798357,0.7605888605558924
+included_only,pooled,low,within_subjects_all_vignettes,proximate,punish,CH,137,0.2919275362621954,0.0,0.5225741342297621
+included_only,pooled,low,between_subjects_first_vignette,distal,blame,CC,50,6.96,7.0,0.8071112509614591
+included_only,pooled,low,between_subjects_first_vignette,distal,blame,CH,38,7.473684210526316,7.0,0.5568658485285913
+included_only,pooled,low,between_subjects_first_vignette,distal,blame,DIV,49,6.877551020408164,7.0,1.1480536620229709
+included_only,pooled,low,between_subjects_first_vignette,distal,wrong,CC,50,6.9,7.0,0.931314629314664
+included_only,pooled,low,between_subjects_first_vignette,distal,wrong,CH,38,7.5,8.0,0.9226870278438682
+included_only,pooled,low,between_subjects_first_vignette,distal,wrong,DIV,49,6.387755102040816,6.0,1.3511773651556054
+included_only,pooled,low,between_subjects_first_vignette,distal,punish,CC,50,1.4912036248871816,1.6094379124341003,0.5363607251833669
+included_only,pooled,low,between_subjects_first_vignette,distal,punish,CH,38,1.5583685599047634,1.791759469228055,0.3966372413121939
+included_only,pooled,low,between_subjects_first_vignette,distal,punish,DIV,49,1.4589409914443923,1.791759469228055,0.7107088100528763
+included_only,pooled,low,within_subjects_deltas,distal,blame,CH - CC,137,0.5547445255474452,1.0,0.8217601985730268
+included_only,pooled,low,within_subjects_deltas,distal,blame,DIV - CC,137,0.13138686131386862,0.0,0.6509892726162235
+included_only,pooled,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",137,-0.06569343065693431,0.0,0.6987844441899237
+included_only,pooled,low,within_subjects_deltas,proximate,blame,CC - CH,137,6.364963503649635,6.0,0.9615850304143914
+included_only,pooled,low,within_subjects_deltas,distal,wrong,CH - CC,137,0.5474452554744526,1.0,0.8222172580331011
+included_only,pooled,low,within_subjects_deltas,distal,wrong,DIV - CC,137,0.0072992700729927005,0.0,0.8357486109238997
+included_only,pooled,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",137,-0.1386861313868613,0.0,0.8926372175933054
+included_only,pooled,low,within_subjects_deltas,proximate,wrong,CC - CH,137,5.7153284671532845,6.0,1.4700385404586038
+included_only,pooled,low,within_subjects_deltas,distal,punish,CH - CC,137,0.16227477699148785,0.27193371548364187,0.2715357102099913
+included_only,pooled,low,within_subjects_deltas,distal,punish,DIV - CC,137,0.04198100993056023,0.0,0.25748417900621995
+included_only,pooled,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",137,-0.03930901028675628,0.0,0.24621880283284786
+included_only,pooled,low,within_subjects_deltas,proximate,punish,CC - CH,137,1.6608361883871021,1.6422277352570913,0.6719989075867457
+included_only,firework,pooled,within_subjects_all_vignettes,distal,blame,CC,114,7.850877192982456,8.0,0.833294518580601
+included_only,firework,pooled,within_subjects_all_vignettes,distal,blame,CH,114,8.412280701754385,8.0,0.5770140334909724
+included_only,firework,pooled,within_subjects_all_vignettes,distal,blame,DIV,114,8.25438596491228,8.0,0.6888672696532354
+included_only,firework,pooled,within_subjects_all_vignettes,distal,wrong,CC,114,7.87719298245614,8.0,1.0981911988951876
+included_only,firework,pooled,within_subjects_all_vignettes,distal,wrong,CH,114,8.342105263157896,9.0,0.8182535618477189
+included_only,firework,pooled,within_subjects_all_vignettes,distal,wrong,DIV,114,7.850877192982456,8.0,1.4342982999026233
+included_only,firework,pooled,within_subjects_all_vignettes,distal,punish,CC,114,2.0919941719095134,2.0794415416798357,0.4083967613667172
+included_only,firework,pooled,within_subjects_all_vignettes,distal,punish,CH,114,2.2719026015221897,2.1972245773362196,0.40807050790915583
+included_only,firework,pooled,within_subjects_all_vignettes,distal,punish,DIV,114,2.2221668141194892,2.1972245773362196,0.400893272286793
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,blame,CC,114,8.885964912280702,9.0,0.319257211194281
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,blame,CH,114,2.543859649122807,3.0,0.7542252765175195
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CC,114,8.885964912280702,9.0,0.319257211194281
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CH,114,3.5,3.0,1.619843759536621
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,punish,CC,114,2.6865465241385587,2.772588722239781,0.36991620174829576
+included_only,firework,pooled,within_subjects_all_vignettes,proximate,punish,CH,114,0.48367612664878545,0.0,0.7155505080985437
+included_only,firework,pooled,between_subjects_first_vignette,distal,blame,CC,34,7.529411764705882,7.5,0.5632854982907605
+included_only,firework,pooled,between_subjects_first_vignette,distal,blame,CH,28,8.071428571428571,8.0,0.5394490624751247
+included_only,firework,pooled,between_subjects_first_vignette,distal,blame,DIV,52,7.75,8.0,0.5557189302262113
+included_only,firework,pooled,between_subjects_first_vignette,distal,wrong,CC,34,7.823529411764706,8.0,0.672876603361388
+included_only,firework,pooled,between_subjects_first_vignette,distal,wrong,CH,28,8.357142857142858,8.0,0.67846699279881
+included_only,firework,pooled,between_subjects_first_vignette,distal,wrong,DIV,52,6.826923076923077,6.5,1.5303614060680255
+included_only,firework,pooled,between_subjects_first_vignette,distal,punish,CC,34,1.9481335243357965,1.791759469228055,0.3261531831330151
+included_only,firework,pooled,between_subjects_first_vignette,distal,punish,CH,28,2.071784290118507,1.9356005054539454,0.3222380068184404
+included_only,firework,pooled,between_subjects_first_vignette,distal,punish,DIV,52,2.0209275803229305,1.791759469228055,0.340510371887645
+included_only,firework,pooled,within_subjects_deltas,distal,blame,CH - CC,114,0.5614035087719298,1.0,0.8522234087342704
+included_only,firework,pooled,within_subjects_deltas,distal,blame,DIV - CC,114,0.40350877192982454,0.0,0.7492686492653552
+included_only,firework,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",114,0.14035087719298245,0.0,0.7628218802108571
+included_only,firework,pooled,within_subjects_deltas,proximate,blame,CC - CH,114,6.342105263157895,6.0,0.860427423815321
+included_only,firework,pooled,within_subjects_deltas,distal,wrong,CH - CC,114,0.4649122807017544,1.0,0.7663246910156549
+included_only,firework,pooled,within_subjects_deltas,distal,wrong,DIV - CC,114,-0.02631578947368421,0.0,1.2370427648425786
+included_only,firework,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",114,-0.18421052631578946,0.0,1.2377955674467698
+included_only,firework,pooled,within_subjects_deltas,proximate,wrong,CC - CH,114,5.385964912280702,6.0,1.6103029557749144
+included_only,firework,pooled,within_subjects_deltas,distal,punish,CH - CC,114,0.17990842961267606,0.23978654013094314,0.3087132750876925
+included_only,firework,pooled,within_subjects_deltas,distal,punish,DIV - CC,114,0.13017264220997551,0.1438410362258904,0.34159502096150063
+included_only,firework,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",114,-0.0042427442928551365,0.0,0.30645219275809676
+included_only,firework,pooled,within_subjects_deltas,proximate,punish,CC - CH,114,2.2028703974897734,2.3978952727983707,0.5599022302725322
+included_only,firework,high,within_subjects_all_vignettes,distal,blame,CC,58,7.775862068965517,8.0,0.8794556420054928
+included_only,firework,high,within_subjects_all_vignettes,distal,blame,CH,58,8.46551724137931,8.0,0.5369020048904776
+included_only,firework,high,within_subjects_all_vignettes,distal,blame,DIV,58,8.293103448275861,8.0,0.6756055292964757
+included_only,firework,high,within_subjects_all_vignettes,distal,wrong,CC,58,7.827586206896552,8.0,1.094450611750388
+included_only,firework,high,within_subjects_all_vignettes,distal,wrong,CH,58,8.39655172413793,9.0,0.770956461610336
+included_only,firework,high,within_subjects_all_vignettes,distal,wrong,DIV,58,7.862068965517241,8.0,1.48025929286314
+included_only,firework,high,within_subjects_all_vignettes,distal,punish,CC,58,2.1290727436738903,2.0794415416798357,0.4297737313327405
+included_only,firework,high,within_subjects_all_vignettes,distal,punish,CH,58,2.3451201876550187,2.3978952727983707,0.4110210466705934
+included_only,firework,high,within_subjects_all_vignettes,distal,punish,DIV,58,2.2950029766948137,2.3978952727983707,0.42769713589487185
+included_only,firework,high,within_subjects_all_vignettes,proximate,blame,CC,58,8.913793103448276,9.0,0.2831206276062635
+included_only,firework,high,within_subjects_all_vignettes,proximate,blame,CH,58,2.396551724137931,2.0,0.6738122798715879
+included_only,firework,high,within_subjects_all_vignettes,proximate,wrong,CC,58,8.913793103448276,9.0,0.2831206276062635
+included_only,firework,high,within_subjects_all_vignettes,proximate,wrong,CH,58,3.206896551724138,3.0,1.530492647318723
+included_only,firework,high,within_subjects_all_vignettes,proximate,punish,CC,58,2.7746063188461614,2.772588722239781,0.3617107229110894
+included_only,firework,high,within_subjects_all_vignettes,proximate,punish,CH,58,0.4992385100017356,0.0,0.7788816518200696
+included_only,firework,high,between_subjects_first_vignette,distal,blame,CC,19,7.473684210526316,7.0,0.5129891760425771
+included_only,firework,high,between_subjects_first_vignette,distal,blame,CH,13,8.307692307692308,8.0,0.4803844614152614
+included_only,firework,high,between_subjects_first_vignette,distal,blame,DIV,26,7.8076923076923075,8.0,0.5670436151994497
+included_only,firework,high,between_subjects_first_vignette,distal,wrong,CC,19,7.7368421052631575,8.0,0.6533762964749499
+included_only,firework,high,between_subjects_first_vignette,distal,wrong,CH,13,8.615384615384615,9.0,0.5063696835418332
+included_only,firework,high,between_subjects_first_vignette,distal,wrong,DIV,26,6.8076923076923075,6.0,1.6252810407860117
+included_only,firework,high,between_subjects_first_vignette,distal,punish,CC,19,1.9141336438224277,1.791759469228055,0.3331062360545715
+included_only,firework,high,between_subjects_first_vignette,distal,punish,CH,13,2.2935335355460698,2.3978952727983707,0.2700756181214825
+included_only,firework,high,between_subjects_first_vignette,distal,punish,DIV,26,2.0880888080975963,1.791759469228055,0.34815689160603325
+included_only,firework,high,within_subjects_deltas,distal,blame,CH - CC,58,0.6896551724137931,1.0,0.842029639677597
+included_only,firework,high,within_subjects_deltas,distal,blame,DIV - CC,58,0.5172413793103449,1.0,0.7548993033893416
+included_only,firework,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",58,0.29310344827586204,0.0,0.7256846903528158
+included_only,firework,high,within_subjects_deltas,proximate,blame,CC - CH,58,6.517241379310345,7.0,0.8000302474620596
+included_only,firework,high,within_subjects_deltas,distal,wrong,CH - CC,58,0.5689655172413793,1.0,0.7036762853610689
+included_only,firework,high,within_subjects_deltas,distal,wrong,DIV - CC,58,0.034482758620689655,0.0,1.3240755429948734
+included_only,firework,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",58,-0.08620689655172414,0.0,1.288062365802688
+included_only,firework,high,within_subjects_deltas,proximate,wrong,CC - CH,58,5.706896551724138,6.0,1.5447548001606857
+included_only,firework,high,within_subjects_deltas,distal,punish,CH - CC,58,0.2160474439811283,0.20415503012019776,0.3235488155808663
+included_only,firework,high,within_subjects_deltas,distal,punish,DIV - CC,58,0.1659302330209235,0.20415503012019776,0.3438553321087205
+included_only,firework,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",58,0.031044289149798412,0.0,0.3069001168459882
+included_only,firework,high,within_subjects_deltas,proximate,punish,CC - CH,58,2.275367808844426,2.3978952727983707,0.6246220598574445
+included_only,firework,low,within_subjects_all_vignettes,distal,blame,CC,56,7.928571428571429,8.0,0.7829348714848592
+included_only,firework,low,within_subjects_all_vignettes,distal,blame,CH,56,8.357142857142858,8.0,0.6158090444454183
+included_only,firework,low,within_subjects_all_vignettes,distal,blame,DIV,56,8.214285714285714,8.0,0.7061878636037997
+included_only,firework,low,within_subjects_all_vignettes,distal,wrong,CC,56,7.928571428571429,8.0,1.109580475300837
+included_only,firework,low,within_subjects_all_vignettes,distal,wrong,CH,56,8.285714285714286,9.0,0.8678978933300583
+included_only,firework,low,within_subjects_all_vignettes,distal,wrong,DIV,56,7.839285714285714,8.0,1.3983988989267262
+included_only,firework,low,within_subjects_all_vignettes,distal,punish,CC,56,2.0535913654392663,2.0794415416798357,0.3850972985373187
+included_only,firework,low,within_subjects_all_vignettes,distal,punish,CH,56,2.1960701015989024,2.0794415416798357,0.3943807973679421
+included_only,firework,low,within_subjects_all_vignettes,distal,punish,DIV,56,2.1467293600236173,2.0794415416798357,0.3594881357493683
+included_only,firework,low,within_subjects_all_vignettes,proximate,blame,CC,56,8.857142857142858,9.0,0.3530939318018998
+included_only,firework,low,within_subjects_all_vignettes,proximate,blame,CH,56,2.6964285714285716,3.0,0.8072319224506527
+included_only,firework,low,within_subjects_all_vignettes,proximate,wrong,CC,56,8.857142857142858,9.0,0.3530939318018998
+included_only,firework,low,within_subjects_all_vignettes,proximate,wrong,CH,56,3.8035714285714284,4.0,1.6670021307413208
+included_only,firework,low,within_subjects_all_vignettes,proximate,punish,CC,56,2.595341736762827,2.3978952727983707,0.3590272354208589
+included_only,firework,low,within_subjects_all_vignettes,proximate,punish,CH,56,0.4675579438903728,0.0,0.6501663091126939
+included_only,firework,low,between_subjects_first_vignette,distal,blame,CC,15,7.6,8.0,0.6324555320336759
+included_only,firework,low,between_subjects_first_vignette,distal,blame,CH,15,7.866666666666666,8.0,0.5163977794943222
+included_only,firework,low,between_subjects_first_vignette,distal,blame,DIV,26,7.6923076923076925,8.0,0.5491251783869153
+included_only,firework,low,between_subjects_first_vignette,distal,wrong,CC,15,7.933333333333334,8.0,0.7037315505489967
+included_only,firework,low,between_subjects_first_vignette,distal,wrong,CH,15,8.133333333333333,8.0,0.7432233529572067
+included_only,firework,low,between_subjects_first_vignette,distal,wrong,DIV,26,6.846153846153846,7.0,1.4612955263685081
+included_only,firework,low,between_subjects_first_vignette,distal,punish,CC,15,1.9912000396527298,1.791759469228055,0.3233026208323191
+included_only,firework,low,between_subjects_first_vignette,distal,punish,CH,15,1.879601610747952,1.791759469228055,0.22913809345638259
+included_only,firework,low,between_subjects_first_vignette,distal,punish,DIV,26,1.9537663525482647,1.791759469228055,0.32547993273652803
+included_only,firework,low,within_subjects_deltas,distal,blame,CH - CC,56,0.42857142857142855,1.0,0.8497516825978764
+included_only,firework,low,within_subjects_deltas,distal,blame,DIV - CC,56,0.2857142857142857,0.0,0.7314813292661236
+included_only,firework,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",56,-0.017857142857142856,0.0,0.7743870638610414
+included_only,firework,low,within_subjects_deltas,proximate,blame,CC - CH,56,6.160714285714286,6.0,0.8898781472106824
+included_only,firework,low,within_subjects_deltas,distal,wrong,CH - CC,56,0.35714285714285715,0.5,0.8186146041513492
+included_only,firework,low,within_subjects_deltas,distal,wrong,DIV - CC,56,-0.08928571428571429,0.0,1.1485450988776382
+included_only,firework,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",56,-0.2857142857142857,0.0,1.1865041962809098
+included_only,firework,low,within_subjects_deltas,proximate,wrong,CC - CH,56,5.053571428571429,5.0,1.6227882050475837
+included_only,firework,low,within_subjects_deltas,distal,punish,CH - CC,56,0.14247873615963616,0.27193371548364187,0.2907093472724787
+included_only,firework,low,within_subjects_deltas,distal,punish,DIV - CC,56,0.09313799458435082,0.05889151782819191,0.3383167488860219
+included_only,firework,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",56,-0.040790028929889165,0.0,0.3044053974938224
+included_only,firework,low,within_subjects_deltas,proximate,punish,CC - CH,56,2.127783792872454,2.3978952727983707,0.47797211421342667
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,blame,CC,189,6.343915343915344,6.0,0.9856564467871648
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,blame,CH,189,6.962962962962963,7.0,0.9013604987023567
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,blame,DIV,189,6.439153439153439,6.0,0.8768605281945713
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CC,189,6.201058201058201,6.0,1.0271831663500512
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CH,189,6.830687830687831,7.0,1.0173547535570682
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,wrong,DIV,189,6.322751322751323,6.0,1.0192617512778166
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,punish,CC,189,1.1091485452394125,1.0986122886681098,0.5172985703159015
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,punish,CH,189,1.2919843944082976,1.0986122886681098,0.4825772490931276
+included_only,trolley,pooled,within_subjects_all_vignettes,distal,punish,DIV,189,1.1443043414221654,1.0986122886681098,0.5119304659927704
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CC,189,7.708994708994709,8.0,0.8088431093257649
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CH,189,1.2222222222222223,1.0,0.4982237954520137
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CC,189,7.571428571428571,8.0,1.0165798790335794
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CH,189,1.4444444444444444,1.0,0.9070253775176266
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CC,189,1.5093426416486404,1.3862943611198906,0.5511319948768406
+included_only,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CH,189,0.22823931704983125,0.0,0.48181130869856154
+included_only,trolley,pooled,between_subjects_first_vignette,distal,blame,CC,82,6.560975609756097,7.0,0.84761919261781
+included_only,trolley,pooled,between_subjects_first_vignette,distal,blame,CH,54,7.407407407407407,7.0,0.49596555413404597
+included_only,trolley,pooled,between_subjects_first_vignette,distal,blame,DIV,53,6.132075471698113,6.0,0.899524144479834
+included_only,trolley,pooled,between_subjects_first_vignette,distal,wrong,CC,82,6.439024390243903,6.0,0.6866911354074365
+included_only,trolley,pooled,between_subjects_first_vignette,distal,wrong,CH,54,7.277777777777778,7.5,0.8559815433265622
+included_only,trolley,pooled,between_subjects_first_vignette,distal,wrong,DIV,53,5.886792452830188,5.0,1.1034975403146154
+included_only,trolley,pooled,between_subjects_first_vignette,distal,punish,CC,82,1.2062008835893485,1.0986122886681098,0.47650437321900374
+included_only,trolley,pooled,between_subjects_first_vignette,distal,punish,CH,54,1.4204892284062238,1.2424533248940002,0.3831194989437828
+included_only,trolley,pooled,between_subjects_first_vignette,distal,punish,DIV,53,1.001895450769848,1.0986122886681098,0.5154182975610061
+included_only,trolley,pooled,within_subjects_deltas,distal,blame,CH - CC,189,0.6190476190476191,1.0,0.7874393883173207
+included_only,trolley,pooled,within_subjects_deltas,distal,blame,DIV - CC,189,0.09523809523809523,0.0,0.6615814157039654
+included_only,trolley,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",189,-0.07407407407407407,0.0,0.6801242180151019
+included_only,trolley,pooled,within_subjects_deltas,proximate,blame,CC - CH,189,6.4867724867724865,7.0,0.9543208881381923
+included_only,trolley,pooled,within_subjects_deltas,distal,wrong,CH - CC,189,0.6296296296296297,1.0,0.7789589140357233
+included_only,trolley,pooled,within_subjects_deltas,distal,wrong,DIV - CC,189,0.12169312169312169,0.0,0.6449519947542945
+included_only,trolley,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",189,-0.026455026455026454,0.0,0.655856289670736
+included_only,trolley,pooled,within_subjects_deltas,proximate,wrong,CC - CH,189,6.126984126984127,6.0,1.1321049424901108
+included_only,trolley,pooled,within_subjects_deltas,distal,punish,CH - CC,189,0.18283584916888534,0.2876820724517808,0.2692751573746087
+included_only,trolley,pooled,within_subjects_deltas,distal,punish,DIV - CC,189,0.03515579618275289,0.0,0.22640832864278615
+included_only,trolley,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",189,-0.024397337590781637,0.0,0.22833994013692344
+included_only,trolley,pooled,within_subjects_deltas,proximate,punish,CC - CH,189,1.281103324598809,1.3862943611198904,0.5447984811547503
+included_only,trolley,high,within_subjects_all_vignettes,distal,blame,CC,108,6.361111111111111,6.0,0.9902169434096633
+included_only,trolley,high,within_subjects_all_vignettes,distal,blame,CH,108,6.962962962962963,7.0,0.9464732957405704
+included_only,trolley,high,within_subjects_all_vignettes,distal,blame,DIV,108,6.5092592592592595,6.0,0.8806897293861073
+included_only,trolley,high,within_subjects_all_vignettes,distal,wrong,CC,108,6.231481481481482,6.0,1.0730904054856927
+included_only,trolley,high,within_subjects_all_vignettes,distal,wrong,CH,108,6.824074074074074,7.0,1.0486190625708582
+included_only,trolley,high,within_subjects_all_vignettes,distal,wrong,DIV,108,6.388888888888889,6.0,1.109292384818167
+included_only,trolley,high,within_subjects_all_vignettes,distal,punish,CC,108,1.117287553051563,1.0986122886681098,0.5028132022524545
+included_only,trolley,high,within_subjects_all_vignettes,distal,punish,CH,108,1.3052795925888327,1.0986122886681098,0.4378259476019154
+included_only,trolley,high,within_subjects_all_vignettes,distal,punish,DIV,108,1.1738502828180184,1.0986122886681098,0.5035636688213767
+included_only,trolley,high,within_subjects_all_vignettes,proximate,blame,CC,108,7.731481481481482,8.0,0.7686191220585438
+included_only,trolley,high,within_subjects_all_vignettes,proximate,blame,CH,108,1.2592592592592593,1.0,0.5360005992877521
+included_only,trolley,high,within_subjects_all_vignettes,proximate,wrong,CC,108,7.583333333333333,8.0,1.0150733134979468
+included_only,trolley,high,within_subjects_all_vignettes,proximate,wrong,CH,108,1.4907407407407407,1.0,0.9322404965304869
+included_only,trolley,high,within_subjects_all_vignettes,proximate,punish,CC,108,1.5099654282718291,1.3862943611198906,0.47975136142043656
+included_only,trolley,high,within_subjects_all_vignettes,proximate,punish,CH,108,0.27154077141072414,0.0,0.5485907071657419
+included_only,trolley,high,between_subjects_first_vignette,distal,blame,CC,47,6.468085106382978,6.0,0.9290262276867538
+included_only,trolley,high,between_subjects_first_vignette,distal,blame,CH,31,7.548387096774194,8.0,0.5058794110206737
+included_only,trolley,high,between_subjects_first_vignette,distal,blame,DIV,30,6.266666666666667,6.0,0.8683449709106095
+included_only,trolley,high,between_subjects_first_vignette,distal,wrong,CC,47,6.425531914893617,6.0,0.7443900581965787
+included_only,trolley,high,between_subjects_first_vignette,distal,wrong,CH,31,7.419354838709677,8.0,0.8859719163490114
+included_only,trolley,high,between_subjects_first_vignette,distal,wrong,DIV,30,5.9,5.0,1.184672222963833
+included_only,trolley,high,between_subjects_first_vignette,distal,punish,CC,47,1.1535381235054993,1.0986122886681098,0.48477099595259465
+included_only,trolley,high,between_subjects_first_vignette,distal,punish,CH,31,1.4736270070572368,1.3862943611198906,0.4100963925729185
+included_only,trolley,high,between_subjects_first_vignette,distal,punish,DIV,30,1.0803425158760545,1.0986122886681098,0.4297016117999802
+included_only,trolley,high,within_subjects_deltas,distal,blame,CH - CC,108,0.6018518518518519,1.0,0.784663923711361
+included_only,trolley,high,within_subjects_deltas,distal,blame,DIV - CC,108,0.14814814814814814,0.0,0.7210430504836338
+included_only,trolley,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",108,-0.05555555555555555,0.0,0.7082073371539961
+included_only,trolley,high,within_subjects_deltas,proximate,blame,CC - CH,108,6.472222222222222,7.0,0.9318691229487625
+included_only,trolley,high,within_subjects_deltas,distal,wrong,CH - CC,108,0.5925925925925926,1.0,0.7616636616004214
+included_only,trolley,high,within_subjects_deltas,distal,wrong,DIV - CC,108,0.1574074074074074,0.0,0.7255296104540132
+included_only,trolley,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",108,-0.018518518518518517,0.0,0.6968752886120719
+included_only,trolley,high,within_subjects_deltas,proximate,wrong,CC - CH,108,6.092592592592593,6.0,1.1152053332331766
+included_only,trolley,high,within_subjects_deltas,distal,punish,CH - CC,108,0.18799203953726962,0.2876820724517808,0.27822506835984007
+included_only,trolley,high,within_subjects_deltas,distal,punish,DIV - CC,108,0.056562729766455475,0.0,0.2566511958734277
+included_only,trolley,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",108,-0.013981518661536227,0.0,0.24885996232057056
+included_only,trolley,high,within_subjects_deltas,proximate,punish,CC - CH,108,1.238424656861105,1.175687628581739,0.5036523181869318
+included_only,trolley,low,within_subjects_all_vignettes,distal,blame,CC,81,6.320987654320987,6.0,0.9852304361649
+included_only,trolley,low,within_subjects_all_vignettes,distal,blame,CH,81,6.962962962962963,7.0,0.8432740427115678
+included_only,trolley,low,within_subjects_all_vignettes,distal,blame,DIV,81,6.345679012345679,6.0,0.8683388426639754
+included_only,trolley,low,within_subjects_all_vignettes,distal,wrong,CC,81,6.160493827160494,6.0,0.9676878386579112
+included_only,trolley,low,within_subjects_all_vignettes,distal,wrong,CH,81,6.839506172839506,7.0,0.9805201441512662
+included_only,trolley,low,within_subjects_all_vignettes,distal,wrong,DIV,81,6.234567901234568,6.0,0.884188963659234
+included_only,trolley,low,within_subjects_all_vignettes,distal,punish,CC,81,1.0982965348232119,1.0986122886681098,0.5389786132187252
+included_only,trolley,low,within_subjects_all_vignettes,distal,punish,CH,81,1.2742574635009178,1.0986122886681098,0.5388187263819606
+included_only,trolley,low,within_subjects_all_vignettes,distal,punish,DIV,81,1.1049097528943614,1.0986122886681098,0.5234146152196884
+included_only,trolley,low,within_subjects_all_vignettes,proximate,blame,CC,81,7.679012345679013,8.0,0.8635270767877977
+included_only,trolley,low,within_subjects_all_vignettes,proximate,blame,CH,81,1.1728395061728396,1.0,0.4413083801830111
+included_only,trolley,low,within_subjects_all_vignettes,proximate,wrong,CC,81,7.555555555555555,8.0,1.02469507659596
+included_only,trolley,low,within_subjects_all_vignettes,proximate,wrong,CH,81,1.382716049382716,1.0,0.8741839227898197
+included_only,trolley,low,within_subjects_all_vignettes,proximate,punish,CC,81,1.5085122594843885,1.3862943611198906,0.637151603275975
+included_only,trolley,low,within_subjects_all_vignettes,proximate,punish,CH,81,0.17050404456864066,0.0,0.3702765693634199
+included_only,trolley,low,between_subjects_first_vignette,distal,blame,CC,35,6.685714285714286,7.0,0.7183080025689689
+included_only,trolley,low,between_subjects_first_vignette,distal,blame,CH,23,7.217391304347826,7.0,0.42174116783665
+included_only,trolley,low,between_subjects_first_vignette,distal,blame,DIV,23,5.956521739130435,6.0,0.9282564726687249
+included_only,trolley,low,between_subjects_first_vignette,distal,wrong,CC,35,6.457142857142857,6.0,0.6108266887567038
+included_only,trolley,low,between_subjects_first_vignette,distal,wrong,CH,23,7.086956521739131,7.0,0.7927537436201201
+included_only,trolley,low,between_subjects_first_vignette,distal,wrong,DIV,23,5.869565217391305,5.0,1.0137396037394037
+included_only,trolley,low,between_subjects_first_vignette,distal,punish,CC,35,1.2769194471305179,1.3862943611198906,0.462602876715888
+included_only,trolley,low,between_subjects_first_vignette,distal,punish,CH,23,1.3488687441374672,1.0986122886681098,0.3390150809975152
+included_only,trolley,low,between_subjects_first_vignette,distal,punish,DIV,23,0.8995731919356665,1.0986122886681098,0.6043037935547833
+included_only,trolley,low,within_subjects_deltas,distal,blame,CH - CC,81,0.6419753086419753,1.0,0.7954345035153529
+included_only,trolley,low,within_subjects_deltas,distal,blame,DIV - CC,81,0.024691358024691357,0.0,0.569546061393969
+included_only,trolley,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",81,-0.09876543209876543,0.0,0.6443007502635113
+included_only,trolley,low,within_subjects_deltas,proximate,blame,CC - CH,81,6.506172839506172,7.0,0.9889825174152909
+included_only,trolley,low,within_subjects_deltas,distal,wrong,CH - CC,81,0.6790123456790124,1.0,0.8035415436339797
+included_only,trolley,low,within_subjects_deltas,distal,wrong,DIV - CC,81,0.07407407407407407,0.0,0.5190803834132479
+included_only,trolley,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",81,-0.037037037037037035,0.0,0.6009252125773316
+included_only,trolley,low,within_subjects_deltas,proximate,wrong,CC - CH,81,6.172839506172839,6.0,1.1596348935849392
+included_only,trolley,low,within_subjects_deltas,distal,punish,CH - CC,81,0.17596092867770627,0.2231435513142097,0.2584141495948655
+included_only,trolley,low,within_subjects_deltas,distal,punish,DIV - CC,81,0.006613218071149454,0.0,0.17583601297494764
+included_only,trolley,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",81,-0.03828509616310885,0.0,0.19837369291010323
+included_only,trolley,low,within_subjects_deltas,proximate,punish,CC - CH,81,1.338008214915748,1.3862943611198906,0.5936979126704894
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,blame,CC,400,7.13,7.0,1.2007098986231557
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,blame,CH,400,7.6275,8.0,1.039926616844214
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,blame,DIV,400,7.335,7.0,1.2233218263101566
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CC,400,7.1425,7.0,1.3422734427036354
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,wrong,CH,400,7.59,8.0,1.1576919394063414
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,wrong,DIV,400,7.2,7.0,1.398172814084551
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,punish,CC,400,1.5639274271511199,1.6094379124341003,0.6408558696063693
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,punish,CH,400,1.720334428650366,1.791759469228055,0.6150338015052531
+all_finishers,pooled,pooled,within_subjects_all_vignettes,distal,punish,DIV,400,1.6406246112548424,1.791759469228055,0.6816295753341944
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CC,400,8.325,9.0,0.8492219644251763
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,blame,CH,400,1.955,2.0,0.924723083931015
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CC,400,8.2725,9.0,0.9877666512863672
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,wrong,CH,400,2.5725,3.0,1.6205892520344332
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CC,400,2.0341832386915315,2.0794415416798357,0.7038017535850281
+all_finishers,pooled,pooled,within_subjects_all_vignettes,proximate,punish,CH,400,0.30506690892397886,0.0,0.5725493514301079
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,blame,CC,143,7.006993006993007,7.0,0.9382070366463497
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,blame,CH,130,7.653846153846154,8.0,0.5666649128318294
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,blame,DIV,127,6.952755905511811,7.0,1.0301661733462772
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,wrong,CC,143,7.034965034965035,7.0,0.9598458459901836
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,wrong,CH,130,7.730769230769231,8.0,0.8425548222538872
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,wrong,DIV,127,6.519685039370079,7.0,1.3560586779736843
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,punish,CC,143,1.493028858472633,1.6094379124341003,0.5327804218700185
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,punish,CH,130,1.7382404676899057,1.791759469228055,0.4365126195326694
+all_finishers,pooled,pooled,between_subjects_first_vignette,distal,punish,DIV,127,1.495788249243228,1.3862943611198906,0.6399835407154739
+all_finishers,pooled,pooled,within_subjects_deltas,distal,blame,CH - CC,400,0.4975,1.0,0.852531980011516
+all_finishers,pooled,pooled,within_subjects_deltas,distal,blame,DIV - CC,400,0.205,0.0,0.7545849827823249
+all_finishers,pooled,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",400,-0.07,0.0,0.7493355452656014
+all_finishers,pooled,pooled,within_subjects_deltas,proximate,blame,CC - CH,400,6.37,6.0,0.866010933731993
+all_finishers,pooled,pooled,within_subjects_deltas,distal,wrong,CH - CC,400,0.4475,1.0,0.8479630613319536
+all_finishers,pooled,pooled,within_subjects_deltas,distal,wrong,DIV - CC,400,0.0575,0.0,0.9199508268432198
+all_finishers,pooled,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",400,-0.165,0.0,0.9191774681992115
+all_finishers,pooled,pooled,within_subjects_deltas,proximate,wrong,CC - CH,400,5.7,6.0,1.3526174384640666
+all_finishers,pooled,pooled,within_subjects_deltas,distal,punish,CH - CC,400,0.15640700149924625,0.18232155679395468,0.28344869936460626
+all_finishers,pooled,pooled,within_subjects_deltas,distal,punish,DIV - CC,400,0.07669718410372293,0.0,0.27353925603346085
+all_finishers,pooled,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",400,-0.032680252517936735,0.0,0.248765687156293
+all_finishers,pooled,pooled,within_subjects_deltas,proximate,punish,CC - CH,400,1.7291163297675527,1.666102255087602,0.6808964797578541
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,blame,CC,224,7.09375,7.0,1.2330123708732437
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,blame,CH,224,7.607142857142857,8.0,1.086873517149346
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,blame,DIV,224,7.321428571428571,7.0,1.2106721678530872
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,wrong,CC,224,7.111607142857143,7.0,1.342993479592056
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,wrong,CH,224,7.566964285714286,8.0,1.1733122325840324
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,wrong,DIV,224,7.200892857142857,7.0,1.4046045697766827
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,punish,CC,224,1.5582346157086,1.6094379124341003,0.6470173714211425
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,punish,CH,224,1.7270615325677465,1.791759469228055,0.6155117290715433
+all_finishers,pooled,high,within_subjects_all_vignettes,distal,punish,DIV,224,1.6493536942038627,1.791759469228055,0.6847596132206774
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,blame,CC,224,8.316964285714286,9.0,0.8323491412197009
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,blame,CH,224,1.9330357142857142,2.0,0.888379225861898
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,wrong,CC,224,8.267857142857142,9.0,0.9885636893195742
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,wrong,CH,224,2.5267857142857144,2.5,1.5530084874035524
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,punish,CC,224,2.0348911755956993,2.0794415416798357,0.6957249139332068
+all_finishers,pooled,high,within_subjects_all_vignettes,proximate,punish,CH,224,0.32622273998004686,0.0,0.6077396377810049
+all_finishers,pooled,high,between_subjects_first_vignette,distal,blame,CC,80,6.9,7.0,1.0012650226436657
+all_finishers,pooled,high,between_subjects_first_vignette,distal,blame,CH,74,7.756756756756757,8.0,0.5688443177446999
+all_finishers,pooled,high,between_subjects_first_vignette,distal,blame,DIV,70,6.9714285714285715,7.0,0.9923099762810588
+all_finishers,pooled,high,between_subjects_first_vignette,distal,wrong,CC,80,6.975,7.0,0.9675101804979049
+all_finishers,pooled,high,between_subjects_first_vignette,distal,wrong,CH,74,7.8108108108108105,8.0,0.8222201097775591
+all_finishers,pooled,high,between_subjects_first_vignette,distal,wrong,DIV,70,6.514285714285714,6.0,1.3908902075139424
+all_finishers,pooled,high,between_subjects_first_vignette,distal,punish,CC,80,1.4372039553252176,1.4978661367769954,0.5394415316714758
+all_finishers,pooled,high,between_subjects_first_vignette,distal,punish,CH,74,1.7957834064748217,1.791759469228055,0.45122710808419486
+all_finishers,pooled,high,between_subjects_first_vignette,distal,punish,DIV,70,1.5225101995419894,1.3862943611198906,0.6255219825204161
+all_finishers,pooled,high,within_subjects_deltas,distal,blame,CH - CC,224,0.5133928571428571,1.0,0.8781345429172263
+all_finishers,pooled,high,within_subjects_deltas,distal,blame,DIV - CC,224,0.22767857142857142,0.0,0.7849149302885494
+all_finishers,pooled,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",224,-0.05803571428571429,0.0,0.7758852479595685
+all_finishers,pooled,high,within_subjects_deltas,proximate,blame,CC - CH,224,6.383928571428571,6.0,0.854904454990191
+all_finishers,pooled,high,within_subjects_deltas,distal,wrong,CH - CC,224,0.45535714285714285,1.0,0.8458645679969679
+all_finishers,pooled,high,within_subjects_deltas,distal,wrong,DIV - CC,224,0.08928571428571429,0.0,0.952255490348122
+all_finishers,pooled,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",224,-0.15178571428571427,0.0,0.9250846179070739
+all_finishers,pooled,high,within_subjects_deltas,proximate,wrong,CC - CH,224,5.741071428571429,6.0,1.303637791962525
+all_finishers,pooled,high,within_subjects_deltas,distal,punish,CH - CC,224,0.16882691685914608,0.18232155679395468,0.2981513380403939
+all_finishers,pooled,high,within_subjects_deltas,distal,punish,DIV - CC,224,0.09111907849526234,0.0,0.28503409095637056
+all_finishers,pooled,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",224,-0.024751610888403806,0.0,0.2585808675822577
+all_finishers,pooled,high,within_subjects_deltas,proximate,punish,CC - CH,224,1.7086684356156527,1.5567576546051871,0.7066801883934843
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,blame,CC,176,7.176136363636363,7.0,1.1601472141248101
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,blame,CH,176,7.653409090909091,8.0,0.9793815965640317
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,blame,DIV,176,7.3522727272727275,7.5,1.242483896783469
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,wrong,CC,176,7.181818181818182,7.0,1.3441552167637658
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,wrong,CH,176,7.619318181818182,8.0,1.1401611870553798
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,wrong,DIV,176,7.198863636363637,7.0,1.3939456286327725
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,punish,CC,176,1.5711728235325082,1.791759469228055,0.6346944530513361
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,punish,CH,176,1.7117726600282452,1.791759469228055,0.6160738837621775
+all_finishers,pooled,low,within_subjects_all_vignettes,distal,punish,DIV,176,1.6295148693197263,1.791759469228055,0.6794131663020396
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,blame,CC,176,8.335227272727273,9.0,0.8725057213372495
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,blame,CH,176,1.9829545454545454,2.0,0.9708578346312785
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,wrong,CC,176,8.278409090909092,9.0,0.9895394442306541
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,wrong,CH,176,2.6306818181818183,3.0,1.7054439190542037
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,punish,CC,176,2.033282228086227,2.1972245773362196,0.7159400514788069
+all_finishers,pooled,low,within_subjects_all_vignettes,proximate,punish,CH,176,0.2781413057617105,0.0,0.5248398533981669
+all_finishers,pooled,low,between_subjects_first_vignette,distal,blame,CC,63,7.142857142857143,7.0,0.8396839431738368
+all_finishers,pooled,low,between_subjects_first_vignette,distal,blame,CH,56,7.517857142857143,7.5,0.5390588238628652
+all_finishers,pooled,low,between_subjects_first_vignette,distal,blame,DIV,57,6.9298245614035086,7.0,1.0833092343569808
+all_finishers,pooled,low,between_subjects_first_vignette,distal,wrong,CC,63,7.111111111111111,7.0,0.9522657380386497
+all_finishers,pooled,low,between_subjects_first_vignette,distal,wrong,CH,56,7.625,8.0,0.8647122485123434
+all_finishers,pooled,low,between_subjects_first_vignette,distal,wrong,DIV,57,6.526315789473684,7.0,1.3242958123079
+all_finishers,pooled,low,between_subjects_first_vignette,distal,punish,CC,63,1.5639176243741129,1.791759469228055,0.5198127528927039
+all_finishers,pooled,low,between_subjects_first_vignette,distal,punish,CH,56,1.6622015842955524,1.791759469228055,0.40783319706882476
+all_finishers,pooled,low,between_subjects_first_vignette,distal,punish,DIV,57,1.462971819051766,1.791759469228055,0.6614028917641153
+all_finishers,pooled,low,within_subjects_deltas,distal,blame,CH - CC,176,0.4772727272727273,1.0,0.8208326466255066
+all_finishers,pooled,low,within_subjects_deltas,distal,blame,DIV - CC,176,0.17613636363636365,0.0,0.7153012261668815
+all_finishers,pooled,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",176,-0.08522727272727272,0.0,0.7160270980869405
+all_finishers,pooled,low,within_subjects_deltas,proximate,blame,CC - CH,176,6.3522727272727275,6.0,0.8820725299270736
+all_finishers,pooled,low,within_subjects_deltas,distal,wrong,CH - CC,176,0.4375,1.0,0.852936105461599
+all_finishers,pooled,low,within_subjects_deltas,distal,wrong,DIV - CC,176,0.017045454545454544,0.0,0.8781437032948329
+all_finishers,pooled,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",176,-0.18181818181818182,0.0,0.9139609812922406
+all_finishers,pooled,low,within_subjects_deltas,proximate,wrong,CC - CH,176,5.6477272727272725,6.0,1.4145349380305494
+all_finishers,pooled,low,within_subjects_deltas,distal,punish,CH - CC,176,0.1405998364957374,0.18232155679395468,0.2635470388934885
+all_finishers,pooled,low,within_subjects_deltas,distal,punish,DIV - CC,176,0.05834204578721825,0.0,0.25780691783662896
+all_finishers,pooled,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",176,-0.042771250955524094,0.0,0.23602872462675423
+all_finishers,pooled,low,within_subjects_deltas,proximate,punish,CC - CH,176,1.7551409223245165,1.7047480922384253,0.6476596152918482
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,blame,CC,201,7.945273631840796,8.0,0.7496599560809177
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,blame,CH,201,8.308457711442786,8.0,0.6279953100563223
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,blame,DIV,201,8.248756218905474,8.0,0.7126085498179431
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,wrong,CC,201,8.059701492537313,8.0,0.936171944915976
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,wrong,CH,201,8.313432835820896,8.0,0.7656818247264446
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,wrong,DIV,201,8.039800995024876,8.0,1.1993364666343658
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,punish,CC,201,2.020497772371658,1.9459101490553132,0.3655678379271359
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,punish,CH,201,2.143870904798347,2.0794415416798357,0.39863176572374154
+all_finishers,firework,pooled,within_subjects_all_vignettes,distal,punish,DIV,201,2.132324171633617,2.0794415416798357,0.42341344992587154
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,blame,CC,201,8.930348258706468,9.0,0.2551947846439122
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,blame,CH,201,2.6417910447761193,3.0,0.6790027806418785
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CC,201,8.930348258706468,9.0,0.2551947846439122
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,wrong,CH,201,3.611940298507463,4.0,1.4658297023931226
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,punish,CC,201,2.5448548184729622,2.3978952727983707,0.4051111962290622
+all_finishers,firework,pooled,within_subjects_all_vignettes,proximate,punish,CH,201,0.38213975674374917,0.0,0.6470770288321603
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,blame,CC,59,7.677966101694915,8.0,0.5705616702169435
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,blame,CH,71,7.859154929577465,8.0,0.5423697907697643
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,blame,DIV,71,7.591549295774648,8.0,0.5751388599716566
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,wrong,CC,59,7.88135593220339,8.0,0.5897031913485088
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,wrong,CH,71,8.04225352112676,8.0,0.6852865869382126
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,wrong,DIV,71,6.957746478873239,7.0,1.356851604880208
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,punish,CC,59,1.9001652145334222,1.791759469228055,0.30008263423155057
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,punish,CH,71,1.9830777690804107,1.791759469228055,0.2956488378568148
+all_finishers,firework,pooled,between_subjects_first_vignette,distal,punish,DIV,71,1.896724284306363,1.791759469228055,0.3945780437644994
+all_finishers,firework,pooled,within_subjects_deltas,distal,blame,CH - CC,201,0.36318407960199006,0.0,0.8788844127331386
+all_finishers,firework,pooled,within_subjects_deltas,distal,blame,DIV - CC,201,0.3034825870646766,0.0,0.7825840599867042
+all_finishers,firework,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",201,-0.05472636815920398,0.0,0.788663457852108
+all_finishers,firework,pooled,within_subjects_deltas,proximate,blame,CC - CH,201,6.288557213930348,6.0,0.7323376324894133
+all_finishers,firework,pooled,within_subjects_deltas,distal,wrong,CH - CC,201,0.2537313432835821,0.0,0.8545750449566651
+all_finishers,firework,pooled,within_subjects_deltas,distal,wrong,DIV - CC,201,-0.01990049751243781,0.0,1.0998190715066507
+all_finishers,firework,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",201,-0.2935323383084577,0.0,1.0947182104080506
+all_finishers,firework,pooled,within_subjects_deltas,proximate,wrong,CC - CH,201,5.318407960199005,5.0,1.4484852269651627
+all_finishers,firework,pooled,within_subjects_deltas,distal,punish,CH - CC,201,0.12337313242668893,0.15415067982725827,0.2902236872997291
+all_finishers,firework,pooled,within_subjects_deltas,distal,punish,DIV - CC,201,0.11182639926195917,0.11778303565638382,0.3040286441536188
+all_finishers,firework,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",201,-0.04034220700959011,0.0,0.26784878391099076
+all_finishers,firework,pooled,within_subjects_deltas,proximate,punish,CC - CH,201,2.162715061729213,2.1972245773362196,0.5032314258442842
+all_finishers,firework,high,within_subjects_all_vignettes,distal,blame,CC,107,7.962616822429907,8.0,0.8000617151296661
+all_finishers,firework,high,within_subjects_all_vignettes,distal,blame,CH,107,8.355140186915888,8.0,0.6181581962846784
+all_finishers,firework,high,within_subjects_all_vignettes,distal,blame,DIV,107,8.25233644859813,8.0,0.7149806428825207
+all_finishers,firework,high,within_subjects_all_vignettes,distal,wrong,CC,107,8.05607476635514,8.0,0.9299196120758472
+all_finishers,firework,high,within_subjects_all_vignettes,distal,wrong,CH,107,8.336448598130842,8.0,0.7389937732222267
+all_finishers,firework,high,within_subjects_all_vignettes,distal,wrong,DIV,107,8.037383177570094,8.0,1.2047487301230924
+all_finishers,firework,high,within_subjects_all_vignettes,distal,punish,CC,107,2.0490542224880555,2.0794415416798357,0.369850020315849
+all_finishers,firework,high,within_subjects_all_vignettes,distal,punish,CH,107,2.1865376685209257,2.0794415416798357,0.4106853302120938
+all_finishers,firework,high,within_subjects_all_vignettes,distal,punish,DIV,107,2.168162417412042,2.0794415416798357,0.4336376603976125
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,blame,CC,107,8.953271028037383,9.0,0.21205097153765942
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,blame,CH,107,2.5981308411214954,3.0,0.6422221605284375
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,wrong,CC,107,8.953271028037383,9.0,0.21205097153765942
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,wrong,CH,107,3.5233644859813085,3.0,1.4297763012293374
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,punish,CC,107,2.5909713434508865,2.3978952727983707,0.4080446351091982
+all_finishers,firework,high,within_subjects_all_vignettes,proximate,punish,CH,107,0.3894210177709574,0.0,0.6755146541023719
+all_finishers,firework,high,between_subjects_first_vignette,distal,blame,CC,31,7.645161290322581,8.0,0.5506594287321456
+all_finishers,firework,high,between_subjects_first_vignette,distal,blame,CH,39,7.948717948717949,8.0,0.5595448314063639
+all_finishers,firework,high,between_subjects_first_vignette,distal,blame,DIV,37,7.594594594594595,8.0,0.5990482942625401
+all_finishers,firework,high,between_subjects_first_vignette,distal,wrong,CC,31,7.838709677419355,8.0,0.5829107532346262
+all_finishers,firework,high,between_subjects_first_vignette,distal,wrong,CH,39,8.076923076923077,8.0,0.664300795241662
+all_finishers,firework,high,between_subjects_first_vignette,distal,wrong,DIV,37,6.945945945945946,7.0,1.39335617895836
+all_finishers,firework,high,between_subjects_first_vignette,distal,punish,CC,31,1.8798425152087404,1.791759469228055,0.2711514789279405
+all_finishers,firework,high,between_subjects_first_vignette,distal,punish,CH,39,2.0471237509740527,1.791759469228055,0.30807437275734106
+all_finishers,firework,high,between_subjects_first_vignette,distal,punish,DIV,37,1.9450868625492272,1.791759469228055,0.42470877852660155
+all_finishers,firework,high,within_subjects_deltas,distal,blame,CH - CC,107,0.3925233644859813,0.0,0.9291608036164961
+all_finishers,firework,high,within_subjects_deltas,distal,blame,DIV - CC,107,0.2897196261682243,0.0,0.7771421495768426
+all_finishers,firework,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",107,-0.04672897196261682,0.0,0.8054434799759232
+all_finishers,firework,high,within_subjects_deltas,proximate,blame,CC - CH,107,6.355140186915888,6.0,0.7037947874229663
+all_finishers,firework,high,within_subjects_deltas,distal,wrong,CH - CC,107,0.2803738317757009,0.0,0.8665088544155
+all_finishers,firework,high,within_subjects_deltas,distal,wrong,DIV - CC,107,-0.018691588785046728,0.0,1.1072770307620006
+all_finishers,firework,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",107,-0.2897196261682243,0.0,1.0903465417133555
+all_finishers,firework,high,within_subjects_deltas,proximate,wrong,CC - CH,107,5.429906542056075,5.0,1.4282338316871175
+all_finishers,firework,high,within_subjects_deltas,distal,punish,CH - CC,107,0.1374834460328698,0.15415067982725827,0.31116414511297497
+all_finishers,firework,high,within_subjects_deltas,distal,punish,DIV - CC,107,0.11910819492398585,0.13353139262452252,0.3029555884309376
+all_finishers,firework,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",107,-0.034412488130534456,0.0,0.2703031265303887
+all_finishers,firework,high,within_subjects_deltas,proximate,punish,CC - CH,107,2.201550325679929,2.3978952727983707,0.5471788718774434
+all_finishers,firework,low,within_subjects_all_vignettes,distal,blame,CC,94,7.925531914893617,8.0,0.691567670627039
+all_finishers,firework,low,within_subjects_all_vignettes,distal,blame,CH,94,8.25531914893617,8.0,0.6381453337141968
+all_finishers,firework,low,within_subjects_all_vignettes,distal,blame,DIV,94,8.24468085106383,8.0,0.7137086272251527
+all_finishers,firework,low,within_subjects_all_vignettes,distal,wrong,CC,94,8.063829787234043,8.0,0.9482129273862067
+all_finishers,firework,low,within_subjects_all_vignettes,distal,wrong,CH,94,8.287234042553191,8.0,0.798147592268308
+all_finishers,firework,low,within_subjects_all_vignettes,distal,wrong,DIV,94,8.042553191489361,8.0,1.199595752851152
+all_finishers,firework,low,within_subjects_all_vignettes,distal,punish,CC,94,1.9879920259625667,1.9459101490553132,0.35983498089922905
+all_finishers,firework,low,within_subjects_all_vignettes,distal,punish,CH,94,2.095303418433284,2.0794415416798357,0.3808129748741509
+all_finishers,firework,low,within_subjects_all_vignettes,distal,punish,DIV,94,2.0915295727156233,2.0794415416798357,0.4099503610348217
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,blame,CC,94,8.904255319148936,9.0,0.2958184904168056
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,blame,CH,94,2.6914893617021276,3.0,0.7188191592859621
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,wrong,CC,94,8.904255319148936,9.0,0.2958184904168056
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,wrong,CH,94,3.7127659574468086,4.0,1.507132436514534
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,punish,CC,94,2.492360476210857,2.3978952727983707,0.3974025762341063
+all_finishers,firework,low,within_subjects_all_vignettes,proximate,punish,CH,94,0.37385151280852297,0.0,0.6166130262743857
+all_finishers,firework,low,between_subjects_first_vignette,distal,blame,CC,28,7.714285714285714,8.0,0.5998236072282915
+all_finishers,firework,low,between_subjects_first_vignette,distal,blame,CH,32,7.75,8.0,0.508000508000762
+all_finishers,firework,low,between_subjects_first_vignette,distal,blame,DIV,34,7.588235294117647,8.0,0.5569204860727307
+all_finishers,firework,low,between_subjects_first_vignette,distal,wrong,CC,28,7.928571428571429,8.0,0.6042179781166439
+all_finishers,firework,low,between_subjects_first_vignette,distal,wrong,CH,32,8.0,8.0,0.7184212081070996
+all_finishers,firework,low,between_subjects_first_vignette,distal,wrong,DIV,34,6.970588235294118,7.0,1.3367825261730644
+all_finishers,firework,low,between_subjects_first_vignette,distal,punish,CC,28,1.9226653459286058,1.791759469228055,0.3327886544685303
+all_finishers,firework,low,between_subjects_first_vignette,distal,punish,CH,32,1.905021728647534,1.791759469228055,0.26378521729243065
+all_finishers,firework,low,between_subjects_first_vignette,distal,punish,DIV,34,1.844094419747951,1.791759469228055,0.35777592341853054
+all_finishers,firework,low,within_subjects_deltas,distal,blame,CH - CC,94,0.32978723404255317,0.0,0.8215942785493064
+all_finishers,firework,low,within_subjects_deltas,distal,blame,DIV - CC,94,0.3191489361702128,0.0,0.7926105764917587
+all_finishers,firework,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",94,-0.06382978723404255,0.0,0.773325602088225
+all_finishers,firework,low,within_subjects_deltas,proximate,blame,CC - CH,94,6.212765957446808,6.0,0.7601972073728371
+all_finishers,firework,low,within_subjects_deltas,distal,wrong,CH - CC,94,0.22340425531914893,0.0,0.8443901574782915
+all_finishers,firework,low,within_subjects_deltas,distal,wrong,DIV - CC,94,-0.02127659574468085,0.0,1.0971980286484326
+all_finishers,firework,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",94,-0.2978723404255319,0.0,1.1055071062740487
+all_finishers,firework,low,within_subjects_deltas,proximate,wrong,CC - CH,94,5.191489361702128,5.0,1.4684978481404511
+all_finishers,firework,low,within_subjects_deltas,distal,punish,CH - CC,94,0.1073113924707171,0.15415067982725827,0.2651263157785427
+all_finishers,firework,low,within_subjects_deltas,distal,punish,DIV - CC,94,0.10353754675305644,0.11778303565638382,0.3066581929966984
+all_finishers,firework,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",94,-0.04709199339319601,0.0,0.266312707584482
+all_finishers,firework,low,within_subjects_deltas,proximate,punish,CC - CH,94,2.118508963402334,2.1972245773362196,0.4468095459979454
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,blame,CC,199,6.306532663316583,6.0,0.9906163460895651
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,blame,CH,199,6.939698492462312,7.0,0.9136351577973412
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,blame,DIV,199,6.4120603015075375,6.0,0.893893580757296
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CC,199,6.21608040201005,6.0,1.0143130797766033
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,wrong,CH,199,6.85929648241206,7.0,1.020151260094508
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,wrong,DIV,199,6.351758793969849,6.0,1.0234051016737562
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,punish,CC,199,1.1027684352449476,1.0986122886681098,0.5169804771246919
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,punish,CH,199,1.2925413045008975,1.0986122886681098,0.48550978291572405
+all_finishers,trolley,pooled,within_subjects_all_vignettes,distal,punish,DIV,199,1.143983346751658,1.0986122886681098,0.5117203398245184
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CC,199,7.71356783919598,8.0,0.7998527858052749
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,blame,CH,199,1.2613065326633166,1.0,0.5431486035728798
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CC,199,7.608040201005025,8.0,1.00861725448878
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,wrong,CH,199,1.5226130653266332,1.0,0.9578180200990243
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CC,199,1.5183792812238552,1.3862943611198906,0.547970735054833
+all_finishers,trolley,pooled,within_subjects_all_vignettes,proximate,punish,CH,199,0.22721945961858261,0.0,0.4749034196100631
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,blame,CC,84,6.535714285714286,7.0,0.8565330590463177
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,blame,CH,59,7.406779661016949,7.0,0.49544978059984535
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,blame,DIV,56,6.142857142857143,6.0,0.9030971241147961
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,wrong,CC,84,6.440476190476191,6.0,0.6828570468364724
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,wrong,CH,59,7.3559322033898304,8.0,0.8662784426222078
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,wrong,DIV,56,5.964285714285714,5.0,1.1435874290110954
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,punish,CC,84,1.207064036953745,1.0986122886681098,0.47129041282108236
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,punish,CH,59,1.4436057490674332,1.3862943611198906,0.39574506225111916
+all_finishers,trolley,pooled,between_subjects_first_vignette,distal,punish,DIV,56,0.9874586333596104,1.0986122886681098,0.5191766959447623
+all_finishers,trolley,pooled,within_subjects_deltas,distal,blame,CH - CC,199,0.6331658291457286,1.0,0.8047243882526972
+all_finishers,trolley,pooled,within_subjects_deltas,distal,blame,DIV - CC,199,0.10552763819095477,0.0,0.7134491537168877
+all_finishers,trolley,pooled,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",199,-0.08542713567839195,0.0,0.7090601928170229
+all_finishers,trolley,pooled,within_subjects_deltas,proximate,blame,CC - CH,199,6.452261306532663,7.0,0.9777744323027429
+all_finishers,trolley,pooled,within_subjects_deltas,distal,wrong,CH - CC,199,0.6432160804020101,1.0,0.7966734553677495
+all_finishers,trolley,pooled,within_subjects_deltas,distal,wrong,DIV - CC,199,0.135678391959799,0.0,0.686583855763723
+all_finishers,trolley,pooled,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",199,-0.035175879396984924,0.0,0.677017258199602
+all_finishers,trolley,pooled,within_subjects_deltas,proximate,wrong,CC - CH,199,6.085427135678392,6.0,1.127139354611701
+all_finishers,trolley,pooled,within_subjects_deltas,distal,punish,CH - CC,199,0.18977286925594986,0.2876820724517808,0.2731233828435236
+all_finishers,trolley,pooled,within_subjects_deltas,distal,punish,DIV - CC,199,0.04121491150671047,0.0,0.23429883645625377
+all_finishers,trolley,pooled,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",199,-0.02494129345852805,0.0,0.22829572844573925
+all_finishers,trolley,pooled,within_subjects_deltas,proximate,punish,CC - CH,199,1.2911598216052727,1.3862943611198904,0.5429858445131376
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,blame,CC,117,6.299145299145299,6.0,1.0022815117052493
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,blame,CH,117,6.923076923076923,7.0,0.9662748070049845
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,blame,DIV,117,6.47008547008547,6.0,0.9056589292223454
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,wrong,CC,117,6.247863247863248,6.0,1.0496796137310014
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,wrong,CH,117,6.863247863247863,7.0,1.0496796137310014
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,wrong,DIV,117,6.435897435897436,6.0,1.1094003924504583
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,punish,CC,117,1.1093654026709783,1.0986122886681098,0.5043337038246245
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,punish,CH,117,1.30685686122595,1.0986122886681098,0.448731897984537
+all_finishers,trolley,high,within_subjects_all_vignettes,distal,punish,DIV,117,1.1748875969109123,1.0986122886681098,0.5042246857787395
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,blame,CC,117,7.735042735042735,8.0,0.758778082967909
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,blame,CH,117,1.3247863247863247,1.0,0.5992676540500804
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,wrong,CC,117,7.641025641025641,8.0,1.0039708958339866
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,wrong,CH,117,1.6153846153846154,1.0,1.007268017667813
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,punish,CC,117,1.526339227215315,1.3862943611198906,0.4819511578979366
+all_finishers,trolley,high,within_subjects_all_vignettes,proximate,punish,CH,117,0.26842602439348756,0.0,0.5347926273073567
+all_finishers,trolley,high,between_subjects_first_vignette,distal,blame,CC,49,6.428571428571429,6.0,0.9354143466934853
+all_finishers,trolley,high,between_subjects_first_vignette,distal,blame,CH,35,7.542857142857143,8.0,0.505432670960188
+all_finishers,trolley,high,between_subjects_first_vignette,distal,blame,DIV,33,6.2727272727272725,6.0,0.8758113121817134
+all_finishers,trolley,high,between_subjects_first_vignette,distal,wrong,CC,49,6.428571428571429,6.0,0.7359800721939872
+all_finishers,trolley,high,between_subjects_first_vignette,distal,wrong,CH,35,7.514285714285714,8.0,0.8868791472623199
+all_finishers,trolley,high,between_subjects_first_vignette,distal,wrong,DIV,33,6.03030303030303,5.0,1.237054174360618
+all_finishers,trolley,high,between_subjects_first_vignette,distal,punish,CC,49,1.1571673153989075,1.0986122886681098,0.4758037319587265
+all_finishers,trolley,high,between_subjects_first_vignette,distal,punish,CH,35,1.5157184511756776,1.3862943611198906,0.42174977745859604
+all_finishers,trolley,high,between_subjects_first_vignette,distal,punish,DIV,33,1.0487121228369045,1.0986122886681098,0.4503280888322184
+all_finishers,trolley,high,within_subjects_deltas,distal,blame,CH - CC,117,0.6239316239316239,1.0,0.8171280206803342
+all_finishers,trolley,high,within_subjects_deltas,distal,blame,DIV - CC,117,0.17094017094017094,0.0,0.7910119913930236
+all_finishers,trolley,high,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",117,-0.06837606837606838,0.0,0.751165711623535
+all_finishers,trolley,high,within_subjects_deltas,proximate,blame,CC - CH,117,6.410256410256411,6.0,0.9751555680827878
+all_finishers,trolley,high,within_subjects_deltas,distal,wrong,CH - CC,117,0.6153846153846154,1.0,0.7970436089630601
+all_finishers,trolley,high,within_subjects_deltas,distal,wrong,DIV - CC,117,0.18803418803418803,0.0,0.7760601639895242
+all_finishers,trolley,high,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",117,-0.02564102564102564,0.0,0.7247061052537384
+all_finishers,trolley,high,within_subjects_deltas,proximate,wrong,CC - CH,117,6.0256410256410255,6.0,1.1099979687892136
+all_finishers,trolley,high,within_subjects_deltas,distal,punish,CH - CC,117,0.1974914585549714,0.2876820724517808,0.2840426740243825
+all_finishers,trolley,high,within_subjects_deltas,distal,punish,DIV - CC,117,0.065522194239934,0.0,0.26633084685147496
+all_finishers,trolley,high,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",117,-0.015916449649874053,0.0,0.24821441993947044
+all_finishers,trolley,high,within_subjects_deltas,proximate,punish,CC - CH,117,1.2579132028218272,1.252762968495368,0.5073828187935036
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,blame,CC,82,6.317073170731708,6.0,0.9797713109396701
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,blame,CH,82,6.963414634146342,7.0,0.8380624619642429
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,blame,DIV,82,6.329268292682927,6.0,0.8756638123821079
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,wrong,CC,82,6.170731707317073,6.0,0.9661541176138693
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,wrong,CH,82,6.853658536585366,7.0,0.9828398161376484
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,wrong,DIV,82,6.2317073170731705,6.0,0.8790957824723165
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,punish,CC,82,1.0933556890395135,1.0986122886681098,0.5375065874917091
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,punish,CH,82,1.2721154491736886,1.0986122886681098,0.5358335445532825
+all_finishers,trolley,low,within_subjects_all_vignettes,distal,punish,DIV,82,1.0998882581097953,1.0986122886681098,0.5221573187376183
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,blame,CC,82,7.682926829268292,8.0,0.8589118694710287
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,blame,CH,82,1.170731707317073,1.0,0.4389909318442621
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,wrong,CC,82,7.560975609756097,8.0,1.0195322211755034
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,wrong,CH,82,1.3902439024390243,1.0,0.8714412294127386
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,punish,CC,82,1.5070217973092115,1.3862943611198906,0.6333501781200208
+all_finishers,trolley,low,within_subjects_all_vignettes,proximate,punish,CH,82,0.1684247269519499,0.0,0.3684652206096801
+all_finishers,trolley,low,between_subjects_first_vignette,distal,blame,CC,35,6.685714285714286,7.0,0.7183080025689689
+all_finishers,trolley,low,between_subjects_first_vignette,distal,blame,CH,24,7.208333333333333,7.0,0.41485111699905347
+all_finishers,trolley,low,between_subjects_first_vignette,distal,blame,DIV,23,5.956521739130435,6.0,0.9282564726687249
+all_finishers,trolley,low,between_subjects_first_vignette,distal,wrong,CC,35,6.457142857142857,6.0,0.6108266887567038
+all_finishers,trolley,low,between_subjects_first_vignette,distal,wrong,CH,24,7.125,7.0,0.7974142996067924
+all_finishers,trolley,low,between_subjects_first_vignette,distal,wrong,DIV,23,5.869565217391305,5.0,1.0137396037394037
+all_finishers,trolley,low,between_subjects_first_vignette,distal,punish,CC,35,1.2769194471305179,1.3862943611198906,0.462602876715888
+all_finishers,trolley,low,between_subjects_first_vignette,distal,punish,CH,24,1.3384413918262437,1.0986122886681098,0.3354753755258796
+all_finishers,trolley,low,between_subjects_first_vignette,distal,punish,DIV,23,0.8995731919356665,1.0986122886681098,0.6043037935547833
+all_finishers,trolley,low,within_subjects_deltas,distal,blame,CH - CC,82,0.6463414634146342,1.0,0.7914972718499921
+all_finishers,trolley,low,within_subjects_deltas,distal,blame,DIV - CC,82,0.012195121951219513,0.0,0.5772198682237187
+all_finishers,trolley,low,within_subjects_deltas,distal,blame,"MIN(CH, DIV) - CC",82,-0.10975609756097561,0.0,0.6479997249080275
+all_finishers,trolley,low,within_subjects_deltas,proximate,blame,CC - CH,82,6.512195121951219,7.0,0.9843704817841755
+all_finishers,trolley,low,within_subjects_deltas,distal,wrong,CH - CC,82,0.6829268292682927,1.0,0.7993523424744886
+all_finishers,trolley,low,within_subjects_deltas,distal,wrong,DIV - CC,82,0.06097560975609756,0.0,0.529326639000718
+all_finishers,trolley,low,within_subjects_deltas,distal,wrong,"MIN(CH, DIV) - CC",82,-0.04878048780487805,0.0,0.6065982668886811
+all_finishers,trolley,low,within_subjects_deltas,proximate,wrong,CC - CH,82,6.170731707317073,6.0,1.1526124705976837
+all_finishers,trolley,low,within_subjects_deltas,distal,punish,CH - CC,82,0.17875976013417524,0.25541281188299525,0.2580616167623603
+all_finishers,trolley,low,within_subjects_deltas,distal,punish,DIV - CC,82,0.006532569070281778,0.0,0.1747487606772812
+all_finishers,trolley,low,within_subjects_deltas,distal,punish,"MIN(CH, DIV) - CC",82,-0.03781820474648557,0.0,0.19719069033407616
+all_finishers,trolley,low,within_subjects_deltas,proximate,punish,CC - CH,82,1.3385970703572618,1.3862943611198906,0.5900458241160407

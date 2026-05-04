@@ -12,6 +12,7 @@ from preprocessing import (
 from core import (
     run_confirmatory_and_exploratory_tests,
     run_welch_t_test_between_groups,
+    run_one_sample_t_test_on_delta,
     compute_group_summaries,
     compute_twoafc_counts,
     compute_correlations,
@@ -587,6 +588,70 @@ def compute_manuscript_table_1_participant_counts(
     return dataframe_table_1
 
 
+def _compute_model_means_from_dataframe(cleaned_dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute blame means per model × story condition × vignette condition directly from the cleaned dataframe.
+
+    Row order mirrors Table 2: CC Proximate, CH Distal, DIV Distal, CC Distal, CH Proximate.
+    Proximate rows show NaN for Blame First Vignette (no between-subjects first-vignette design for proximate).
+    Returns two stacked blocks: Included participants first, then Everyone (all finishers).
+
+    Arguments:
+        • cleaned_dataframe: pd.DataFrame
+            - Must contain race_compact, included, story_condition, vignette_condition_position_1,
+              first_vignette_distal_blame, distal_blame_cc/ch/div, proximate_blame_cc/ch.
+
+    Returns:
+        • pd.DataFrame with columns: Inclusion, Model, Story Condition, Condition,
+          Blame First Vignette, Blame All Vignettes.
+    """
+    row_specs = [
+        {"condition_display": "CC Proximate", "agent_role": "proximate", "condition_code": "CC"},
+        {"condition_display": "CH Distal",    "agent_role": "distal",    "condition_code": "CH"},
+        {"condition_display": "DIV Distal",   "agent_role": "distal",    "condition_code": "DIV"},
+        {"condition_display": "CC Distal",    "agent_role": "distal",    "condition_code": "CC"},
+        {"condition_display": "CH Proximate", "agent_role": "proximate", "condition_code": "CH"},
+    ]
+    all_vignettes_column_map = {
+        ("distal",    "CC"):  "distal_blame_cc",
+        ("distal",    "CH"):  "distal_blame_ch",
+        ("distal",    "DIV"): "distal_blame_div",
+        ("proximate", "CC"):  "proximate_blame_cc",
+        ("proximate", "CH"):  "proximate_blame_ch",
+    }
+    story_condition_display_map = {"pooled": "Pooled", "firework": "Firework", "trolley": "Trolley"}
+
+    def _rows_for_subset(df: pd.DataFrame, inclusion_label: str) -> list[dict]:
+        rows = []
+        for model_name in sorted(df["race_compact"].dropna().unique()):
+            model_df = df.loc[df["race_compact"] == model_name]
+            for story_condition_key, story_display in story_condition_display_map.items():
+                story_df = model_df if story_condition_key == "pooled" else model_df.loc[model_df["story_condition"] == story_condition_key]
+                for spec in row_specs:
+                    condition_code = spec["condition_code"]
+                    agent_role = spec["agent_role"]
+                    all_col = all_vignettes_column_map[(agent_role, condition_code)]
+                    all_mean = float(story_df[all_col].mean()) if len(story_df) > 0 else np.nan
+                    if agent_role == "distal":
+                        first_df = story_df.loc[story_df["vignette_condition_position_1"] == condition_code]
+                        first_mean = float(first_df["first_vignette_distal_blame"].mean()) if len(first_df) > 0 else np.nan
+                    else:
+                        first_mean = np.nan
+                    rows.append({
+                        "Inclusion": inclusion_label,
+                        "Model": model_name,
+                        "Story Condition": story_display,
+                        "Condition": spec["condition_display"],
+                        "Blame First Vignette": round(first_mean, 2) if pd.notna(first_mean) else np.nan,
+                        "Blame All Vignettes": round(all_mean, 2) if pd.notna(all_mean) else np.nan,
+                    })
+        return rows
+
+    included_df = cleaned_dataframe.loc[cleaned_dataframe["included"] == True].copy()  # noqa: E712
+    all_rows = _rows_for_subset(included_df, "Included") + _rows_for_subset(cleaned_dataframe.copy(), "Everyone")
+    return pd.DataFrame(all_rows, columns=["Inclusion", "Model", "Story Condition", "Condition", "Blame First Vignette", "Blame All Vignettes"])
+
+
 def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
     general_settings: GeneralSettings,
     force_rebuild: bool | None = None,
@@ -594,6 +659,8 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
     save_pretty_multilevel_version: bool = True,
     include_medians: bool = False,
     include_std: bool = False,
+    group_by_model: bool = False,
+    cleaned_dataframe: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """
     Compute a descriptive table of mean scale values by DV and condition.
@@ -656,6 +723,10 @@ def compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
+
+    if group_by_model:
+        resolved_dataframe = cleaned_dataframe if cleaned_dataframe is not None else load_or_build_cleaned_dataframe(general_settings)
+        return _compute_model_means_from_dataframe(resolved_dataframe)
 
     valid_inclusion_filters = {"included_only", "all_finishers"}
     if inclusion_filter not in valid_inclusion_filters:
@@ -1761,11 +1832,100 @@ def compute_supplementary_table_8_order_effects_summary(
     return dataframe_table_8
 
 
+def _compute_model_contrasts_from_dataframe(
+    cleaned_dataframe: pd.DataFrame,
+    general_settings: GeneralSettings,
+) -> pd.DataFrame:
+    """
+    Compute responsibility-shielding contrast statistics per model directly from the cleaned dataframe.
+
+    Returns two stacked blocks: Included participants first, then Everyone (all finishers).
+
+    Arguments:
+        • cleaned_dataframe: pd.DataFrame
+            - Must contain race_compact, included, story_condition, vignette_condition_position_1,
+              first_vignette_distal_blame/wrong/punish, and delta columns.
+        • general_settings: GeneralSettings
+
+    Returns:
+        • pd.DataFrame with columns: Inclusion, DV, Story Family, Model, Design, Contrast,
+          Estimate, 95% CI, p-value.
+    """
+    dv_display_map = {"blame": "Blame", "wrong": "Wrong", "punish": "Punish"}
+    story_display_map = {"pooled": "Pooled", "firework": "Firework", "trolley": "Trolley"}
+    design_display_map = {
+        "between_subjects_first_vignette": "Between-subj",
+        "within_subjects_all_vignettes": "Within-subj",
+    }
+    within_delta_columns = {
+        ("blame", "CH - CC"): "distal_blame_ch_minus_cc",
+        ("blame", "DIV - CC"): "distal_blame_div_minus_cc",
+        ("wrong", "CH - CC"): "distal_wrong_ch_minus_cc",
+        ("wrong", "DIV - CC"): "distal_wrong_div_minus_cc",
+        ("punish", "CH - CC"): "distal_punish_ch_minus_cc",
+        ("punish", "DIV - CC"): "distal_punish_div_minus_cc",
+    }
+    first_vignette_columns = {
+        "blame": "first_vignette_distal_blame",
+        "wrong": "first_vignette_distal_wrong",
+        "punish": "first_vignette_distal_punish",
+    }
+
+    def _rows_for_subset(df: pd.DataFrame, inclusion_label: str) -> list[dict]:
+        rows = []
+        for model_name in sorted(df["race_compact"].dropna().unique()):
+            model_df = df.loc[df["race_compact"] == model_name]
+            for dv_key, dv_display in dv_display_map.items():
+                for story_key, story_display in story_display_map.items():
+                    story_df = model_df if story_key == "pooled" else model_df.loc[model_df["story_condition"] == story_key]
+                    for design_key, design_display in design_display_map.items():
+                        for contrast in ["CH - CC", "DIV - CC"]:
+                            try:
+                                if design_key == "between_subjects_first_vignette":
+                                    condition_a, condition_b = contrast.split(" - ")
+                                    result = run_welch_t_test_between_groups(
+                                        dataframe=story_df,
+                                        dv_column_name=first_vignette_columns[dv_key],
+                                        group_column_name="vignette_condition_position_1",
+                                        group_a_value=condition_a,
+                                        group_b_value=condition_b,
+                                    )
+                                else:
+                                    result = run_one_sample_t_test_on_delta(
+                                        dataframe=story_df,
+                                        delta_column_name=within_delta_columns[(dv_key, contrast)],
+                                    )
+                                estimate = round(float(result["mean_difference_a_minus_b"]), 2)
+                                ci_string = _format_ci_for_manuscript_table(result["ci95_lower"], result["ci95_upper"])
+                                p_string = _format_p_value_for_manuscript_table(result["p_value"])
+                            except Exception:
+                                estimate = np.nan
+                                ci_string = ""
+                                p_string = ""
+                            rows.append({
+                                "Inclusion": inclusion_label,
+                                "DV": dv_display,
+                                "Story Family": story_display,
+                                "Model": model_name,
+                                "Design": design_display,
+                                "Contrast": contrast,
+                                "Estimate": estimate,
+                                "95% CI": ci_string,
+                                "p-value": p_string,
+                            })
+        return rows
+
+    included_df = cleaned_dataframe.loc[cleaned_dataframe["included"] == True].copy()  # noqa: E712
+    all_rows = _rows_for_subset(included_df, "Included") + _rows_for_subset(cleaned_dataframe.copy(), "Everyone")
+    return pd.DataFrame(all_rows, columns=["Inclusion", "DV", "Story Family", "Model", "Design", "Contrast", "Estimate", "95% CI", "p-value"])
+
+
 def compute_supplementary_table_9_secondary_dv_contrasts(
     general_settings: GeneralSettings,
     cleaned_dataframe: pd.DataFrame | None = None,
     force_rebuild: bool | None = None,
     story_condition: bool = True,
+    group_by_model: bool = False,
 ) -> pd.DataFrame:
     """
     Compute supplementary Table 9: included-only contrasts across blame, wrongness, and punishment.
@@ -1774,6 +1934,10 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
         • general_settings: GeneralSettings
         • cleaned_dataframe: pd.DataFrame | None
         • force_rebuild: bool | None
+        • story_condition: bool
+        • group_by_model: bool
+            - If True, compute per-model contrasts directly from cleaned_dataframe and return
+              without file I/O. Adds a Model column to the output.
 
     Returns:
         • pd.DataFrame
@@ -1781,6 +1945,13 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
     """
     if force_rebuild is None:
         force_rebuild = general_settings["misc"]["force_rebuild"]
+
+    if group_by_model:
+        resolved_dataframe = cleaned_dataframe if cleaned_dataframe is not None else load_or_build_cleaned_dataframe(general_settings)
+        return _compute_model_contrasts_from_dataframe(
+            cleaned_dataframe=resolved_dataframe,
+            general_settings=general_settings,
+        )
 
     table_names = general_settings["filing"]["table_names"]
     table_file_name = table_names["table_9_secondary_dv_contrasts"]
@@ -1945,6 +2116,62 @@ def compute_supplementary_table_9_secondary_dv_contrasts(
     )
 
     return dataframe_table_9
+
+
+def compute_robot_table_10_model_means(
+    general_settings: GeneralSettings,
+    cleaned_dataframe: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Robot-only Table 10: distal blame means broken down by model × story condition × vignette condition.
+
+    Arguments:
+        • general_settings: GeneralSettings
+        • cleaned_dataframe: pd.DataFrame
+            - Robot cleaned dataframe (must have race_compact column).
+
+    Returns:
+        • pd.DataFrame with columns: Model, Story Condition, Condition, Blame First Vignette, Blame All Vignettes.
+    """
+    dataframe_table = compute_manuscript_table_2_mean_scale_values_by_dv_and_condition(
+        general_settings=general_settings,
+        group_by_model=True,
+        cleaned_dataframe=cleaned_dataframe,
+    )
+    _save_table_dataframe_to_tables_folder(
+        dataframe_table=dataframe_table,
+        general_settings=general_settings,
+        table_file_name=general_settings["filing"]["table_names"]["table_10_model_means"],
+    )
+    return dataframe_table
+
+
+def compute_robot_table_11_model_contrasts(
+    general_settings: GeneralSettings,
+    cleaned_dataframe: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Robot-only Table 11: responsibility-shielding contrast statistics broken down by model.
+
+    Arguments:
+        • general_settings: GeneralSettings
+        • cleaned_dataframe: pd.DataFrame
+            - Robot cleaned dataframe (must have race_compact column).
+
+    Returns:
+        • pd.DataFrame with columns: DV, Story Family, Model, Design, Contrast, Estimate, 95% CI, p-value.
+    """
+    dataframe_table = compute_supplementary_table_9_secondary_dv_contrasts(
+        general_settings=general_settings,
+        cleaned_dataframe=cleaned_dataframe,
+        group_by_model=True,
+    )
+    _save_table_dataframe_to_tables_folder(
+        dataframe_table=dataframe_table,
+        general_settings=general_settings,
+        table_file_name=general_settings["filing"]["table_names"]["table_11_model_contrasts"],
+    )
+    return dataframe_table
 
 
 def _compute_extra_terminal_statistics_for_manuscript(

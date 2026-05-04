@@ -1653,14 +1653,14 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
         sample_a_raw = coerce_numeric_array(sample_a_raw)
         sample_b_raw = coerce_numeric_array(sample_b_raw)
 
-        if sample_a_raw.shape[0] == 0 or sample_b_raw.shape[0] == 0:
+        if sample_a_raw.shape[0] <= 1 or sample_b_raw.shape[0] <= 1:
             return {
                 "analysis_mode": analysis_mode,
                 "test_type": "insufficient_data",
                 "transformation": "none",
                 "location_statistic_reported": resolve_location_statistic_reported(analysis_mode),
-                "n_a": 0,
-                "n_b": 0,
+                "n_a": int(sample_a_raw.shape[0]),
+                "n_b": int(sample_b_raw.shape[0]),
                 "mean_a": np.nan,
                 "mean_b": np.nan,
                 "median_a": np.nan,
@@ -1789,14 +1789,14 @@ def run_confirmatory_and_exploratory_tests(general_settings: GeneralSettings, co
             sample_a_raw = sample_a_raw[:minimum_n]
             sample_b_raw = sample_b_raw[:minimum_n]
 
-        if sample_a_raw.shape[0] == 0:
+        if sample_a_raw.shape[0] <= 1:
             return {
                 "analysis_mode": analysis_mode,
                 "test_type": "insufficient_data",
                 "transformation": "none",
                 "location_statistic_reported": resolve_location_statistic_reported(analysis_mode),
-                "n_a": 0,
-                "n_b": 0,
+                "n_a": int(sample_a_raw.shape[0]),
+                "n_b": int(sample_a_raw.shape[0]),
                 "mean_a": np.nan,
                 "mean_b": np.nan,
                 "median_a": np.nan,

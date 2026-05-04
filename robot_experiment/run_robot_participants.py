@@ -82,6 +82,9 @@ from tables import (
     compute_manuscript_table_3_primary_distal_blame_contrasts,
     compute_manuscript_table_4_story_specific_distal_blame_contrasts,
     compute_supplementary_table_9_secondary_dv_contrasts,
+    compute_robot_table_10_model_means,
+    compute_robot_table_11_model_contrasts,
+    _pretty_print_table_to_terminal,
 )
 
 
@@ -92,12 +95,13 @@ ROOT = Path(__file__).parent.parent
 "ROBOT EXPERIMENT CONFIGURATION — edit these before each run"
 "============================================================"
 ROBOT_EXPERIMENT_CONFIG: RobotSettings = {
-    "models": ["claude-sonnet-4-6", "gpt-4o", "gemini-2.0-flash", "grok-3"],
-    "n_participants_per_model": 1,
+    "models": ["gemini-2.5-flash", "claude-sonnet-4-6", "gpt-4o", "grok-3"],
+    # "models": ["gemini-2.5-flash"],
+    "n_participants_per_model": 2,
     "temperature": 1.0,
-    "story_balance": "random",
+    "story_balance": "balanced",
     "output_file": str(ROOT / "robot_raw_data" / "robot_responsibility_shielding_raw.csv"),
-    "max_concurrent_participants": 5,
+    "max_concurrent_participants": 1,
     "beta_mode": False,
     "beta_n_participants": 3,
     "print_transcripts": True,
@@ -105,6 +109,7 @@ ROBOT_EXPERIMENT_CONFIG: RobotSettings = {
     "run_models_sequentially": True,
     "overwrite_raw_data": False,
     "generate_justification": True,
+    "interleave_models": True,
 }
 "============================================================"
 
@@ -295,7 +300,7 @@ async def request_ratings_with_retry(
 
     turn_display = format_turn_label_for_display(turn_label)
     max_rate_limit_retries = 4
-    rate_limit_wait_seconds = 15
+    rate_limit_wait_seconds = 30
 
     for rate_limit_attempt in range(max_rate_limit_retries):
         try:
@@ -463,7 +468,7 @@ async def run_single_participant(
             conversation_history=conversation_history,
             prompt_text=vignette_prompt,
             json_schema_description=json_schema,
-            beta_mode=beta_mode and print_transcripts,
+            beta_mode=print_transcripts,
             participant_id=participant_id,
             turn_label=turn_label,
         )
@@ -498,7 +503,7 @@ async def run_single_participant(
             conversation_history=conversation_history,
             prompt_text=proximate_prompt,
             json_schema_description=json_schema,
-            beta_mode=beta_mode and print_transcripts,
+            beta_mode=print_transcripts,
             participant_id=participant_id,
             turn_label=turn_label,
         )
@@ -557,56 +562,60 @@ async def run_single_participant(
     div_cc_followup_choices = story_two_afc_questions["intraperson_div_cc_followup"]
 
     two_afc_prompt = (
-        "Please answer the following questions. For each question, you MUST choose EXACTLY ONE of the listed options "
-        "and copy that option's text verbatim into your JSON response.\n\n"
+        "Please answer the following questions. For each question, respond with exactly A or B.\n\n"
 
         f"QUESTION 1: {interperson_primary_choices['text']}\n"
-        f"  Option A: {interperson_primary_choices['choice_a']}\n"
-        f"  Option B: {interperson_primary_choices['choice_b']}\n\n"
+        f"  A: {interperson_primary_choices['choice_a']}\n"
+        f"  B: {interperson_primary_choices['choice_b']}\n\n"
 
         f"QUESTION 2: {interperson_followup_choices['text']}\n"
-        f"  Option A: {interperson_followup_choices['choice_a']}\n"
-        f"  Option B: {interperson_followup_choices['choice_b']}\n\n"
+        f"  A: {interperson_followup_choices['choice_a']}\n"
+        f"  B: {interperson_followup_choices['choice_b']}\n\n"
 
         f"QUESTION 3: {ch_cc_primary_choices['text']}\n"
-        f"  Option A: {ch_cc_primary_choices['choice_a']}\n"
-        f"  Option B: {ch_cc_primary_choices['choice_b']}\n\n"
+        f"  A: {ch_cc_primary_choices['choice_a']}\n"
+        f"  B: {ch_cc_primary_choices['choice_b']}\n\n"
 
         f"QUESTION 4: {ch_cc_followup_choices['text']}\n"
-        f"  Option A: {ch_cc_followup_choices['choice_a']}\n"
-        f"  Option B: {ch_cc_followup_choices['choice_b']}\n\n"
+        f"  A: {ch_cc_followup_choices['choice_a']}\n"
+        f"  B: {ch_cc_followup_choices['choice_b']}\n\n"
 
         f"QUESTION 5: {div_cc_primary_choices['text']}\n"
-        f"  Option A: {div_cc_primary_choices['choice_a']}\n"
-        f"  Option B: {div_cc_primary_choices['choice_b']}\n\n"
+        f"  A: {div_cc_primary_choices['choice_a']}\n"
+        f"  B: {div_cc_primary_choices['choice_b']}\n\n"
 
         f"QUESTION 6: {div_cc_followup_choices['text']}\n"
-        f"  Option A: {div_cc_followup_choices['choice_a']}\n"
-        f"  Option B: {div_cc_followup_choices['choice_b']}"
+        f"  A: {div_cc_followup_choices['choice_a']}\n"
+        f"  B: {div_cc_followup_choices['choice_b']}"
     )
 
-    json_schema = (
-        '{"q1": "<exact text of chosen option>", "q2": "<exact text of chosen option>", '
-        '"q3": "<exact text of chosen option>", "q4": "<exact text of chosen option>", '
-        '"q5": "<exact text of chosen option>", "q6": "<exact text of chosen option>"}'
-    )
+    json_schema = '{"q1": "A" or "B", "q2": "A" or "B", "q3": "A" or "B", "q4": "A" or "B", "q5": "A" or "B", "q6": "A" or "B"}'
 
     parsed_two_afc, conversation_history = await request_ratings_with_retry(
         model_client=model_client,
         conversation_history=conversation_history,
         prompt_text=two_afc_prompt,
         json_schema_description=json_schema,
-        beta_mode=beta_mode and print_transcripts,
+        beta_mode=print_transcripts,
         participant_id=participant_id,
         turn_label="two_afc",
     )
 
-    output_row[f"{afc_prefix}_interperson_1"] = str(parsed_two_afc.get("q1", ""))
-    output_row[f"{afc_prefix}_interperson_2"] = str(parsed_two_afc.get("q2", ""))
-    output_row[f"{afc_prefix}_intraperson_1"] = str(parsed_two_afc.get("q3", ""))
-    output_row[f"{afc_prefix}_intraperson_2"] = str(parsed_two_afc.get("q4", ""))
-    output_row[f"{afc_prefix}_intraperson_3"] = str(parsed_two_afc.get("q5", ""))
-    output_row[f"{afc_prefix}_intraperson_4"] = str(parsed_two_afc.get("q6", ""))
+    def _resolve_afc(answer: str, choice_a: str, choice_b: str) -> str:
+        "Maps A/B letter back to full choice text for CSV storage."
+        letter = str(answer).strip().strip('"').upper()
+        if letter == "A":
+            return choice_a
+        if letter == "B":
+            return choice_b
+        return str(answer)
+
+    output_row[f"{afc_prefix}_interperson_1"] = _resolve_afc(parsed_two_afc.get("q1", ""), interperson_primary_choices["choice_a"], interperson_primary_choices["choice_b"])
+    output_row[f"{afc_prefix}_interperson_2"] = _resolve_afc(parsed_two_afc.get("q2", ""), interperson_followup_choices["choice_a"], interperson_followup_choices["choice_b"])
+    output_row[f"{afc_prefix}_intraperson_1"] = _resolve_afc(parsed_two_afc.get("q3", ""), ch_cc_primary_choices["choice_a"], ch_cc_primary_choices["choice_b"])
+    output_row[f"{afc_prefix}_intraperson_2"] = _resolve_afc(parsed_two_afc.get("q4", ""), ch_cc_followup_choices["choice_a"], ch_cc_followup_choices["choice_b"])
+    output_row[f"{afc_prefix}_intraperson_3"] = _resolve_afc(parsed_two_afc.get("q5", ""), div_cc_primary_choices["choice_a"], div_cc_primary_choices["choice_b"])
+    output_row[f"{afc_prefix}_intraperson_4"] = _resolve_afc(parsed_two_afc.get("q6", ""), div_cc_followup_choices["choice_a"], div_cc_followup_choices["choice_b"])
 
     "Turn 12: CRT"
     crt_prompt = (
@@ -831,6 +840,8 @@ def build_robot_general_settings(robot_raw_csv_path: Path) -> GeneralSettings:
                 "table_7_cognitive_load_blame_contrasts": "robot_table_7_Cognitive_Load_Blame_Contrasts.csv",
                 "table_8_order_effects_summary": "robot_table_8_Order_Effects_Summary.csv",
                 "table_9_secondary_dv_contrasts": "robot_table_9_Secondary_DV_Contrasts.csv",
+                "table_10_model_means": "robot_table_10_Model_Means.csv",
+                "table_11_model_contrasts": "robot_table_11_Model_Contrasts.csv",
                 "table_manifest": "robot_Table_Manifest.csv",
             },
         },
@@ -881,12 +892,17 @@ def run_robot_analysis(robot_raw_csv_path: Path) -> None:
     Returns:
         • None. Outputs are printed to the terminal and written to disk.
     """
+    import warnings
+
     print(f"\n{'='*60}")
     print(f"Robot Analysis Pipeline")
     print(f"Input: {robot_raw_csv_path.name}")
     print(f"{'='*60}\n")
 
     robot_general_settings = build_robot_general_settings(robot_raw_csv_path)
+
+    "Suppress scipy/numpy RuntimeWarnings during robot analysis — AI responses have near-zero within-condition variance"
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
 
     try:
         robot_cleaned_dataframe = load_or_build_cleaned_dataframe(
@@ -923,9 +939,7 @@ def run_robot_analysis(robot_raw_csv_path: Path) -> None:
             general_settings=robot_general_settings,
             force_rebuild=True,
         )
-        print(f"--- Table 2: Means by DV and Condition ---")
-        print(robot_table_2.to_string())
-        print()
+        _pretty_print_table_to_terminal("Table 2: Means by DV and Condition", robot_table_2)
     except Exception as table_2_error:
         print(f"WARNING: Table 2 failed: {table_2_error}")
 
@@ -935,9 +949,7 @@ def run_robot_analysis(robot_raw_csv_path: Path) -> None:
             cleaned_dataframe=robot_cleaned_dataframe,
             force_rebuild=True,
         )
-        print(f"--- Table 3: Primary Distal Blame Contrasts ---")
-        print(robot_table_3.to_string())
-        print()
+        _pretty_print_table_to_terminal("Table 3: Primary Distal Blame Contrasts", robot_table_3)
     except Exception as table_3_error:
         print(f"WARNING: Table 3 failed: {table_3_error}")
 
@@ -947,9 +959,7 @@ def run_robot_analysis(robot_raw_csv_path: Path) -> None:
             cleaned_dataframe=robot_cleaned_dataframe,
             force_rebuild=True,
         )
-        print(f"--- Table 4: Story-Specific Distal Blame Contrasts ---")
-        print(robot_table_4.to_string())
-        print()
+        _pretty_print_table_to_terminal("Table 4: Story-Specific Distal Blame Contrasts", robot_table_4)
     except Exception as table_4_error:
         print(f"WARNING: Table 4 failed: {table_4_error}")
 
@@ -959,11 +969,27 @@ def run_robot_analysis(robot_raw_csv_path: Path) -> None:
             cleaned_dataframe=robot_cleaned_dataframe,
             force_rebuild=True,
         )
-        print(f"--- Table 9: Secondary DV Contrasts ---")
-        print(robot_table_9.to_string())
-        print()
+        _pretty_print_table_to_terminal("Table 9: Secondary DV Contrasts", robot_table_9)
     except Exception as table_9_error:
         print(f"WARNING: Table 9 failed: {table_9_error}")
+
+    try:
+        robot_table_10 = compute_robot_table_10_model_means(
+            general_settings=robot_general_settings,
+            cleaned_dataframe=robot_cleaned_dataframe,
+        )
+        _pretty_print_table_to_terminal("Table 10: Blame Means by Model and Condition", robot_table_10)
+    except Exception as table_10_error:
+        print(f"WARNING: Table 10 failed: {table_10_error}")
+
+    try:
+        robot_table_11 = compute_robot_table_11_model_contrasts(
+            general_settings=robot_general_settings,
+            cleaned_dataframe=robot_cleaned_dataframe,
+        )
+        _pretty_print_table_to_terminal("Table 11: Contrast Statistics by Model", robot_table_11)
+    except Exception as table_11_error:
+        print(f"WARNING: Table 11 failed: {table_11_error}")
 
     print(f"Analysis outputs written to: {robot_general_settings['filing']['file_paths']['processed']}")
     print(f"Table outputs written to:    {robot_general_settings['filing']['file_paths']['tables']}\n")
@@ -1193,7 +1219,74 @@ async def run_experiment(config: RobotSettings) -> None:
 
         print(f"\n{robot_model_name_string}: {model_completed} completed, {model_failed} failed")
 
-    if run_models_sequentially:
+    interleave_models = config.get("interleave_models", False) and len(models_to_run) > 1
+
+    if interleave_models:
+        "Round-robin: one participant per model per round — spaces out same-provider calls naturally"
+        requested_temperature = config.get("temperature", 1.0)
+        model_client_map = {}
+        model_conditions_map = {}
+        model_temperatures = {}
+
+        for model_name in models_to_run:
+            provider_name = MODEL_TO_PROVIDER.get(model_name, "openai")
+            max_temp = PROVIDER_MAX_TEMPERATURE.get(provider_name, 2.0)
+            effective_temp = min(requested_temperature, max_temp)
+            if effective_temp != requested_temperature:
+                print(f"  Note: temperature clipped {requested_temperature} → {effective_temp} for {model_name} (max for {provider_name})")
+            model_temperatures[model_name] = effective_temp
+            model_client_map[model_name] = get_client_for_model(model_name, temperature=effective_temp)
+            model_conditions_map[model_name] = generate_participant_conditions(
+                n_participants=n_participants_per_model,
+                story_balance=config.get("story_balance", "random"),
+                random_seed=None,
+            )
+
+        semaphore = asyncio.Semaphore(max_concurrent)
+        model_completed_counts = {model_name: 0 for model_name in models_to_run}
+        model_failed_counts = {model_name: 0 for model_name in models_to_run}
+
+        def _write_one_row(target_path: Path, row: dict) -> None:
+            header_needed = not target_path.exists() or target_path.stat().st_size == 0
+            with open(target_path, mode="a", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=output_column_names, extrasaction="ignore")
+                if header_needed:
+                    writer.writeheader()
+                writer.writerow(row)
+
+        print(f"\n{'='*60}")
+        print(f"Interleaved mode: {n_participants_per_model} round(s) × {len(models_to_run)} models")
+        print(f"{'='*60}")
+
+        for round_index in range(n_participants_per_model):
+            print(f"\n--- Round {round_index + 1} / {n_participants_per_model} ---")
+            for model_name in models_to_run:
+                conditions = model_conditions_map[model_name][round_index]
+                result_row = await run_one_participant_with_semaphore(
+                    conditions,
+                    model_client_map[model_name],
+                    model_name,
+                    semaphore,
+                    model_temperatures[model_name],
+                )
+                if result_row is not None:
+                    try:
+                        _write_one_row(output_file_path, result_row)
+                    except PermissionError:
+                        print(f"\n  WARNING: {output_file_path.name} is locked (probably open in Excel).")
+                        print(f"  Saving row to backup: {backup_file_path.name}")
+                        print(f"  Close the CSV and re-run — the backup will be merged automatically.\n")
+                        _write_one_row(backup_file_path, result_row)
+                    model_completed_counts[model_name] += 1
+                    total_completed += 1
+                else:
+                    model_failed_counts[model_name] += 1
+                    total_failed += 1
+
+        for model_name in models_to_run:
+            print(f"\n{model_name}: {model_completed_counts[model_name]} completed, {model_failed_counts[model_name]} failed")
+
+    elif run_models_sequentially:
         for robot_model_name_string in models_to_run:
             await run_one_model(robot_model_name_string)
     else:

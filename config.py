@@ -34,6 +34,8 @@ class TableNames(TypedDict):
     table_7_cognitive_load_blame_contrasts: Path
     table_8_order_effects_summary: Path
     table_9_secondary_dv_contrasts: Path
+    table_10_model_means: Path
+    table_11_model_contrasts: Path
     table_manifest: Path
 
 class FilePaths(TypedDict):
@@ -80,6 +82,8 @@ RobotModelName = Literal[
     "gpt-4o",
     "gpt-4o-mini",
     "o3-mini",
+    "gemini-2.5-flash",
+    "gemini-2.5-pro",
     "gemini-2.0-flash",
     "gemini-1.5-pro",
     "grok-3",
@@ -105,6 +109,7 @@ class RobotSettings(TypedDict, total=False):
     run_models_sequentially: bool
     overwrite_raw_data: bool
     generate_justification: bool
+    interleave_models: bool
 
 class GeneralSettings(TypedDict):
     filing: Filing

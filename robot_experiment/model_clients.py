@@ -148,14 +148,15 @@ class OpenAIClient(ModelClient):
 
 class GeminiClient(ModelClient):
     """
-    Client for Google Gemini models via the google-generativeai Python SDK.
+    Client for Google Gemini models via the google-genai Python SDK.
 
+    Install: pip install google-genai
     Requires the GOOGLE_API_KEY environment variable to be set,
     or an api_key argument passed directly.
 
     Arguments:
         • model_name:
-            Gemini model ID, e.g. "gemini-2.0-flash", "gemini-1.5-pro".
+            Gemini model ID, e.g. "gemini-2.5-flash", "gemini-2.0-flash".
         • temperature:
             Sampling temperature (0.0–2.0).
         • max_tokens:
@@ -175,47 +176,40 @@ class GeminiClient(ModelClient):
         self._api_key = api_key
 
     async def chat(self, messages: list[dict]) -> str:
-        import google.generativeai as genai
+        from google import genai
+        from google.genai import types
         import os
 
         api_key = self._api_key or os.environ.get("GOOGLE_API_KEY")
-        genai.configure(api_key=api_key)
-
-        model = genai.GenerativeModel(
-            model_name=self.model_name,
-            generation_config=genai.GenerationConfig(
-                temperature=self.temperature,
-                max_output_tokens=self.max_tokens,
-            ),
-        )
+        client = genai.Client(api_key=api_key)
 
         "Convert OpenAI-style messages to Gemini format"
         system_text = ""
-        gemini_history = []
-        last_user_message = ""
+        gemini_contents = []
 
         for message in messages:
             if message["role"] == "system":
                 system_text = message["content"]
             elif message["role"] == "user":
-                last_user_message = message["content"]
-                if gemini_history or system_text:
-                    gemini_history.append({"role": "user", "parts": [message["content"]]})
+                gemini_contents.append(
+                    types.Content(role="user", parts=[types.Part(text=message["content"])])
+                )
             elif message["role"] == "assistant":
-                gemini_history.append({"role": "model", "parts": [message["content"]]})
+                gemini_contents.append(
+                    types.Content(role="model", parts=[types.Part(text=message["content"])])
+                )
 
-        "Prepend system text to the first user message if present"
-        if system_text and gemini_history and gemini_history[0]["role"] == "user":
-            gemini_history[0]["parts"][0] = system_text + "\n\n" + gemini_history[0]["parts"][0]
+        config = types.GenerateContentConfig(
+            temperature=self.temperature,
+            max_output_tokens=self.max_tokens,
+            system_instruction=system_text or None,
+        )
 
-        chat_session = model.start_chat(history=gemini_history[:-1] if len(gemini_history) > 1 else [])
-
-        "Send the final user message (last_user_message) as the current turn"
-        final_message = last_user_message
-        if system_text and not gemini_history:
-            final_message = system_text + "\n\n" + last_user_message
-
-        response = await asyncio.to_thread(chat_session.send_message, final_message)
+        response = await client.aio.models.generate_content(
+            model=self.model_name,
+            contents=gemini_contents,
+            config=config,
+        )
         return response.text
 
 
@@ -383,6 +377,8 @@ MODEL_TO_PROVIDER: dict[str, str] = {
     "gpt-4o": "openai",
     "gpt-4o-mini": "openai",
     "o3-mini": "openai",
+    "gemini-2.5-flash": "gemini",
+    "gemini-2.5-pro": "gemini",
     "gemini-2.0-flash": "gemini",
     "gemini-1.5-pro": "gemini",
     "grok-3": "grok",
